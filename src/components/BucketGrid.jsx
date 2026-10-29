@@ -4,7 +4,9 @@ import { newestFirst } from '../utils/dates.js'
 
 // A collapsed bucket: color dot, name, small count, and a scrolling peek of its emails (PRD F2).
 function BucketTile({ bucket, emails }) {
-  const bucketEmails = emails.filter((email) => email.bucketId === bucket.id).sort(newestFirst)
+  const bucketEmails = emails
+    .filter((email) => email.bucketId === bucket.id && email.removedTo === null)
+    .sort(newestFirst)
 
   return (
     <article

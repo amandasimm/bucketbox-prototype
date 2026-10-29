@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react'
+import BulkActions from './BulkActions.jsx'
 import EmailRow from './EmailRow.jsx'
-import Icon from './Icon.jsx'
 import { formatShortDate, newestFirst } from '../utils/dates.js'
 
 function dayLabel(dayOffset) {
@@ -10,12 +11,33 @@ function dayLabel(dayOffset) {
   return formatShortDate(date)
 }
 
-// The day's unsorted emails, with a big unsorted count (PRD F1) and the
-// Move / Archive / Delete buttons at the bottom (PRD F7). Look only until Stage 4.
-export default function TodayList({ emails, dayOffset }) {
-  const unsorted = emails
-    .filter((email) => email.bucketId === null && email.dayOffset === dayOffset)
+// State-aware empty messages (PRD F6; wording is a placeholder, PRD §12 #7)
+function emptyMessage(dayOffset, receivedThatDay) {
+  if (dayOffset < 0) return 'You cleared this day. Nice work.'
+  if (receivedThatDay === 0) return 'Nothing yet, go enjoy your day.'
+  return 'Way to go! Your daily inbox is cleared right now.'
+}
+
+// The day's unsorted emails, with the unsorted count (PRD F1), Select all,
+// and the Move / Archive / Delete buttons (PRD F7).
+export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions }) {
+  const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
+  const unsorted = dayEmails
+    .filter((email) => email.bucketId === null && email.removedTo === null)
     .sort(newestFirst)
+  const unsortedIds = unsorted.map((email) => email.id)
+  const selectedHere = selectedIds.filter((id) => unsortedIds.includes(id))
+
+  const allSelected = unsorted.length > 0 && selectedHere.length === unsorted.length
+  const someSelected = selectedHere.length > 0 && !allSelected
+  const selectAllRef = useRef(null)
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
+  }, [someSelected])
+
+  function toggle(id) {
+    onSelect(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id])
+  }
 
   return (
     <section className="today-list" aria-labelledby="today-heading">
@@ -26,31 +48,36 @@ export default function TodayList({ emails, dayOffset }) {
         </p>
       </header>
 
-      <label className="select-all">
-        <input type="checkbox" className="email-checkbox" />
-        Select all
-      </label>
+      {unsorted.length > 0 ? (
+        <>
+          <label className="select-all">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              className="email-checkbox"
+              checked={allSelected}
+              onChange={() => onSelect(allSelected ? [] : unsortedIds)}
+            />
+            {selectedHere.length > 0 ? `${selectedHere.length} selected` : 'Select all'}
+          </label>
+          <ul className="email-list">
+            {unsorted.map((email) => (
+              <EmailRow
+                key={email.id}
+                email={email}
+                selected={selectedIds.includes(email.id)}
+                onToggleSelected={() => toggle(email.id)}
+              />
+            ))}
+          </ul>
+        </>
+      ) : (
+        <div className="empty-state" role="status">
+          <p>{emptyMessage(dayOffset, dayEmails.length)}</p>
+        </div>
+      )}
 
-      <ul className="email-list">
-        {unsorted.map((email) => (
-          <EmailRow key={email.id} email={email} />
-        ))}
-      </ul>
-
-      <footer className="bulk-actions">
-        <button type="button" className="bulk-button" disabled>
-          <Icon name="drive_file_move" size={20} />
-          Move
-        </button>
-        <button type="button" className="bulk-button" disabled>
-          <Icon name="archive" size={20} />
-          Archive
-        </button>
-        <button type="button" className="bulk-button" disabled>
-          <Icon name="delete" size={20} />
-          Delete
-        </button>
-      </footer>
+      <BulkActions selectedCount={selectedHere.length} buckets={buckets} actions={actions} />
     </section>
   )
 }

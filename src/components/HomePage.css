@@ -16,6 +16,11 @@
   z-index: 1;
   display: flex;
 }
+/* At the bottom of the screen, tooltips open upward so they aren't cut off */
+.page-history .tooltip {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
 
 /* Today list */
 .today-list {
@@ -65,6 +70,7 @@
 
 /* Bulk buttons, pinned to the bottom of the Today list */
 .bulk-actions {
+  position: relative;
   display: flex;
   gap: 8px;
   padding: 12px 16px;
@@ -89,6 +95,7 @@
 
 /* Email rows */
 .email-row {
+  position: relative; /* keeps screen-reader-only text inside the row, so lists don't overflow */
   display: grid;
   grid-template-columns: 20px 20px 1fr;
   column-gap: 8px;
@@ -232,7 +239,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px 12px 26px; /* dot lines up with the row checkboxes */
+  padding: 12px 16px 12px 24px; /* dot lines up with the start of the row text */
   border-bottom: 1px solid var(--divider);
   /* 15% tint of the bucket color. Even a black bucket gives #d9d9d9, which keeps
      dark text at 11.7:1 and the gray count at 6.9:1 (WCAG AA needs 4.5:1). */
@@ -258,7 +265,7 @@
   color: var(--text-muted);
 }
 .bucket-peek .email-row {
-  grid-template-columns: 16px 20px 1fr;
+  grid-template-columns: 16px 1fr; /* hover handle, then text (no checkbox on tiles) */
   column-gap: 6px;
   padding: 10px 12px 10px 2px;
 }
@@ -275,3 +282,108 @@
   font-weight: 500;
 }
 .add-bucket-button:hover { background: rgba(11, 87, 208, 0.08); }
+
+/* Selected rows: Gmail's light blue */
+.email-row.is-selected { background: var(--selected-row-bg); }
+
+/* Empty Today list (PRD F6) */
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+/* Small list of buckets above the Move button (PRD F4 "Move to") */
+.move-menu {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 16px;
+  z-index: 10;
+  min-width: 200px;
+  padding: 8px 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+}
+.move-menu-title,
+.move-menu-empty {
+  margin: 0;
+  padding: 4px 16px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.move-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+}
+.move-menu-item:hover,
+.move-menu-item:focus-visible { background: var(--hover-bg); }
+
+/* First-use note for Archive / Delete: sits above the buttons, not a pop-up */
+.first-use-note {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  padding: 14px 16px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+}
+.first-use-note p {
+  margin: 0 0 8px;
+  line-height: 20px;
+}
+.first-use-note-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.text-button,
+.filled-button {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 18px;
+  font-weight: 500;
+}
+.text-button { color: var(--focus-ring); }
+.text-button:hover { background: rgba(11, 87, 208, 0.08); }
+.filled-button {
+  background: var(--focus-ring);
+  color: #ffffff;
+}
+.filled-button:hover { box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3); }
+
+/* Toast: appears just left of undo/redo, so the confirmation sits next to the way back */
+.toast-region {
+  position: absolute;
+  bottom: 12px;
+  right: 120px;
+  z-index: 20;
+}
+.toast {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  line-height: 20px;
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3);
+  animation: toast-in 150ms ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}

@@ -7,6 +7,7 @@
   --text-meta: #444746;      /* times and dates */
   --text-read: #444746;      /* sender and subject of read emails, slightly dimmer than --text */
   --unread-dot: #0b57d0;     /* Gmail blue */
+  --selected-row-bg: #d3e3fd; /* light blue; keeps preview text above 4.5:1 */
   --text-preview: #5f6368;   /* body previews: lightest gray that still passes AA on white */
   --search-bg: #e9eef6;
   --nav-active-bg: #d3e3fd;

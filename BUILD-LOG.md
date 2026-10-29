@@ -13,13 +13,12 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-29_
 
-- **Built:** Stages 0–3. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **In progress:** Nothing.
-- **Next:** Stage 4, selecting, bulk actions, undo/redo and toasts.
+- **Built:** Stages 0–4. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 5, drag and drop and the delete zone.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
-4. Selection, bulk actions, undo/redo, toasts · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
+4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
@@ -68,6 +67,20 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: GitHub email, repo, Vercel setup.
 - Commits: "Stage 3: first deploy notes" (accidentally held only the Known-issues fix, because a log edit failed) and "Stage 3: record deploy details in the log"
 
+### 2026-10-29 — Stage 4: Selecting, bulk actions, undo/redo, toasts
+- Done:
+  - Row checkboxes and Select all (shows "3 selected", with a part-checked state when some are selected). Selected rows turn light blue.
+  - Move / Archive / Delete switch on when something is selected. Move opens a small "Move to" bucket list above the button (Escape or a click outside closes it).
+  - The first Archive and first Delete show an inline note above the buttons (Cancel / Archive N), not a pop-up; after that they act immediately.
+  - Counts update (unsorted count and bucket count). Toasts appear just left of undo/redo for 5 s and pause on hover.
+  - Undo/redo cover the last action only, with hover text naming it ("Undo: archived 2").
+  - Cleared Today shows "Way to go! Your daily inbox is cleared right now."
+  - Bucket tile rows no longer have checkboxes.
+- Fixed along the way: hidden screen-reader text was stretching the panel (the panel jumped when a button got focus); undo/redo tooltips now open upward.
+- Checked: every path tested in the preview (archive, undo, redo, delete, move, Select all to empty, Escape on the menu, focus); clean console in a fresh tab; build works.
+- Approved by Amanda: 2026-10-29
+- Commit: "Stage 4: selecting, bulk actions, undo/redo, toasts"
+
 ---
 
 ## Decisions
@@ -93,6 +106,10 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: All Gmail categories (Primary, Promotions, Social, Updates) feed the Today list, as the mock data does. Reason: implied by Amanda's spreadsheet; confirm. **SYNC TO PRD** (F1 open: inbox categories; §12 #11)
 - 2026-10-28: The 11-stage build plan is approved (see Current status). Reason: small stages Amanda can preview one at a time.
 - 2026-10-28: "Visible but inert" controls (search, Send, Remind me, Mark as junk, Gmail nav links, settings, Chat, Meet) show a gentle tooltip such as "Not part of this prototype" when clicked. Reason: calm, and participants don't think it's broken. **SYNC TO PRD** (§4 interaction inventory)
+- 2026-10-29: First use of Archive or Delete shows a short inline note above the buttons (not a pop-up) explaining the action, with Cancel / "Archive N" (or "Delete N"). The action happens only on confirm. Once confirmed, the note doesn't show again for that action until the page reloads. Reason: Amanda's choice; keeps the PRD's first-use explanation but follows NEST-UX (no modal). **SYNC TO PRD** (F7, Flow 3, §12 #6)
+- 2026-10-29: Toast wording: "Archived 3", "Deleted 3", "Moved 3 to Priority". Undo/redo toasts read "Undone: Archived 3" / "Redone: Archived 3" (Claude's placeholder). Toasts sit just left of undo/redo, last 5 s, and pause on hover. Reason: Amanda's choice for the action wording; placement ties the confirmation to the way back. **SYNC TO PRD** (F8 Toast, §12 #7)
+- 2026-10-29: The bulk Move button opens a small "Move to" bucket list on the home page. F4's "not visible on the home page" is read as "no per-row Move to on the home page". Reason: Amanda's choice. **SYNC TO PRD** (F4, F7)
+- 2026-10-29: Bucket tile rows on the home page have no checkboxes; selecting bucket emails happens in the opened bucket view (Stage 7). Reason: there are no bucket bulk buttons on the home page, and the tile reads as a clean peek. **SYNC TO PRD** (F2 tile; differs from wireframe-v2)
 - 2026-10-29: Qualtrics: participants open the prototype through a link that opens it in a new tab (`target="_blank"`), with a reminder to come back to the survey tab. Amanda tested it in Qualtrics and it works. Reason: avoids the cramped, sideways-scrolling frame (the prototype needs at least 1024px). Notes: every load starts fresh, and a desktop-only notice or device check is worth adding to the survey. **SYNC TO PRD** (§0 and §8 "embedded in the Qualtrics survey")
 - 2026-10-29: Hosting. Code at github.com/amandasimm/bucketbox-prototype (public); live at https://bucketbox-prototype-3s9t.vercel.app; commits use 100169270+amandasimm@users.noreply.github.com. CLAUDE.md and BUILD-LOG.md are public (they name Amanda and the thesis; no participant data). Reason: Stage 3 setup.
 - 2026-10-28: Public repo contents: the PRD, the spreadsheet, sketches, wireframes and screenshots stay out of Git (local only). Reason: thesis research material. Commits use a placeholder email until Stage 3, when it switches to Amanda's GitHub private "noreply" address before the first push. Reason: keeps her NYU email off a public repo.
@@ -145,13 +162,13 @@ Each stage: preview → Amanda approves → commit → log update.
 9. Bucket name length limit: 50 or 30 characters? (PRD §12 #2)
 10. 12 preset bucket colors: which palette? Is the free color picker in v1? (PRD §12 #3)
 11. ~~Undo/redo position on screen~~: resolved 2026-10-29 (see Decisions). The first proposal, a full-width top bar, was rejected as wasted space.
-12. First-use confirmation modal for Archive/Delete: keep it, or use a tooltip/inline message? (PRD §12 #6, F7)
-13. Toast wording: "Archived 3" or "Moved 3 to Archive"? Empty-state wording, including zero buckets. (PRD §12 #7)
+12. ~~First-use confirmation~~: resolved 2026-10-29, inline note (see Decisions).
+13. ~~Toast wording~~: resolved 2026-10-29 (see Decisions). Still open: empty-state wording (placeholders from PRD F6 for now), the zero-bucket state, and the undo/redo toast wording ("Undone: Archived 2").
 14. Bucket reordering by drag handle: v1 or v2? (PRD §12 #4)
 14a. ~~Unread vs read is subtle~~: resolved 2026-10-29 with a blue dot plus bold/regular weights (see Decisions).
 14b. **Drop-target highlight (Stage 5):** bucket tiles now always have a stroke in their own color, but PRD F4 uses "an outline in the bucket's color" as the drag highlight. The highlight needs a different signal, e.g. a thicker stroke plus a light tint of the bucket color, or the name growing slightly.
 15. Bucket-to-bucket drag: in the expanded bucket view other buckets are hidden. Is dragging between buckets only from the home-page tiles, or is Move to the path inside a bucket?
-16. The bulk **Move** button opens a bucket dropdown on the home page, but F4 says the "Move to" dropdown is "not visible on the home page." Are these the same control, and is the bulk one allowed?
+16. ~~Bulk Move on the home page~~: resolved 2026-10-29, allowed (see Decisions).
 17. Which interactions are real, scripted, or visible-but-inert? (PRD §4 interaction inventory.) For example: search, compose/Reply, Remind me, Mark as junk, Gmail nav links (Starred, Trash, All Mail).
 18. What does the "missed email" indicator on the back arrow mean? (PRD §12 #9) Build it in v1 or leave it out?
 19. Delete zone in the expanded bucket view: where does it appear there?
