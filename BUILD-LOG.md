@@ -154,7 +154,7 @@ Each stage: preview → Amanda approves → commit → log update.
 ## Known issues
 <!-- Bugs or compromises to fix later. Format: - YYYY-MM-DD: Issue. (Plan) -->
 
-- 2026-10-28: Commits use the placeholder email `placeholder@example.invalid`. (Stage 3: reset the author on all commits to Amanda's GitHub noreply address before the first push.)
+- ~~2026-10-28: Commits use a placeholder email.~~ Fixed 2026-10-29: all commits were rewritten to Amanda's GitHub private address before the first upload.
 - 2026-10-28: The Gmail logo is an approximation (a red mail icon plus "Gmail"), not Google's official logo file. (Fine for the prototype; revisit if it looks off.)
 - 2026-10-28: Left out of the Gmail frame for simplicity: the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
