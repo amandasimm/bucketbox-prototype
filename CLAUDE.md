@@ -115,6 +115,6 @@ Avoid:
 | **Emoji picker: curated grid, built by hand** | No library. Amanda chooses 24–40 emojis, which is calmer than a full picker. |
 
 ## 11. Deployment
-Hosted on **Vercel**, connected to a **GitHub repo**: every push to the main branch redeploys the site automatically. The site must work from a plain link and inside a Qualtrics iframe. **The repo is public**, so `.gitignore` keeps these on Amanda's computer only, never committed or deployed: the `screenshot-gmail-*.png` files (real inbox data), the PRD, the mock data spreadsheet, and the sketches and wireframes. Read them locally as usual.
+Hosted on **Vercel**, connected to the **GitHub repo** github.com/amandasimm/bucketbox-prototype: every push to `main` redeploys https://bucketbox-prototype-3s9t.vercel.app automatically, so **push only approved stages**. The site must work from a plain link and inside a Qualtrics iframe. **The repo is public**, so `.gitignore` keeps these on Amanda's computer only, never committed or deployed: the `screenshot-gmail-*.png` files (real inbox data), the PRD, the mock data spreadsheet, and the sketches and wireframes. Read them locally as usual.
 
 **Mock data:** `mock_inbox_data_v3.numbers` → `scripts/import-mock-data.py` → `src/data/mockEmails.js` (generated, don't hand-edit). Buckets and emojis live in `src/data/startingSetup.js`. **Preview:** `npm run dev` (or the "prototype" entry in `.claude/launch.json`), at http://localhost:5173.

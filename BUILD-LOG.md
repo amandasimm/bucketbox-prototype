@@ -11,15 +11,14 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-10-28_
+_Last updated: 2026-10-29_
 
-- **Built:** Stage 0 (setup and data) and Stage 1 (the Gmail frame), and Stage 2 (home page layout, look only).
-- **In progress:** Nothing.
-- **Since Stage 1:** the switch is renamed "Bucketbox", and Gmail's Inbox count is hidden while it's on.
-- **Next:** Stage 3, the first deploy (GitHub + Vercel + Qualtrics test).
+- **Built:** Stages 0–3. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **In progress:** Amanda's own test inside a real Qualtrics survey.
+- **Next:** Stage 4, selecting, bulk actions, undo/redo and toasts.
 
 **Approved build plan (2026-10-28)**
-0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy (GitHub + Vercel + Qualtrics test)
+0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel; real Qualtrics test pending)
 4. Selection, bulk actions, undo/redo, toasts · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
@@ -64,6 +63,11 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: yes, 2026-10-29.
 - Commit: "Stage 2: Home page layout (look only)"
 
+### 2026-10-29 — Stage 3: First deploy
+- Done: Rewrote all commits to Amanda's GitHub private email (no NYU or placeholder email anywhere in the history). Confirmed only code, CLAUDE.md and BUILD-LOG.md are in Git. Pushed to github.com/amandasimm/bucketbox-prototype (public). Amanda connected Vercel (Vite settings auto-detected). Checked the live site at 1440×900: it matches the local preview. No headers block framing, and it loads inside an iframe. The PRD, screenshots and spreadsheet return 404 on the live site.
+- Approved by Amanda: GitHub email, repo, Vercel setup.
+- Commits: "Stage 3: first deploy notes" (accidentally held only the Known-issues fix, because a log edit failed) and "Stage 3: record deploy details in the log"
+
 ---
 
 ## Decisions
@@ -89,6 +93,7 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: All Gmail categories (Primary, Promotions, Social, Updates) feed the Today list, as the mock data does. Reason: implied by Amanda's spreadsheet; confirm. **SYNC TO PRD** (F1 open: inbox categories; §12 #11)
 - 2026-10-28: The 11-stage build plan is approved (see Current status). Reason: small stages Amanda can preview one at a time.
 - 2026-10-28: "Visible but inert" controls (search, Send, Remind me, Mark as junk, Gmail nav links, settings, Chat, Meet) show a gentle tooltip such as "Not part of this prototype" when clicked. Reason: calm, and participants don't think it's broken. **SYNC TO PRD** (§4 interaction inventory)
+- 2026-10-29: Hosting. Code at github.com/amandasimm/bucketbox-prototype (public); live at https://bucketbox-prototype-3s9t.vercel.app; commits use 100169270+amandasimm@users.noreply.github.com. CLAUDE.md and BUILD-LOG.md are public (they name Amanda and the thesis; no participant data). Reason: Stage 3 setup.
 - 2026-10-28: Public repo contents: the PRD, the spreadsheet, sketches, wireframes and screenshots stay out of Git (local only). Reason: thesis research material. Commits use a placeholder email until Stage 3, when it switches to Amanda's GitHub private "noreply" address before the first push. Reason: keeps her NYU email off a public repo.
 - 2026-10-29: The prototype's customer-facing name is **Bucketbox** (Amanda's working name). The switch at the bottom of Gmail's nav reads "Bucketbox". Reason: Amanda's choice. **SYNC TO PRD** (§5 "open prototype" button; product name)
 - 2026-10-29: Gmail's Inbox unread count (in the nav and on the Mail icon) is hidden while Bucketbox is on, and shown in the plain Gmail view. Reason: Bucketbox shows only per-day counts ("Chunk by day" principle). **SYNC TO PRD** (§1 Chunk by day, §5)
@@ -133,6 +138,8 @@ Each stage: preview → Amanda approves → commit → log update.
 - Times are written as 24-hour in the sheet and shown Gmail-style (e.g. 4:30 PM).
 
 **During the build (can wait until the feature)**
+
+- **Qualtrics width:** the prototype needs at least 1024px. Qualtrics question areas are often narrower, which would cause sideways scrolling inside the frame. Options: a wide/full-width Qualtrics layout, a large iframe, or a link that opens the prototype in a new tab. Decide after Amanda's real Qualtrics test.
 
 9. Bucket name length limit: 50 or 30 characters? (PRD §12 #2)
 10. 12 preset bucket colors: which palette? Is the free color picker in v1? (PRD §12 #3)
