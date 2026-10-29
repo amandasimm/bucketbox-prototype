@@ -1,0 +1,277 @@
+/* Layout: Today list | buckets */
+.home-page {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(360px, 420px) 1fr;
+  grid-template-areas: 'today buckets';
+  height: 100%;
+}
+
+/* Undo and redo: pinned to the bottom-right corner of the whole panel, level with
+   the Move / Archive / Delete buttons, so they read as page-wide controls (PRD F8). */
+.page-history {
+  position: absolute;
+  bottom: 6px;
+  right: 12px;
+  z-index: 1;
+  display: flex;
+}
+
+/* Today list */
+.today-list {
+  grid-area: today;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* lets the email list scroll inside the column */
+  border-right: 1px solid var(--divider);
+}
+.today-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+}
+.today-label {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 400;
+}
+.unsorted-count {
+  margin: 0;
+  color: var(--text-muted);
+}
+.unsorted-number {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+}
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px 8px 36px; /* lines up with the row checkboxes */
+  border-bottom: 1px solid var(--divider);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.email-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Bulk buttons, pinned to the bottom of the Today list */
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--divider);
+}
+.bulk-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--outline);
+  border-radius: 18px;
+  font-weight: 500;
+}
+.bulk-button:hover:not(:disabled) { background: var(--hover-bg); }
+.bulk-button:disabled {
+  color: var(--text-disabled);
+  border-color: var(--divider);
+  cursor: default;
+}
+
+/* Email rows */
+.email-row {
+  display: grid;
+  grid-template-columns: 20px 20px 1fr;
+  column-gap: 8px;
+  align-items: start;
+  padding: 10px 16px 10px 8px;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+}
+.email-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3); }
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  height: 21px;
+  color: var(--text-muted);
+  cursor: grab;
+}
+/* Bucket rows only show the handle on hover, as in Gmail (PRD F2) */
+.email-row.in-bucket .drag-handle { visibility: hidden; }
+.email-row.in-bucket:hover .drag-handle { visibility: visible; }
+
+.email-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--focus-ring);
+  cursor: pointer;
+}
+
+.email-row-body {
+  min-width: 0; /* lets long text shorten with "…" */
+  line-height: 21px;
+}
+.email-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.email-sender-name,
+.email-subject,
+.email-preview {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Text hierarchy (BUILD-LOG, 2026-10-29):
+   1 sender: bold, darkest, largest · 2 time/date: regular, muted, small, far right
+   3 subject: dark, a little smaller · 4 preview: regular, lightest gray, smallest, 2 lines
+   Unread: blue dot after the sender, sender and subject bold.
+   Read: no dot, sender and subject regular weight and slightly dimmer. No background fill,
+   so read and unread rows look the same in the Today list and in buckets. */
+.email-sender {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-read);
+}
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--unread-dot);
+  flex-shrink: 0;
+}
+.email-thread-size {
+  flex-shrink: 0;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-meta);
+}
+.email-received {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-meta);
+}
+.email-subject {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-read);
+}
+.is-unread .email-sender,
+.is-unread .email-subject {
+  font-weight: 700;
+  color: var(--text);
+}
+.email-preview {
+  margin-top: 1px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-preview);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.email-attachments {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Buckets */
+.buckets {
+  grid-area: buckets;
+  padding: 16px 24px 72px; /* bottom space keeps tiles clear of undo/redo */
+  overflow-y: auto;
+}
+.bucket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.bucket-tile {
+  display: flex;
+  flex-direction: column;
+  height: 280px;
+  border: 2px solid var(--bucket-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.bucket-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 12px 26px; /* dot lines up with the row checkboxes */
+  border-bottom: 1px solid var(--divider);
+  /* 15% tint of the bucket color. Even a black bucket gives #d9d9d9, which keeps
+     dark text at 11.7:1 and the gray count at 6.9:1 (WCAG AA needs 4.5:1). */
+  background: color-mix(in srgb, var(--bucket-color) 15%, white);
+}
+.bucket-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bucket-name {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bucket-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.bucket-peek .email-row {
+  grid-template-columns: 16px 20px 1fr;
+  column-gap: 6px;
+  padding: 10px 12px 10px 2px;
+}
+
+.add-bucket-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  height: 40px;
+  padding: 0 18px 0 12px;
+  border-radius: 20px;
+  color: var(--focus-ring);
+  font-weight: 500;
+}
+.add-bucket-button:hover { background: rgba(11, 87, 208, 0.08); }

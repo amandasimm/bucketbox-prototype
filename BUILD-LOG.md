@@ -13,13 +13,13 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-28_
 
-- **Built:** Stage 0 (setup and data) and Stage 1 (the Gmail frame).
+- **Built:** Stage 0 (setup and data) and Stage 1 (the Gmail frame), and Stage 2 (home page layout, look only).
 - **In progress:** Nothing.
 - **Since Stage 1:** the switch is renamed "Bucketbox", and Gmail's Inbox count is hidden while it's on.
-- **Next:** Stage 2, the home page layout (Today list and bucket grid), look only.
+- **Next:** Stage 3, the first deploy (GitHub + Vercel + Qualtrics test).
 
 **Approved build plan (2026-10-28)**
-0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout (look only) · 3. First deploy (GitHub + Vercel + Qualtrics test)
+0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy (GitHub + Vercel + Qualtrics test)
 4. Selection, bulk actions, undo/redo, toasts · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
@@ -55,6 +55,15 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: yes, 2026-10-29.
 - Commit: "Stage 1: Gmail frame (look only)"
 
+### 2026-10-29 — Stage 2: Home page layout (look only)
+- Done: Today list ("Today" label, big "12 unsorted" count, Select all, 12 stacked rows newest first). Each row has a drag handle, checkbox, sender (thread size shown, e.g. "6"), time, subject, preview and attachment chip. Unread rows are bold; read rows have Gmail's light tint. Move / Archive / Delete sit at the bottom, switched off. The bucket grid has the Priority tile (color dot, name, count, scrolling peek of 5 emails with dates; handles show on hover only) and "Add a Bucket" below it. Undo and redo sit in a bar across the top of the panel, switched off, with "Nothing to undo" tooltips. Nothing is clickable yet. Emails now live in app memory with real dates. Checked at 1440×900: no errors, no sideways scrolling, build works.
+- Revised after Amanda's review (2026-10-29): less space before the handle and checkbox in bucket rows; more space between lines of text (21px line height); bucket tile stroke is 2px in the bucket's own color; "Buckets" title removed; the unsorted count is the same size as "Today" (22px); undo/redo moved out of the top bar into the panel's top-right corner, level with "Today".
+- Revised again (2026-10-29): undo/redo moved to the panel's bottom-right corner, level with the bulk buttons. Select all checkbox lines up with the row checkboxes; the bucket color dot lines up with the bucket row checkboxes. Bucket headers have a 15% tint of the bucket color. New 4-level text hierarchy in email rows; previews show 2 lines.
+- Revised again (2026-10-29): read rows lost their background fill, so read/unread styling is identical in the Today list and buckets.
+- Revised (2026-10-29): unread rows have a blue dot after the sender (after the thread count if there is one) with a bold sender and subject; read rows have no dot and a regular-weight, slightly dimmer sender and subject.
+- Approved by Amanda: yes, 2026-10-29.
+- Commit: "Stage 2: Home page layout (look only)"
+
 ---
 
 ## Decisions
@@ -83,6 +92,13 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: Public repo contents: the PRD, the spreadsheet, sketches, wireframes and screenshots stay out of Git (local only). Reason: thesis research material. Commits use a placeholder email until Stage 3, when it switches to Amanda's GitHub private "noreply" address before the first push. Reason: keeps her NYU email off a public repo.
 - 2026-10-29: The prototype's customer-facing name is **Bucketbox** (Amanda's working name). The switch at the bottom of Gmail's nav reads "Bucketbox". Reason: Amanda's choice. **SYNC TO PRD** (§5 "open prototype" button; product name)
 - 2026-10-29: Gmail's Inbox unread count (in the nav and on the Mail icon) is hidden while Bucketbox is on, and shown in the plain Gmail view. Reason: Bucketbox shows only per-day counts ("Chunk by day" principle). **SYNC TO PRD** (§1 Chunk by day, §5)
+- 2026-10-29: Undo and redo sit in the top-right corner of the Bucketbox panel, level with the "Today" heading, with no toolbar bar. Reason: Amanda found the full-width bar wasted space; the corner position still reads as page-wide. **SYNC TO PRD** (F8 position, §12 #5) **SUPERSEDED (2026-10-29)** by the bottom-right position below.
+- 2026-10-29: Undo and redo sit in the bottom-right corner of the Bucketbox panel, level with the Move / Archive / Delete buttons. Reason: Amanda's choice. **SYNC TO PRD** (F8 position, §12 #5)
+- 2026-10-29: Bucket headers get a 15% tint of the bucket color (mixed with white), with the text color unchanged. Reason: tested on 8 colors including black and yellow; the worst case (black) still gives 11.7:1 for the name and 6.7:1 for the gray count (AA needs 4.5:1), so any color a user picks stays readable. 20% would also pass (worst 10.3 / 5.8); 15% stays calmer. The name is always shown, so color is never the only signal. **SYNC TO PRD** (F2 bucket tile)
+- 2026-10-29: Email row text hierarchy. 1 Sender: 15px bold, darkest (#1f1f1f). 2 Time/date: 12px regular, muted gray (#444746), far right. 3 Subject: 14px, dark (#1f1f1f). 4 Preview: 13px regular, lightest gray (#5f6368, 6.2:1 on white), up to 2 lines. Colors follow Gmail's palette. Reason: Amanda's hierarchy spec. **SYNC TO PRD** (F1 row layout)
+- 2026-10-29: Unread vs read. **Unread:** an 8px Gmail-blue dot (#0b57d0, 6.4:1 on white) after the sender name, and the sender and subject bold (#1f1f1f). **Read:** no dot; sender and subject regular weight in a slightly dimmer gray (#444746, 8.7:1 on the read-row tint); Gmail's light row tint stays. Screen readers hear "Unread." before the sender. Reason: Amanda's choice; the dot, weight and tint together mean unread never relies on color alone. **SYNC TO PRD** (F1 "Read/unread state follows Gmail") **SUPERSEDED (2026-10-29)** by the no-fill version below.
+- 2026-10-29: Read rows have **no background fill** (Gmail's light tint removed). Read and unread look identical in the Today list and in buckets. **Unread:** blue dot after the sender, sender and subject bold (#1f1f1f). **Read:** no dot, sender and subject regular weight in #444746 (9.4:1 on white). Screen readers hear "Unread." Reason: Amanda found the fill distracting; the dot plus the weight change still mean unread never relies on color alone. **SYNC TO PRD** (F1 "Read/unread state follows Gmail")
+- 2026-10-29: Home page visual refinements: no "Buckets" heading; the unsorted count is the same size as the day label; bucket tiles have a 2px stroke in the bucket's color. Reason: Amanda's review of Stage 2. **SYNC TO PRD** (§5 home page, F1 "large unsorted count", F2 tile)
 - 2026-10-28: Any past day with no unsorted emails shows the past-tense celebration empty state, even a day where no mail arrived (e.g. 2 days ago). Reason: Amanda's choice; keeps the tone rewarding. **SYNC TO PRD** (F6 empty states)
 - 2026-10-28: Assume concept testing happens after 1 PM. Today's emails are spread across the morning, 6:52 AM to 12:42 PM, in the same order as before. They're saved in a new copy, `mock_inbox_data_v3.numbers`, which is now the mock data source (v2 is kept unchanged). Reason: "today" is the real date, so no email should look like it arrived in the future. **SYNC TO PRD** (§4 mock data; concept-testing scheduling)
 
@@ -112,7 +128,7 @@ Each stage: preview → Amanda approves → commit → log update.
 **Mock data at a glance (from `mock_inbox_data_v3.numbers`, 2026-10-28)**
 - Today: 12 unsorted (all unread), 6:52 AM to 12:42 PM, including the Cabin weekend thread and the interview request.
 - Yesterday: 8 unsorted (all read). 2 days ago: none (shows the celebration). 3 days ago: 2 unsorted.
-- Priority bucket: 5 emails from 3–6 days ago (2 unread). Days 4–6 have nothing left unsorted.
+- Priority bucket: 5 emails from 3–6 days ago (3 unread). Days 4–6 have nothing left unsorted.
 - Attachments are shown as labels only ("3 photos", "Lease renewal.pdf"); there are no real files.
 - Times are written as 24-hour in the sheet and shown Gmail-style (e.g. 4:30 PM).
 
@@ -120,10 +136,12 @@ Each stage: preview → Amanda approves → commit → log update.
 
 9. Bucket name length limit: 50 or 30 characters? (PRD §12 #2)
 10. 12 preset bucket colors: which palette? Is the free color picker in v1? (PRD §12 #3)
-11. Undo/redo position on screen. (PRD §12 #5, F8)
+11. ~~Undo/redo position on screen~~: resolved 2026-10-29 (see Decisions). The first proposal, a full-width top bar, was rejected as wasted space.
 12. First-use confirmation modal for Archive/Delete: keep it, or use a tooltip/inline message? (PRD §12 #6, F7)
 13. Toast wording: "Archived 3" or "Moved 3 to Archive"? Empty-state wording, including zero buckets. (PRD §12 #7)
 14. Bucket reordering by drag handle: v1 or v2? (PRD §12 #4)
+14a. ~~Unread vs read is subtle~~: resolved 2026-10-29 with a blue dot plus bold/regular weights (see Decisions).
+14b. **Drop-target highlight (Stage 5):** bucket tiles now always have a stroke in their own color, but PRD F4 uses "an outline in the bucket's color" as the drag highlight. The highlight needs a different signal, e.g. a thicker stroke plus a light tint of the bucket color, or the name growing slightly.
 15. Bucket-to-bucket drag: in the expanded bucket view other buckets are hidden. Is dragging between buckets only from the home-page tiles, or is Move to the path inside a bucket?
 16. The bulk **Move** button opens a bucket dropdown on the home page, but F4 says the "Move to" dropdown is "not visible on the home page." Are these the same control, and is the bulk one allowed?
 17. Which interactions are real, scripted, or visible-but-inert? (PRD §4 interaction inventory.) For example: search, compose/Reply, Remind me, Mark as junk, Gmail nav links (Starred, Trash, All Mail).

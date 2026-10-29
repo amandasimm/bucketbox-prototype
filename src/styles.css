@@ -4,6 +4,10 @@
   --surface: #ffffff;
   --text: #1f1f1f;
   --text-muted: #444746;
+  --text-meta: #444746;      /* times and dates */
+  --text-read: #444746;      /* sender and subject of read emails, slightly dimmer than --text */
+  --unread-dot: #0b57d0;     /* Gmail blue */
+  --text-preview: #5f6368;   /* body previews: lightest gray that still passes AA on white */
   --search-bg: #e9eef6;
   --nav-active-bg: #d3e3fd;
   --compose-bg: #c2e7ff;
@@ -11,6 +15,9 @@
   --focus-ring: #0b57d0;
   --tooltip-bg: #3c4043;
   --tooltip-text: #ffffff;
+  --divider: #e8eaed;
+  --outline: #c4c7c5;
+  --text-disabled: #8e918f;
 
   --header-height: 64px;
   --rail-width: 68px;
@@ -66,6 +73,18 @@ button {
   color: var(--text-muted);
 }
 .icon-button:hover { background: var(--hover-bg); }
+.icon-button[aria-disabled='true'] { color: var(--text-disabled); cursor: default; }
+.icon-button[aria-disabled='true']:hover { background: none; }
+
+/* Read by screen readers, not shown on screen */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 
 /* Tooltips. Hovering or focusing shows the control's name, Gmail-style.
    Clicking a control that isn't part of the prototype shows a gentle note instead. */
