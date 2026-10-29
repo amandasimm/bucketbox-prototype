@@ -13,12 +13,12 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-28_
 
-- **Built:** Stage 0. Git, an empty React + Vite project, and the mock data converted into `src/data/`. The page only shows a data check.
+- **Built:** Stage 0 (setup and data) and Stage 1 (the Gmail frame).
 - **In progress:** Nothing.
-- **Next:** Stage 1, the Gmail frame (header, left nav, "open prototype" button), look only.
+- **Next:** Stage 2, the home page layout (Today list and bucket grid), look only.
 
 **Approved build plan (2026-10-28)**
-0. Setup and data ✅ · 1. Gmail frame · 2. Home page layout (look only) · 3. First deploy (GitHub + Vercel + Qualtrics test)
+0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout (look only) · 3. First deploy (GitHub + Vercel + Qualtrics test)
 4. Selection, bulk actions, undo/redo, toasts · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
@@ -43,6 +43,16 @@ Each stage: preview → Amanda approves → commit → log update.
 - Done: Started Git (branch `main`) with a .gitignore that keeps research files private. Created the React + Vite project. Wrote `scripts/import-mock-data.py`, which turns the spreadsheet into `src/data/mockEmails.js` (27 emails, the 6-message thread attached to EML_1012). Added `src/data/startingSetup.js` (Priority bucket, emoji grid, default 3). The check page shows the right counts. `npm run build` works.
 - Approved by Amanda: the 11-stage build plan; tooltips for inert controls; keeping research files private; a placeholder Git email.
 - Commit: see `git log` (first commit, "Stage 0: project setup and mock data")
+
+### 2026-10-28 — Data fix: Today's times moved to the morning
+- Done: Today's emails now run from 6:52 AM to 12:42 PM (in `mock_inbox_data_v3.numbers`) and were re-imported.
+- Approved by Amanda: yes (her request).
+- Commit: "Move Today's mock emails to the morning (6:52 AM to 12:42 PM)"
+
+### 2026-10-28 — Stage 1: Gmail frame (look only)
+- Done: Gmail header (menu, logo, search bar, Support, Settings, apps, account), app rail (Mail, Chat, Meet), and left nav (Compose, Inbox with unread count, Starred, Snoozed, Sent, Drafts, More). There's a "Daily inbox" switch at the bottom of the nav, plus the white main panel. Every look-only control shows "Not part of this prototype" for 2.5 s when clicked, and icon-only buttons show their name on hover or keyboard focus. Fonts: Roboto and Material Symbols (Google Fonts). Checked at 1440×900: no errors, keyboard reachable, build works.
+- Approved by Amanda: yes, 2026-10-29.
+- Commit: "Stage 1: Gmail frame (look only)"
 
 ---
 
@@ -91,6 +101,9 @@ Each stage: preview → Amanda approves → commit → log update.
 **New, from these answers**
 - ~~Amanda to write the mock emails and emoji list~~: done 2026-10-28 (see Decisions).
 - Final name for the starting bucket ("Priority" is still a placeholder, PRD §12 #1).
+- **Switch wording:** the "open prototype" switch at the bottom of the nav is labelled "Daily inbox" (a placeholder). What should it say? (PRD §5)
+- **Inbox count in the nav:** Gmail's Inbox shows 12 (unread emails still in the inbox) and the Mail icon has a badge. The PRD principle is "never show a cumulative count." Keep Gmail's count for familiarity, or hide it? (It currently matches Today's 12.)
+- **Compose button:** shows "Not part of this prototype" until Stage 7 makes the compose drawer real.
 - ~~Future times on Today~~: resolved 2026-10-28. Testing is after 1 PM, and Today's emails end at 12:42 PM (see Decisions).
 
 **Mock data at a glance (from `mock_inbox_data_v3.numbers`, 2026-10-28)**
@@ -121,5 +134,7 @@ Each stage: preview → Amanda approves → commit → log update.
 <!-- Bugs or compromises to fix later. Format: - YYYY-MM-DD: Issue. (Plan) -->
 
 - 2026-10-28: Commits use the placeholder email `placeholder@example.invalid`. (Stage 3: reset the author on all commits to Amanda's GitHub noreply address before the first push.)
+- 2026-10-28: The Gmail logo is an approximation (a red mail icon plus "Gmail"), not Google's official logo file. (Fine for the prototype; revisit if it looks off.)
+- 2026-10-28: Left out of the Gmail frame for simplicity: the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)

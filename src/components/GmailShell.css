@@ -1,0 +1,195 @@
+/* Page grid: header across the top, then app rail | nav | main area */
+.gmail-shell {
+  display: grid;
+  grid-template-columns: var(--rail-width) var(--nav-width) 1fr;
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-areas:
+    'header header header'
+    'rail   nav    main';
+  height: 100vh;
+}
+
+/* Header */
+.gmail-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+}
+.gmail-header-start {
+  display: flex;
+  align-items: center;
+  width: calc(var(--rail-width) + var(--nav-width) - 20px);
+  flex-shrink: 0;
+}
+.gmail-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  font-size: 22px;
+  color: var(--text-muted);
+}
+.gmail-logo .icon { color: #ea4335; }
+
+.gmail-search {
+  display: flex;
+  align-items: center;
+  flex: 0 1 720px;
+  height: 48px;
+  padding: 0 4px;
+  border-radius: 24px;
+  background: var(--search-bg);
+}
+.gmail-search-field {
+  flex: 1;
+  height: 100%;
+  text-align: left;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+.gmail-header-end {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* App rail (Mail, Chat, Meet) */
+.app-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+.app-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.app-rail-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+}
+.app-rail-item:hover .app-rail-icon { background: var(--hover-bg); }
+.app-rail-item.is-active { font-weight: 700; color: var(--text); }
+.app-rail-item.is-active .app-rail-icon { background: var(--nav-active-bg); }
+.app-rail-badge {
+  position: absolute;
+  top: -4px;
+  right: 6px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #3c4043; /* neutral, not alarming red */
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* Left nav */
+.gmail-nav {
+  grid-area: nav;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px 16px 0;
+  overflow-y: auto;
+}
+.compose-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  height: 56px;
+  margin: 0 0 16px 8px;
+  padding: 0 24px 0 16px;
+  border-radius: var(--radius-large);
+  background: var(--compose-bg);
+  font-weight: 500;
+}
+.compose-button:hover { box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3); }
+
+.gmail-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gmail-nav-item,
+.prototype-switch {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  height: 32px;
+  padding: 0 12px 0 26px;
+  border-radius: 0 16px 16px 0;
+  text-align: left;
+}
+.gmail-nav-item .icon,
+.prototype-switch .icon { font-size: 20px; color: var(--text-muted); }
+.gmail-nav-item:hover,
+.prototype-switch:hover { background: var(--hover-bg); }
+.gmail-nav-item.is-active { background: var(--nav-active-bg); font-weight: 700; }
+.gmail-nav-item.is-active .icon { color: var(--text); }
+.gmail-nav-label { flex: 1; }
+.gmail-nav-count { font-size: 12px; font-weight: 700; }
+
+/* "Open prototype" switch, pinned to the bottom of the nav */
+.prototype-switch {
+  margin-top: auto;
+  height: 40px;
+  font-weight: 500;
+}
+.switch-track {
+  display: flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  border-radius: 10px;
+  border: 2px solid #747775;
+  background: #e1e3e1;
+  transition: background 120ms;
+}
+.switch-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #747775;
+  transition: transform 120ms, width 120ms, height 120ms;
+}
+.prototype-switch[aria-checked='true'] .switch-track {
+  background: var(--focus-ring);
+  border-color: var(--focus-ring);
+}
+.prototype-switch[aria-checked='true'] .switch-thumb {
+  width: 14px;
+  height: 14px;
+  transform: translateX(14px);
+  background: #ffffff;
+}
+.prototype-switch[aria-checked='true'] .switch-thumb .icon { color: var(--focus-ring); }
+
+/* Main area: the white rounded panel the prototype lives in */
+.gmail-main {
+  grid-area: main;
+  margin: 0 16px 16px 0;
+  border-radius: var(--radius-large);
+  background: var(--surface);
+  overflow: auto;
+}

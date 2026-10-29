@@ -1,0 +1,103 @@
+/* Colors and sizes in one place, so styling can be changed later without hunting. */
+:root {
+  --page-bg: #f6f8fc;          /* Gmail's light blue-gray page */
+  --surface: #ffffff;
+  --text: #1f1f1f;
+  --text-muted: #444746;
+  --search-bg: #e9eef6;
+  --nav-active-bg: #d3e3fd;
+  --compose-bg: #c2e7ff;
+  --hover-bg: rgba(68, 71, 70, 0.08);
+  --focus-ring: #0b57d0;
+  --tooltip-bg: #3c4043;
+  --tooltip-text: #ffffff;
+
+  --header-height: 64px;
+  --rail-width: 68px;
+  --nav-width: 256px;
+  --radius-large: 16px;
+
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  min-width: 1024px; /* desktop only */
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Material Symbols icon */
+.icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 24px;
+  line-height: 1;
+  font-weight: normal;
+  font-style: normal;
+  user-select: none;
+  flex-shrink: 0;
+}
+.icon.filled { font-variation-settings: 'FILL' 1; }
+
+/* Round icon-only button, like Gmail's header icons */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--text-muted);
+}
+.icon-button:hover { background: var(--hover-bg); }
+
+/* Tooltips. Hovering or focusing shows the control's name, Gmail-style.
+   Clicking a control that isn't part of the prototype shows a gentle note instead. */
+.has-tooltip { position: relative; }
+.tooltip {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.tooltip.align-left { left: 0; transform: none; }
+.tooltip.align-right { left: auto; right: 0; transform: none; }
+.has-tooltip:hover > .tooltip,
+.has-tooltip:focus-visible > .tooltip,
+.tooltip.showing { opacity: 1; }
+.has-tooltip:hover > .tooltip.no-hover:not(.showing),
+.has-tooltip:focus-visible > .tooltip.no-hover:not(.showing) { opacity: 0; }
+
+/* Temporary message shown in the main area until a stage fills it */
+.stage-placeholder {
+  padding: 48px;
+  color: var(--text-muted);
+}
