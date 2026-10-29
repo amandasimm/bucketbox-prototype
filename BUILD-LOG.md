@@ -63,7 +63,7 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: GitHub repo will be public. The Gmail screenshots (real inbox data) stay out of Git via .gitignore and are kept only on Amanda's computer. Reason: privacy.
 - 2026-10-28: Curated emoji grid (32): 👍 ❤️ 🙏 😊 🎉 ✨ 💯 🙌 🤔 🔥 👀 ‼️ 📝 ✅ ⏰ ⭐ ❓ 📅 💰 📦 💼 🏠 📚 🛍️ 🏥 ✈️ 🍽️ 🎬 🐾 💻 🎟️ 🔐. Reason: Amanda's choice. **SYNC TO PRD** (F3)
 - 2026-10-28: The first-time default three emojis are ⭐ 👀 ✅ (replaces the PRD example 👀 ‼️ 📝). Reason: Amanda's choice. **SYNC TO PRD** (F3)
-- 2026-10-28: Mock data source is `mock_inbox_data_v2.numbers` (sheets "Emails" and "Thread"). Claude converts it into the app's data file. If Amanda edits the spreadsheet, she asks Claude to re-import it. Reason: Amanda wrote the content.
+- 2026-10-28: Mock data source is `mock_inbox_data_v2.numbers` (sheets "Emails" and "Thread"). Claude converts it into the app's data file. If Amanda edits the spreadsheet, she asks Claude to re-import it. Reason: Amanda wrote the content. **SUPERSEDED (2026-10-28)** by v3 (see below).
 - 2026-10-28: Emails are listed newest at the top, in the Today list and in buckets (matches Gmail and the spreadsheet). Reason: familiarity. **SYNC TO PRD** (F1, F2: "chronological" made specific)
 - 2026-10-28: Conversations: the 6-message "Cabin weekend" thread counts as 1 email in the unsorted count. When opened, it shows a Gmail-style stack (earlier messages collapsed to one line, newest open at the bottom). Reason: matches Gmail's Conversation view. **SYNC TO PRD** (F1 open: counting unit; §12 #11)
 - 2026-10-28: All Gmail categories (Primary, Promotions, Social, Updates) feed the Today list, as the mock data does. Reason: implied by Amanda's spreadsheet; confirm. **SYNC TO PRD** (F1 open: inbox categories; §12 #11)
@@ -71,6 +71,7 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: "Visible but inert" controls (search, Send, Remind me, Mark as junk, Gmail nav links, settings, Chat, Meet) show a gentle tooltip such as "Not part of this prototype" when clicked. Reason: calm, and participants don't think it's broken. **SYNC TO PRD** (§4 interaction inventory)
 - 2026-10-28: Public repo contents: the PRD, the spreadsheet, sketches, wireframes and screenshots stay out of Git (local only). Reason: thesis research material. Commits use a placeholder email until Stage 3, when it switches to Amanda's GitHub private "noreply" address before the first push. Reason: keeps her NYU email off a public repo.
 - 2026-10-28: Any past day with no unsorted emails shows the past-tense celebration empty state, even a day where no mail arrived (e.g. 2 days ago). Reason: Amanda's choice; keeps the tone rewarding. **SYNC TO PRD** (F6 empty states)
+- 2026-10-28: Assume concept testing happens after 1 PM. Today's emails are spread across the morning, 6:52 AM to 12:42 PM, in the same order as before. They're saved in a new copy, `mock_inbox_data_v3.numbers`, which is now the mock data source (v2 is kept unchanged). Reason: "today" is the real date, so no email should look like it arrived in the future. **SYNC TO PRD** (§4 mock data; concept-testing scheduling)
 
 ---
 
@@ -90,10 +91,10 @@ Each stage: preview → Amanda approves → commit → log update.
 **New, from these answers**
 - ~~Amanda to write the mock emails and emoji list~~: done 2026-10-28 (see Decisions).
 - Final name for the starting bucket ("Priority" is still a placeholder, PRD §12 #1).
-- **Future times on Today:** "today" is the real date, but the sheet's Today emails run from 06:30 to 16:30. A participant testing at 10 AM would see emails "received" later that day. Options: shift all Today times earlier, or drop emails that are later than the current time. Decide before Stage 2.
+- ~~Future times on Today~~: resolved 2026-10-28. Testing is after 1 PM, and Today's emails end at 12:42 PM (see Decisions).
 
-**Mock data at a glance (from `mock_inbox_data_v2.numbers`, 2026-10-28)**
-- Today: 12 unsorted (all unread), including the Cabin weekend thread and the interview request.
+**Mock data at a glance (from `mock_inbox_data_v3.numbers`, 2026-10-28)**
+- Today: 12 unsorted (all unread), 6:52 AM to 12:42 PM, including the Cabin weekend thread and the interview request.
 - Yesterday: 8 unsorted (all read). 2 days ago: none (shows the celebration). 3 days ago: 2 unsorted.
 - Priority bucket: 5 emails from 3–6 days ago (2 unread). Days 4–6 have nothing left unsorted.
 - Attachments are shown as labels only ("3 photos", "Lease renewal.pdf"); there are no real files.
@@ -120,4 +121,5 @@ Each stage: preview → Amanda approves → commit → log update.
 <!-- Bugs or compromises to fix later. Format: - YYYY-MM-DD: Issue. (Plan) -->
 
 - 2026-10-28: Commits use the placeholder email `placeholder@example.invalid`. (Stage 3: reset the author on all commits to Amanda's GitHub noreply address before the first push.)
+- 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)
