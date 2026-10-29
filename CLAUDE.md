@@ -61,6 +61,7 @@ Build decisions already made (stacked rows, real "today" date, no reminder email
 
 ## 6. Terminology
 Use exactly:
+- **Bucketbox**: the product's customer-facing name (also the label on the nav switch)
 - **Today list** (label reads "Today", "Yesterday", or a date like "Sept 12")
 - **Home page** · **bucket** / **buckets** · **Add a Bucket** · **unsorted** (the big count; not "unread")
 - **Move to** (dropdown) · **Move**, **Archive**, **Delete** (bulk buttons) · **Select all**

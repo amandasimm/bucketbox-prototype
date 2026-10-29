@@ -5,8 +5,9 @@ import './GmailShell.css'
 // Gmail's own frame, kept familiar on every screen (PRD §5): header, app rail, left nav.
 // Only Inbox and the prototype switch respond; everything else is look-only.
 
-// Wording for the switch at the bottom of the nav (PRD §5 "open prototype" button). Placeholder.
-const PROTOTYPE_SWITCH_LABEL = 'Daily inbox'
+// Wording for the switch at the bottom of the nav (PRD §5 "open prototype" button).
+// Bucketbox is Amanda's working customer-facing name (BUILD-LOG, 2026-10-29).
+const PROTOTYPE_SWITCH_LABEL = 'Bucketbox'
 
 const navItems = [
   { label: 'Starred', icon: 'star' },

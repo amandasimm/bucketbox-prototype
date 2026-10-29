@@ -15,6 +15,7 @@ _Last updated: 2026-10-28_
 
 - **Built:** Stage 0 (setup and data) and Stage 1 (the Gmail frame).
 - **In progress:** Nothing.
+- **Since Stage 1:** the switch is renamed "Bucketbox", and Gmail's Inbox count is hidden while it's on.
 - **Next:** Stage 2, the home page layout (Today list and bucket grid), look only.
 
 **Approved build plan (2026-10-28)**
@@ -80,6 +81,8 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: The 11-stage build plan is approved (see Current status). Reason: small stages Amanda can preview one at a time.
 - 2026-10-28: "Visible but inert" controls (search, Send, Remind me, Mark as junk, Gmail nav links, settings, Chat, Meet) show a gentle tooltip such as "Not part of this prototype" when clicked. Reason: calm, and participants don't think it's broken. **SYNC TO PRD** (§4 interaction inventory)
 - 2026-10-28: Public repo contents: the PRD, the spreadsheet, sketches, wireframes and screenshots stay out of Git (local only). Reason: thesis research material. Commits use a placeholder email until Stage 3, when it switches to Amanda's GitHub private "noreply" address before the first push. Reason: keeps her NYU email off a public repo.
+- 2026-10-29: The prototype's customer-facing name is **Bucketbox** (Amanda's working name). The switch at the bottom of Gmail's nav reads "Bucketbox". Reason: Amanda's choice. **SYNC TO PRD** (§5 "open prototype" button; product name)
+- 2026-10-29: Gmail's Inbox unread count (in the nav and on the Mail icon) is hidden while Bucketbox is on, and shown in the plain Gmail view. Reason: Bucketbox shows only per-day counts ("Chunk by day" principle). **SYNC TO PRD** (§1 Chunk by day, §5)
 - 2026-10-28: Any past day with no unsorted emails shows the past-tense celebration empty state, even a day where no mail arrived (e.g. 2 days ago). Reason: Amanda's choice; keeps the tone rewarding. **SYNC TO PRD** (F6 empty states)
 - 2026-10-28: Assume concept testing happens after 1 PM. Today's emails are spread across the morning, 6:52 AM to 12:42 PM, in the same order as before. They're saved in a new copy, `mock_inbox_data_v3.numbers`, which is now the mock data source (v2 is kept unchanged). Reason: "today" is the real date, so no email should look like it arrived in the future. **SYNC TO PRD** (§4 mock data; concept-testing scheduling)
 
@@ -101,8 +104,8 @@ Each stage: preview → Amanda approves → commit → log update.
 **New, from these answers**
 - ~~Amanda to write the mock emails and emoji list~~: done 2026-10-28 (see Decisions).
 - Final name for the starting bucket ("Priority" is still a placeholder, PRD §12 #1).
-- **Switch wording:** the "open prototype" switch at the bottom of the nav is labelled "Daily inbox" (a placeholder). What should it say? (PRD §5)
-- **Inbox count in the nav:** Gmail's Inbox shows 12 (unread emails still in the inbox) and the Mail icon has a badge. The PRD principle is "never show a cumulative count." Keep Gmail's count for familiarity, or hide it? (It currently matches Today's 12.)
+- ~~Switch wording~~: resolved 2026-10-29, "Bucketbox" (see Decisions).
+- ~~Inbox count in the nav~~: resolved 2026-10-29, hidden in Bucketbox (see Decisions).
 - **Compose button:** shows "Not part of this prototype" until Stage 7 makes the compose drawer real.
 - ~~Future times on Today~~: resolved 2026-10-28. Testing is after 1 PM, and Today's emails end at 12:42 PM (see Decisions).
 

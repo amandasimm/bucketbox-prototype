@@ -6,8 +6,11 @@ export default function App() {
   // true = the new daily inbox view, false = the plain Gmail view (PRD §5 toggle)
   const [prototypeOn, setPrototypeOn] = useState(true)
 
-  // Gmail's Inbox count: unread emails still in the inbox (bucketed emails have left it)
-  const inboxUnread = mockEmails.filter((email) => email.bucketId === null && email.unread).length
+  // Gmail's Inbox count: unread emails still in the inbox (bucketed emails have left it).
+  // Hidden in Bucketbox, which only shows per-day counts (BUILD-LOG, 2026-10-29).
+  const inboxUnread = prototypeOn
+    ? 0
+    : mockEmails.filter((email) => email.bucketId === null && email.unread).length
 
   return (
     <GmailShell
