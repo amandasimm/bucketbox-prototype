@@ -1,0 +1,17 @@
+# Real Gmail screenshots contain personal inbox data. Never commit them (public repo).
+screenshot-gmail-*.png
+
+# Installed packages and build output (recreated automatically)
+node_modules/
+dist/
+
+# Mac and editor clutter
+.DS_Store
+.vercel/
+
+# Research material stays on Amanda's computer only (public repo).
+# Claude can still read these locally.
+prd-neuroinclusive-inbox-prototype.md
+mock_inbox_data_v2.numbers
+sketch-*.png
+wireframe-*.png
