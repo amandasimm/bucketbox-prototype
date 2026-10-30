@@ -1,4 +1,5 @@
 import { useDndContext, useDroppable } from '@dnd-kit/core'
+import DashedOutline from './DashedOutline.jsx'
 import EmailRow from './EmailRow.jsx'
 import Icon from './Icon.jsx'
 import { newestFirst } from '../utils/dates.js'
@@ -44,9 +45,7 @@ function BucketTile({ bucket, emails }) {
       </article>
       {showTarget && (
         <div className={`drop-target ${isOver ? 'is-over' : ''}`} aria-hidden="true">
-          <svg className="drop-target-outline">
-            <rect x="1" y="1" rx="11" />
-          </svg>
+          <DashedOutline className="drop-target-outline" inset={1.5} radius={10.5} />
           <span className="drop-target-plus">
             <svg width="28" height="28" viewBox="0 0 28 28">
               <path d="M14 2v24M2 14h24" />

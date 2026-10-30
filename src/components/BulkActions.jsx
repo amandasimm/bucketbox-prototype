@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDndContext, useDroppable } from '@dnd-kit/core'
+import DashedOutline from './DashedOutline.jsx'
 import Icon from './Icon.jsx'
 
 // Shown above the buttons the first time someone uses Archive or Delete, instead of a
@@ -26,6 +27,8 @@ function DeleteZone({ mode }) {
   })
   return (
     <div ref={setNodeRef} className={`delete-zone ${isOver ? 'is-over' : ''}`}>
+      {/* Drawn as a shape so its dashes can match the bucket drop targets */}
+      <DashedOutline className="delete-zone-outline" inset={1} radius={23} />
       <span className="delete-zone-circle">
         <Icon name={verb} size={22} />
       </span>
