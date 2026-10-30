@@ -13,13 +13,13 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-30_
 
-- **Built:** Stages 0–7. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 8, emoji tags.
+- **Built:** Stages 0–7 and 9 (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 10, the plain Gmail view.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
 4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
-7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. Emoji tags · 9. Day navigation
+7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. ~~Emoji tags~~ (skipped for now) · 9. Day navigation ✅
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
 
@@ -197,9 +197,29 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-30 (7a and 7b together)
 - Commit: "Stage 7: email view, opened bucket, reply and compose"
 
+### 2026-10-30 — Stage 9: Day navigation
+- Done:
+  - The Today card header reads "‹ Today ›" with a calendar icon, the unsorted count on the right. Labels: "Today", "Yesterday", or a date ("Oct 27"). The next arrow only appears on past days.
+  - The back arrow shows a small blue dot when the day before still has unsorted emails; its label says so ("Previous day. Yesterday has unsorted emails") for hover and screen readers.
+  - The calendar is a small month popover: today outlined, the viewed day filled, future days and next month switched off, a blue dot under days with unsorted emails, earlier months reachable. Escape or a click outside closes it; it opens with focus on the viewed day.
+  - Past days work like Today: their own unsorted list and count, Select all, Move / Archive / Delete, drag and drop, the email drawer. A day with nothing left shows "You cleared this day. Nice work." (placeholder).
+  - Switching days closes any open email and clears checkboxes. Undo still works across days.
+- Revised after Amanda's review (2026-10-30):
+  - Past days use the full month name ("October 27"), also in the back arrow's label.
+  - The header is "‹ Today ›" on the left and the calendar icon in the right corner; the calendar opens leftward from it. The unsorted count moved down to the Select all row, on the right, with its number at 18px (was 22px). On an empty day that row shows just the count.
+  - **Final (same day):** when the day before has unsorted emails, the back arrow gets a soft blue circle (Gmail's selected blue, #d3e3fd, at 60% so the header shows through; full strength on hover), turns blue (#0b57d0, 4.9:1 on the circle, above the 3:1 icons need), and has a small blue dot on its bottom right corner. Earlier version: the back arrow's dot sits directly under the arrow, centered (tried: top right, bottom right; Amanda also saw sketches of a dot beside the arrow, a tinted circle, a ring, a "‹ Yesterday" chip and an underline). The calendar's dots stay under the date numbers (above was tried and reverted).
+  - The calendar's "Choose a day" hover label opens leftward so the card's edge no longer cuts it off.
+  - Dates from another year include the year: "December 31, 2025".
+  - The opened bucket's Select all uses the same row style.
+- Checked: Today (12, dot), Yesterday (8, no dot), 2 days ago (0, cleared message, dot), 3 days ago (2); next arrow; calendar dots on the 27th, 29th and 30th, picking a day, focus, Escape; archiving on yesterday moving to the next email; switching days closes the drawer; undo across days; clean console in a fresh tab; build works.
+- Approved by Amanda: 2026-10-30
+- Commit: "Stage 9: day navigation"
+
 ---
 
 ## Decisions
+- 2026-10-30: Day navigation (Stage 9): "‹ Today ›" on the left of the Today card header and the calendar icon in its right corner; the unsorted count sits on the Select all row (updated same day); the next arrow is hidden on Today (PRD "when applicable"). The back arrow shows a small blue dot (the unread dot's color, #0b57d0) when the previous day still has unsorted emails, with a text label for hover and screen readers, so it isn't color-only. Reason: Amanda's choices. **SYNC TO PRD** (F6, §12 #9)
+- 2026-10-30: Emoji tags (Stage 8) are skipped for now; the build moves on to day navigation. Open questions 20 and 21 wait until tags come back. Bucket emoji (Stage 6) is separate and stays. Reason: Amanda's choice; she may drop tags. **SYNC TO PRD** (F3, §4 v1 scope)
 - 2026-10-30: The Today list is a rounded card in a calm neutral gray-blue (outline #c7d0dd, header #e9eef6, the search bar's color), to give Bucketbox more personality and set it apart from Gmail. The email drawer runs full height and tucks in behind it; below 1280px wide it covers the buckets completely, with undo/redo floating on top. Reason: Amanda's mock. **SYNC TO PRD** (§5 home page, Today email view; F1)
 - 2026-10-30: Home layout responds to the bucket count (**updated same day**: tiles are at least 340px and share the width evenly with Today, rather than a fixed 308px); 1–2 buckets stack in one column and Today expands; 3+ buckets use two columns; Today returns to 420px while an email is open. Collapsing a cleared Today card is not built (Amanda undecided). Reason: Amanda's review (less wasted space). **SYNC TO PRD** (§5 home page)
 - 2026-10-30: Gmail's Inbox count (plain view) counts every unread email not archived or deleted, including bucketed ones, since buckets act like Gmail labels. Mock data moved to v4, with four older emails unread, so the count looks more like a real inbox. Reason: Amanda's review. **SYNC TO PRD** (§5 Gmail integration; mock data)
@@ -316,7 +336,7 @@ Each stage: preview → Amanda approves → commit → log update.
 15. ~~Bucket-to-bucket drag~~: resolved 2026-10-30. Home page: between tiles. Opened bucket: a strip of the other buckets appears while dragging (see Decisions).
 16. ~~Bulk Move on the home page~~: resolved 2026-10-29, allowed (see Decisions).
 17. ~~Interaction inventory~~: resolved 2026-10-30 for the email view (see Decisions). Search and Gmail nav links stay inert.
-18. What does the "missed email" indicator on the back arrow mean? (PRD §12 #9) Build it in v1 or leave it out?
+18. ~~"Missed email" indicator~~: resolved 2026-10-30, a blue dot on the back arrow when the previous day still has unsorted emails (see Decisions).
 19. ~~Delete zone in the opened bucket~~: resolved 2026-10-30, in place of the bucket list's buttons, as in Today (see Decisions).
 20. Tag button: hover-only (PRD) is not keyboard-reachable. Can it also show on keyboard focus?
 21. Stage 8: should Gmail's 😊 reaction button under an open email open the emoji tag picker? (Inert until then.)

@@ -71,6 +71,7 @@ export default function HomePage({
   emails,
   buckets,
   dayOffset,
+  onChangeDay,
   selectedIds,
   onSelect,
   actions,
@@ -134,6 +135,7 @@ export default function HomePage({
             emails={emails}
             buckets={buckets}
             dayOffset={dayOffset}
+            onChangeDay={onChangeDay}
             selectedIds={selectedIds}
             onSelect={onSelect}
             actions={actions}

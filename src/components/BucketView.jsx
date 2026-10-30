@@ -117,16 +117,18 @@ export default function BucketView({
         <section className="bucket-view-list" aria-label={`${bucket.name} emails`}>
           {bucketEmails.length > 0 ? (
             <>
-              <label className="select-all">
-                <input
-                  ref={selectAllRef}
-                  type="checkbox"
-                  className="email-checkbox"
-                  checked={allSelected}
-                  onChange={() => onSelect(allSelected ? [] : listIds)}
-                />
-                {selectedHere.length > 0 ? `${selectedHere.length} selected` : 'Select all'}
-              </label>
+              <div className="list-toolbar">
+                <label className="select-all">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    className="email-checkbox"
+                    checked={allSelected}
+                    onChange={() => onSelect(allSelected ? [] : listIds)}
+                  />
+                  {selectedHere.length > 0 ? `${selectedHere.length} selected` : 'Select all'}
+                </label>
+              </div>
               <ul className="email-list">
                 {bucketEmails.map((email) => (
                   <EmailRow

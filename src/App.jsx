@@ -33,6 +33,15 @@ export default function App() {
   const [openEmailId, setOpenEmailId] = useState(null)
   // Gmail's compose drawer for new messages (PRD §5): null when closed, or { to, subject, body, minimized }
   const [compose, setCompose] = useState(null)
+  // Which day the Today card shows (PRD F6): 0 = today, -1 = yesterday
+  const [dayOffset, setDayOffset] = useState(0)
+
+  // Switching days closes any open email and clears the checkboxes
+  function changeDay(offset) {
+    setDayOffset(offset)
+    setOpenEmailId(null)
+    setSelectedIds([])
+  }
 
   // extras: { action: { label, ids }, sticky } for a toast with a button that stays until the next toast
   function showToast(message, extras = {}) {
@@ -263,7 +272,8 @@ export default function App() {
         <HomePage
           emails={emails}
           buckets={buckets}
-          dayOffset={0}
+          dayOffset={dayOffset}
+          onChangeDay={changeDay}
           selectedIds={selectedIds}
           onSelect={setSelectedIds}
           actions={actions}

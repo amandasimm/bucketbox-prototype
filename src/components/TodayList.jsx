@@ -1,15 +1,8 @@
 import { useEffect, useRef } from 'react'
 import BulkActions from './BulkActions.jsx'
+import DayNav from './DayNav.jsx'
 import EmailRow from './EmailRow.jsx'
-import { formatShortDate, newestFirst } from '../utils/dates.js'
-
-function dayLabel(dayOffset) {
-  if (dayOffset === 0) return 'Today'
-  if (dayOffset === -1) return 'Yesterday'
-  const date = new Date()
-  date.setDate(date.getDate() + dayOffset)
-  return formatShortDate(date)
-}
+import { newestFirst } from '../utils/dates.js'
 
 // State-aware empty messages (PRD F6; wording is a placeholder, PRD §12 #7)
 function emptyMessage(dayOffset, receivedThatDay) {
@@ -27,9 +20,13 @@ export function unsortedFor(emails, dayOffset) {
 
 // The day's unsorted emails, with the unsorted count (PRD F1), Select all,
 // and the Move / Archive / Delete buttons (PRD F7). Clicking an email opens it in the drawer (PRD F5).
-export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
+export default function TodayList({ emails, buckets, dayOffset, onChangeDay, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
   const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
   const unsorted = unsortedFor(emails, dayOffset)
+  // Days that still have unsorted emails, for the back arrow's dot and the calendar
+  const daysWithUnsorted = new Set(
+    emails.filter((email) => email.bucketId === null && email.removedTo === null).map((email) => email.dayOffset),
+  )
   const unsortedIds = unsorted.map((email) => email.id)
   const selectedHere = selectedIds.filter((id) => unsortedIds.includes(id))
 
@@ -47,14 +44,12 @@ export default function TodayList({ emails, buckets, dayOffset, selectedIds, onS
   return (
     <section className="today-list" aria-labelledby="today-heading">
       <header className="today-header">
-        <h2 id="today-heading" className="today-label">{dayLabel(dayOffset)}</h2>
-        <p className="unsorted-count">
-          <span className="unsorted-number">{unsorted.length}</span> unsorted
-        </p>
+        <DayNav dayOffset={dayOffset} onChangeDay={onChangeDay} daysWithUnsorted={daysWithUnsorted} />
       </header>
 
-      {unsorted.length > 0 ? (
-        <>
+      {/* Select all on the left, the day's unsorted count on the right (BUILD-LOG, 2026-10-30) */}
+      <div className="list-toolbar">
+        {unsorted.length > 0 && (
           <label className="select-all">
             <input
               ref={selectAllRef}
@@ -65,6 +60,14 @@ export default function TodayList({ emails, buckets, dayOffset, selectedIds, onS
             />
             {selectedHere.length > 0 ? `${selectedHere.length} selected` : 'Select all'}
           </label>
+        )}
+        <p className="unsorted-count">
+          <span className="unsorted-number">{unsorted.length}</span> unsorted
+        </p>
+      </div>
+
+      {unsorted.length > 0 ? (
+        <>
           <ul className="email-list">
             {unsorted.map((email) => (
               <EmailRow
