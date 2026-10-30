@@ -126,30 +126,44 @@
   margin: 0;
   padding: 0;
 }
+/* Gmail's nav rows: 32px pills rounded at both ends, 8px in from the left like Compose, with
+   16px of padding inside (Amanda's Gmail measurements, 2026-10-30) */
 .gmail-nav-item,
 .prototype-switch {
   display: flex;
   align-items: center;
   gap: 18px;
-  width: 100%;
+  width: calc(100% - 8px);
   height: 32px;
-  padding: 0 12px 0 26px;
-  border-radius: 0 16px 16px 0;
+  margin-left: 8px;
+  padding: 0 16px;
+  border-radius: 16px;
   text-align: left;
 }
 .gmail-nav-item .icon,
 .prototype-switch .icon { font-size: 20px; color: var(--text-muted); }
+/* The logo is a block, so it centers on the same line as the label and the switch */
+.prototype-switch .bucket-logo {
+  display: block;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transform: translateY(-2px); /* the drawing sits low in its box; this centers it by eye */
+}
 .gmail-nav-item:hover,
 .prototype-switch:hover { background: var(--hover-bg); }
-.gmail-nav-item.is-active { background: var(--nav-active-bg); font-weight: 700; }
-.gmail-nav-item.is-active .icon { color: var(--text); }
+/* The active row: Gmail's light blue pill, bold label, and Gmail's active icon color (#202124).
+   While Bucketbox is on, its row is the active one instead of Inbox (BUILD-LOG, 2026-10-30). */
+.gmail-nav-item.is-active,
+.prototype-switch.is-active { background: var(--nav-active-bg); }
+.gmail-nav-item.is-active { font-weight: 700; }
+.gmail-nav-item.is-active .icon,
+.prototype-switch.is-active .bucket-logo { color: #202124; }
 .gmail-nav-label { flex: 1; }
 .gmail-nav-count { font-size: 12px; font-weight: 700; }
 
-/* "Open prototype" switch, pinned to the bottom of the nav */
+/* "Open prototype" switch, just below the Gmail items, with an 8px gap (BUILD-LOG, 2026-10-30) */
 .prototype-switch {
-  margin-top: auto;
-  height: 40px;
+  margin-top: 8px;
   font-weight: 500;
 }
 .switch-track {
@@ -185,11 +199,146 @@
 }
 .prototype-switch[aria-checked='true'] .switch-thumb .icon { color: var(--focus-ring); }
 
+/* Collapsed nav while Bucketbox is on (Amanda's mock, 2026-10-30): just wide enough for
+   Compose, which keeps its size and place; items show icons only, names on hover. */
+.gmail-shell.nav-collapsed { --nav-width: 160px; }
+.nav-collapsed .gmail-nav-label,
+.nav-collapsed .gmail-nav-count {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.nav-collapsed .gmail-nav-item,
+.nav-collapsed .prototype-switch {
+  width: 136px; /* the pill lines up with Compose at both ends */
+}
+.nav-collapsed .prototype-switch { gap: 12px; }
+
 /* Main area: the white rounded panel the prototype lives in */
 .gmail-main {
   grid-area: main;
-  margin: 0 16px 16px 0;
-  border-radius: var(--radius-large);
-  background: var(--surface);
+  /* No margin: the bucket area scrolls right up to the window's edges; the cards keep their
+     16px spacing on the inside (BUILD-LOG, 2026-10-30) */
+  container-type: inline-size; /* lets the home page size its columns from this area's width */
+  /* No white panel: the Today list and buckets are their own cards on Gmail's page color */
   overflow: auto;
+}
+/* The switch sits at the bottom of the screen, so its hover label opens upward */
+.prototype-switch .tooltip {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+/* Gmail's compose drawer, bottom right (PRD §5; screenshot-gmail-compose.png) */
+.compose-drawer {
+  position: fixed;
+  right: 24px;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 500px;
+  height: 520px;
+  max-height: calc(100vh - 80px);
+  border-radius: 12px 12px 0 0;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(60, 64, 67, 0.3), 0 2px 6px rgba(60, 64, 67, 0.15);
+  overflow: hidden;
+}
+.compose-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 40px;
+  padding: 0 8px 0 16px;
+  background: #f2f6fc;
+}
+.compose-header .icon-button,
+.compose-drawer.is-minimized .icon-button {
+  width: 28px;
+  height: 28px;
+}
+.compose-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.compose-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: 16px 16px 8px;
+}
+.compose-error {
+  margin: -6px 0 0;
+  font-size: 12px;
+}
+.compose-body {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 2px;
+  border: none;
+  resize: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text);
+}
+.compose-body:focus { outline: none; }
+.compose-body:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 12px 16px;
+}
+.compose-send { padding: 0 24px; }
+/* Minimized: a bar along the bottom, like Gmail's collapsed draft */
+.compose-drawer.is-minimized {
+  flex-direction: row;
+  align-items: center;
+  width: 280px;
+  height: 40px;
+  padding-right: 8px;
+  background: #f2f6fc;
+}
+.compose-bar {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+/* Undo and redo, at the bottom of the nav (BUILD-LOG, 2026-10-30), 16px apart and centered
+   under Compose (same left edge and width).
+   "Nothing to undo" is a slightly darker gray (#80868b, 3.5:1 on the page color) so the buttons
+   stay visible when there's nothing to undo. */
+.gmail-nav .page-history {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  width: 136px;
+  margin: auto 0 0 8px;
+}
+.page-history .icon-button {
+  width: 40px;
+  height: 40px;
+}
+.page-history .icon-button[aria-disabled='true'] { color: #80868b; }
+/* Near the bottom of the screen, their hover labels open upward */
+.page-history .tooltip {
+  top: auto;
+  bottom: calc(100% + 4px);
 }

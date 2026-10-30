@@ -1,3 +1,6 @@
+import BucketLogo from './BucketLogo.jsx'
+import ComposeDrawer from './ComposeDrawer.jsx'
+import PageHistory from './PageHistory.jsx'
 import Icon from './Icon.jsx'
 import InertButton from './InertButton.jsx'
 import './GmailShell.css'
@@ -82,25 +85,38 @@ function AppRail({ inboxUnread }) {
   )
 }
 
-function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype }) {
+// While Bucketbox is on, the nav collapses to icons (names show on hover and to screen
+// readers) to give Bucketbox more room. Compose keeps its size and place (BUILD-LOG, 2026-10-30).
+function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history }) {
+  const collapsed = prototypeOn
   return (
     <nav className="gmail-nav" aria-label="Mail folders">
-      <InertButton label="Compose" className="compose-button" tooltipAlign="left" nameOnHover={false}>
+      <button type="button" className="compose-button" onClick={onCompose}>
         <Icon name="edit" />
         <span>Compose</span>
-      </InertButton>
+      </button>
 
       <ul className="gmail-nav-list">
         <li>
-          <button type="button" className="gmail-nav-item is-active" aria-current="page">
-            <Icon name="inbox" filled />
+          {/* Inbox is the active item in the plain Gmail view; while Bucketbox is on, Bucketbox is */}
+          <button
+            type="button"
+            className={`gmail-nav-item ${prototypeOn ? '' : 'is-active'} ${collapsed ? 'has-tooltip' : ''}`}
+            aria-current={prototypeOn ? undefined : 'page'}
+          >
+            <Icon name="inbox" filled={!prototypeOn} />
             <span className="gmail-nav-label">Inbox</span>
             {inboxUnread > 0 && <span className="gmail-nav-count">{inboxUnread}</span>}
+            {collapsed && (
+              <span className="tooltip align-left" aria-hidden="true">
+                Inbox
+              </span>
+            )}
           </button>
         </li>
         {navItems.map((item) => (
           <li key={item.label}>
-            <InertButton label={item.label} className="gmail-nav-item" tooltipAlign="left" nameOnHover={false}>
+            <InertButton label={item.label} className="gmail-nav-item" tooltipAlign="left" nameOnHover={collapsed}>
               <Icon name={item.icon} />
               <span className="gmail-nav-label">{item.label}</span>
             </InertButton>
@@ -112,30 +128,42 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype }) {
         type="button"
         role="switch"
         aria-checked={prototypeOn}
-        className="prototype-switch"
+        className={`prototype-switch ${prototypeOn ? 'is-active' : ''} ${collapsed ? 'has-tooltip' : ''}`}
+        aria-label={PROTOTYPE_SWITCH_LABEL}
         onClick={onTogglePrototype}
       >
-        <Icon name="view_day" />
+        <BucketLogo size={20} filled={prototypeOn} />
         <span className="gmail-nav-label">{PROTOTYPE_SWITCH_LABEL}</span>
+        {collapsed && (
+          <span className="tooltip align-left" aria-hidden="true">
+            {PROTOTYPE_SWITCH_LABEL}
+          </span>
+        )}
         <span className="switch-track" aria-hidden="true">
           <span className="switch-thumb">{prototypeOn && <Icon name="check" size={14} />}</span>
         </span>
       </button>
+
+      {/* Undo and redo sit at the bottom of the nav while Bucketbox is on */}
+      {history && <PageHistory history={history} />}
     </nav>
   )
 }
 
-export default function GmailShell({ inboxUnread, prototypeOn, onTogglePrototype, children }) {
+export default function GmailShell({ composeActions, history, inboxUnread, prototypeOn, onTogglePrototype, children }) {
   return (
-    <div className="gmail-shell">
+    <div className={`gmail-shell ${prototypeOn ? 'nav-collapsed' : ''}`}>
       <GmailHeader />
       <AppRail inboxUnread={inboxUnread} />
       <GmailNav
         inboxUnread={inboxUnread}
         prototypeOn={prototypeOn}
         onTogglePrototype={onTogglePrototype}
+        onCompose={composeActions.openNew}
+        history={history}
       />
       <main className="gmail-main">{children}</main>
+      {composeActions.compose && <ComposeDrawer composeActions={composeActions} />}
     </div>
   )
 }

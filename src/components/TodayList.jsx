@@ -18,13 +18,18 @@ function emptyMessage(dayOffset, receivedThatDay) {
   return 'Way to go! Your daily inbox is cleared right now.'
 }
 
-// The day's unsorted emails, with the unsorted count (PRD F1), Select all,
-// and the Move / Archive / Delete buttons (PRD F7).
-export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions, zoneMode }) {
-  const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
-  const unsorted = dayEmails
-    .filter((email) => email.bucketId === null && email.removedTo === null)
+// A day's unsorted emails, newest first (PRD F1)
+export function unsortedFor(emails, dayOffset) {
+  return emails
+    .filter((email) => email.dayOffset === dayOffset && email.bucketId === null && email.removedTo === null)
     .sort(newestFirst)
+}
+
+// The day's unsorted emails, with the unsorted count (PRD F1), Select all,
+// and the Move / Archive / Delete buttons (PRD F7). Clicking an email opens it in the drawer (PRD F5).
+export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
+  const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
+  const unsorted = unsortedFor(emails, dayOffset)
   const unsortedIds = unsorted.map((email) => email.id)
   const selectedHere = selectedIds.filter((id) => unsortedIds.includes(id))
 
@@ -66,7 +71,9 @@ export default function TodayList({ emails, buckets, dayOffset, selectedIds, onS
                 key={email.id}
                 email={email}
                 selected={selectedIds.includes(email.id)}
+                isOpen={email.id === openEmailId}
                 onToggleSelected={() => toggle(email.id)}
+                onOpen={() => onOpen(email.id)}
               />
             ))}
           </ul>
@@ -77,7 +84,7 @@ export default function TodayList({ emails, buckets, dayOffset, selectedIds, onS
         </div>
       )}
 
-      <BulkActions selectedCount={selectedHere.length} buckets={buckets} actions={actions} zoneMode={zoneMode} />
+      <BulkActions selectedCount={selectedHere.length} buckets={buckets} actions={actions} zoneMode={zoneMode} covered={covered} />
     </section>
   )
 }

@@ -11,15 +11,12 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import BucketGrid from './BucketGrid.jsx'
+import BucketView from './BucketView.jsx'
+import EmailDrawer from './EmailDrawer.jsx'
 import Icon from './Icon.jsx'
-import IconButton from './IconButton.jsx'
 import Toast from './Toast.jsx'
-import TodayList from './TodayList.jsx'
+import TodayList, { unsortedFor } from './TodayList.jsx'
 import './HomePage.css'
-
-function lowerFirst(text) {
-  return text.charAt(0).toLowerCase() + text.slice(1)
-}
 
 // With the mouse, the target is whatever is under the pointer. With the keyboard,
 // the chip jumps onto a target, so the target is whatever the chip overlaps.
@@ -78,13 +75,12 @@ export default function HomePage({
   onSelect,
   actions,
   bucketActions,
-  history,
   toast,
   onToastAction,
   zoneMode,
+  emailView,
+  onSendReply,
 }) {
-  const undoLabel = history.canUndo ? `Undo: ${lowerFirst(history.label)}` : 'Nothing to undo'
-  const redoLabel = history.canRedo ? `Redo: ${lowerFirst(history.label)}` : 'Nothing to redo'
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
   const [draggedIds, setDraggedIds] = useState([])
@@ -96,8 +92,9 @@ export default function HomePage({
 
   function onDragStart({ active }) {
     const email = active.data.current.email
-    const draggingChecked = email.bucketId === null && selectedIds.includes(email.id)
-    setDraggedIds(draggingChecked ? selectedIds : [email.id])
+    setDraggedIds(selectedIds.includes(email.id) ? selectedIds : [email.id])
+    // The Today drawer covers the buckets, so it closes when a drag starts
+    if (emailView.view.type === 'home') emailView.close()
   }
 
   function onDragEnd({ over }) {
@@ -106,6 +103,9 @@ export default function HomePage({
   }
 
   const count = draggedIds.length
+  const openBucket = emailView.view.type === 'bucket' && buckets.find((b) => b.id === emailView.view.bucketId)
+  const todayEmails = unsortedFor(emails, dayOffset)
+  const drawerEmail = todayEmails.find((email) => email.id === emailView.openEmailId)
 
   return (
     <DndContext
@@ -118,25 +118,64 @@ export default function HomePage({
       onDragEnd={onDragEnd}
       onDragCancel={() => setDraggedIds([])}
     >
-      <div className="home-page">
-        <div className="page-history" role="group" aria-label="Undo and redo">
-          <IconButton label={undoLabel} disabled={!history.canUndo} onClick={history.undo}>
-            <Icon name="undo" />
-          </IconButton>
-          <IconButton label={redoLabel} disabled={!history.canRedo} onClick={history.redo} tooltipAlign="right">
-            <Icon name="redo" />
-          </IconButton>
+      {/* Bucket tiles never change width. With 1–2 buckets they stack in one column and the
+          Today card takes the rest of the room; with 3 or more there are two columns.
+          While an email is open, Today goes back to its usual width so the drawer has room
+          (BUILD-LOG, 2026-10-30). */}
+      <div
+        className={`home-page ${drawerEmail && !openBucket ? 'drawer-open' : ''}`}
+        data-bucket-cols={buckets.length <= 2 ? 1 : 2}
+        style={{ '--bucket-cols': buckets.length <= 2 ? 1 : 2 }}
+      >
+        {/* The home page stays underneath an opened bucket, just visible around its edges,
+            but can't be clicked or tabbed into until the bucket closes */}
+        <div className="home-layer" inert={openBucket ? true : undefined}>
+          <TodayList
+            emails={emails}
+            buckets={buckets}
+            dayOffset={dayOffset}
+            selectedIds={selectedIds}
+            onSelect={onSelect}
+            actions={actions}
+            zoneMode={zoneMode}
+            openEmailId={drawerEmail?.id}
+            onOpen={emailView.open}
+            covered={Boolean(openBucket)}
+          />
+          <div className="home-right">
+            <BucketGrid
+              buckets={buckets}
+              emails={emails}
+              bucketActions={bucketActions}
+              onOpenBucket={emailView.openBucket}
+              covered={Boolean(openBucket)}
+            />
+            {/* The drawer disappears when no Today emails remain (PRD F5) */}
+            {drawerEmail && !openBucket && (
+              <EmailDrawer
+                email={drawerEmail}
+                listIds={todayEmails.map((email) => email.id)}
+                buckets={buckets}
+                emailView={emailView}
+                onSendReply={onSendReply}
+              />
+            )}
+          </div>
         </div>
-        <TodayList
-          emails={emails}
-          buckets={buckets}
-          dayOffset={dayOffset}
-          selectedIds={selectedIds}
-          onSelect={onSelect}
-          actions={actions}
-          zoneMode={zoneMode}
-        />
-        <BucketGrid buckets={buckets} emails={emails} bucketActions={bucketActions} />
+        {openBucket && (
+          <BucketView
+            bucket={openBucket}
+            emails={emails}
+            buckets={buckets}
+            selectedIds={selectedIds}
+            onSelect={onSelect}
+            actions={actions}
+            zoneMode={zoneMode}
+            emailView={emailView}
+            onSendReply={onSendReply}
+            bucketActions={bucketActions}
+          />
+        )}
         <Toast toast={toast} onAction={onToastAction} />
       </div>
 

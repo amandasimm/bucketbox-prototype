@@ -10,7 +10,7 @@ import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
 // The bucket's 3-dot menu: Edit bucket and Delete bucket (PRD F2)
-function BucketMenu({ bucket, onEdit, onDelete }) {
+export function BucketMenu({ bucket, onEdit, onDelete }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const menuRef = useRef(null)
@@ -81,14 +81,15 @@ function BucketMenu({ bucket, onEdit, onDelete }) {
 // While an email is being dragged, the tile shows Amanda's drop-target design: a dashed
 // outline and light see-through tint in the bucket's own color, a "+" and the bucket name.
 // The tile under the pointer switches to a stronger, solid version (BUILD-LOG, 2026-10-30).
-function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete }) {
+function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onOpenBucket, covered }) {
   const { active } = useDndContext()
   // An email can't be dropped back into the bucket it came from
   const isSource = active?.data.current?.email.bucketId === bucket.id
-  const showTarget = active !== null && !isSource
+  // Tiles behind an opened bucket stay out of the way while dragging inside it
+  const showTarget = active !== null && !isSource && !covered
   const { setNodeRef, isOver } = useDroppable({
     id: `bucket:${bucket.id}`,
-    disabled: isSource,
+    disabled: isSource || covered,
     data: { target: { type: 'bucket', bucket }, label: `${bucket.name} bucket` },
   })
 
@@ -104,21 +105,35 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete 
             className={`bucket-tile ${showTarget ? 'is-drop-target' : ''}`}
             aria-labelledby={`bucket-${bucket.id}`}
           >
+            {/* The whole colored header (dot or emoji, name, count) opens the bucket, but not
+                the 3-dot menu, which sits on top of it (PRD §5 bucket view; BUILD-LOG, 2026-10-30) */}
             <header className="bucket-header">
-              {/* An emoji, if the bucket has one, takes the color dot's place */}
-              {bucket.emoji ? (
-                <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
-              ) : (
-                <span className="bucket-swatch" aria-hidden="true" />
-              )}
-              <h3 id={`bucket-${bucket.id}`} className="bucket-name">{bucket.name}</h3>
-              <span className="bucket-count" aria-label={`${bucketEmails.length} emails`}>
-                {bucketEmails.length}
-              </span>
+              <h3 id={`bucket-${bucket.id}`} className="bucket-header-title">
+                <button
+                  type="button"
+                  className="bucket-header-button"
+                  aria-label={`Open the ${bucket.name} bucket, ${bucketEmails.length} emails`}
+                  onClick={() => onOpenBucket(bucket.id)}
+                >
+                  {/* An emoji, if the bucket has one, takes the color dot's place */}
+                  {bucket.emoji ? (
+                    <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
+                  ) : (
+                    <span className="bucket-swatch" aria-hidden="true" />
+                  )}
+                  <span className="bucket-name">{bucket.name}</span>
+                  <span className="bucket-count">{bucketEmails.length}</span>
+                </button>
+              </h3>
             </header>
             <ul className="email-list bucket-peek">
               {bucketEmails.map((email) => (
-                <EmailRow key={email.id} email={email} inBucket />
+                <EmailRow
+                  key={email.id}
+                  email={email}
+                  variant="tile"
+                  onOpen={() => onOpenBucket(bucket.id, email.id)}
+                />
               ))}
             </ul>
           </article>
@@ -140,11 +155,22 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete 
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions }) {
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, covered = false }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleting, setDeleting] = useState(null) // the bucket whose confirmation is open
   const addButtonRef = useRef(null)
+  const gridRef = useRef(null)
+  const bucketCount = useRef(buckets.length)
+
+  // A newly added bucket scrolls into view, so it doesn't appear cut off below the fold
+  useEffect(() => {
+    if (buckets.length > bucketCount.current) {
+      const tiles = gridRef.current?.querySelectorAll('.bucket-slot:not(.add-bucket-slot)')
+      tiles?.[tiles.length - 1]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+    bucketCount.current = buckets.length
+  }, [buckets.length])
 
   // Wait a moment so the button is visible again before focusing it
   const focusAddButton = () => setTimeout(() => addButtonRef.current?.focus(), 0)
@@ -169,7 +195,7 @@ export default function BucketGrid({ buckets, emails, bucketActions }) {
       {buckets.length === 0 && !adding && (
         <p className="buckets-empty">Make your first bucket to start sorting.</p>
       )}
-      <div className="bucket-grid">
+      <div className="bucket-grid" ref={gridRef}>
         {buckets.map((bucket) => (
           <BucketTile
             key={bucket.id}
@@ -178,6 +204,8 @@ export default function BucketGrid({ buckets, emails, bucketActions }) {
             editing={editingId === bucket.id}
             onEdit={() => setEditingId(bucket.id)}
             onDelete={() => startDelete(bucket)}
+            onOpenBucket={onOpenBucket}
+            covered={covered}
           >
             {editingId === bucket.id && (
               <BucketForm
@@ -211,21 +239,25 @@ export default function BucketGrid({ buckets, emails, bucketActions }) {
             />
           </div>
         )}
+        {/* Sits where the next bucket would go, centered in that space. Hidden while the
+            new-bucket form is open, so there's only one way in at a time. */}
+        {!adding && (
+          <div className="bucket-slot add-bucket-slot">
+            <button
+              ref={addButtonRef}
+              type="button"
+              className="add-bucket-button"
+              onClick={() => {
+                setEditingId(null)
+                setAdding(true)
+              }}
+            >
+              <Icon name="add" size={20} />
+              Add a Bucket
+            </button>
+          </div>
+        )}
       </div>
-      {/* Hidden while the new-bucket form is open, so there's only one way in at a time */}
-      <button
-        ref={addButtonRef}
-        type="button"
-        className="add-bucket-button"
-        hidden={adding}
-        onClick={() => {
-          setEditingId(null)
-          setAdding(true)
-        }}
-      >
-        <Icon name="add" size={20} />
-        Add a Bucket
-      </button>
 
       {deleting && (
         <DeleteBucketDialog

@@ -1,4 +1,4 @@
-// Generated from mock_inbox_data_v3.numbers by scripts/import-mock-data.py.
+// Generated from mock_inbox_data_v4.numbers by scripts/import-mock-data.py.
 // Don't edit by hand: change the spreadsheet and re-run the import.
 // dayOffset: 0 = today, -1 = yesterday. time is 24-hour, in the viewer's time zone.
 
@@ -220,7 +220,7 @@ export const mockEmails = [
     "dayOffset": -1,
     "time": "18:15",
     "bucketId": null,
-    "unread": false,
+    "unread": true,
     "attachments": [],
     "preview": "I'm hosting this weekend! Bring snacks if you can.",
     "body": "I'm hosting this weekend! Bring snacks if you can. I'll have a few board games ready, and let me know if you have any favorites to add."
@@ -262,7 +262,7 @@ export const mockEmails = [
     "dayOffset": -1,
     "time": "15:10",
     "bucketId": null,
-    "unread": false,
+    "unread": true,
     "attachments": [],
     "preview": "It's official, we're all moved in! Here's our new address...",
     "body": "It's official, we're all moved in! Here's our new address: 218 Birchwood Lane, Apt 4C. Come visit once we've unpacked a few more boxes. I'll make coffee."
@@ -290,7 +290,7 @@ export const mockEmails = [
     "dayOffset": -1,
     "time": "13:30",
     "bucketId": null,
-    "unread": false,
+    "unread": true,
     "attachments": [],
     "preview": "Your latest statement is now available to view online.",
     "body": "Your latest statement is now available to view online. Your payment is scheduled for the due date on your account."
@@ -346,7 +346,7 @@ export const mockEmails = [
     "dayOffset": -3,
     "time": "10:15",
     "bucketId": null,
-    "unread": false,
+    "unread": true,
     "attachments": [],
     "preview": "We found a known security vulnerability in a package you depend on. Upgrade immediately...",
     "body": "We found a known security vulnerability in a package you depend on. Upgrade immediately to keep your project secure."

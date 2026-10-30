@@ -13,13 +13,13 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-30_
 
-- **Built:** Stages 0–6. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 7, the email view (drawer, opened bucket, thread stack, compose).
+- **Built:** Stages 0–7. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 8, emoji tags.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
 4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
-7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
+7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
 
@@ -128,9 +128,90 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-30
 - Commit: "Stage 6: create, edit and delete buckets"
 
+### 2026-10-30 — Stage 7a: Reading emails
+- Done:
+  - Clicking a row's text opens the email (only the handle drags). Rows show which email is open.
+  - Today drawer: slides over the buckets from the Today list, stopping 72px short of the right edge. Closes with its X, Escape, or a click outside it (the Today list, undo/redo, toasts and menus don't count as outside). Focus moves to the email's subject when it opens and back to the row when it closes. It disappears when no Today emails are left. A drag closes it, since it covers the buckets.
+  - Email pane (shared): Gmail's toolbar in Gmail's order. Real: Archive, Mark as junk, Delete, Mark as unread, Move to (a list of the other buckets). Inert: Remind me, Add to tasks, Labels, More. Subject, Gmail-style thread (older messages one line each, newest open; click to expand), attachment chips, Reply button (opens compose in 7b).
+  - After Archive, junk, Delete or Move, the pane moves to the next email (or the one before, if it was the last) and marks it read. Toasts: "Archived 1", "Marked as junk", "Deleted 1", "Moved 1 to Priority", "Marked as unread". All undoable.
+  - Mark as unread: in the Today drawer it closes the email; in a bucket the email stays in the pane, unread.
+  - Opened bucket: the bucket name on a tile (or one of its tile rows) opens it. Header: X, dot or emoji, name, count. Left: list with checkboxes, Select all, Move / Archive / Delete. Right: the pane. With nothing chosen, the top email shows but stays unread until clicked into (PRD F5). X returns to the home page. Deleting the open bucket returns home.
+  - Reading an email or sending a reply isn't an undo step; it's also applied to the saved undo snapshots, so a later undo doesn't un-read it.
+- Revised after Amanda's review of 7a (2026-10-30, from her mock):
+  - The Today list is a rounded card like a bucket, in a calm neutral: 2px gray-blue outline (#c7d0dd), 12px corners, header in the search bar's gray-blue (#e9eef6).
+  - The drawer runs the full height of the Today card and tucks in behind it, with a soft shadow along its left edge, as if pulled out from under the list. A 120px strip of the buckets stays visible (room for undo/redo).
+  - Below 1280px wide the drawer covers the buckets completely; undo/redo float on top of its lower right corner.
+  - Email layout: smaller avatar (32px), less left padding, subject starts where the avatar does, message text lines up with the sender name.
+  - A divider under the message, then Gmail's buttons: Reply (real), Forward, reaction 😊 and Share in chat with its "New" badge (all three inert).
+- Revised again (2026-10-30):
+  - No white panel behind the Bucketbox page: the Today card and bucket tiles sit straight on Gmail's page color. The Today card's top lines up with Compose and its left edge with the search bar; the bucket tiles line up with the Today card's top.
+  - "Add a Bucket" now sits in the grid where the next bucket would go, centered in that space.
+  - The opened bucket follows suit: its list is a card outlined in the bucket's color, and the open email is a white card.
+  - The opened bucket is one card: a bucket-colored header across the full width (X, dot or emoji, name, count), then the list and the open email side by side with a divider, outlined in the bucket's color. Undo/redo float over the email's lower right corner. (Replaces the separate list and email cards.)
+  - The whole colored header of a bucket tile (dot or emoji, name, count) opens the bucket; the 3-dot menu still only opens its menu.
+  - Sizes checked against Amanda's Gmail inspect notes: Reply/Forward/Share in chat are 36px tall, 112px minimum width, 14px/500 text, 16px/12px padding; the reaction button is 36px round; Add a Bucket is 36px tall; bucket names on tiles are 14px/500 (Gmail's emphasized label). Headings stay 22px/400. Roboto stays the font: Google Sans isn't freely available, so participants without it would see a different font.
+  - Round 4 (2026-10-30):
+    - Gmail's nav collapses to icons while Bucketbox is on (names show on hover and to screen readers); Compose keeps its size and place. The nav column goes from 256px to 160px, and the search bar and cards shift left with it. The plain Gmail view keeps the full nav.
+    - The Bucketbox switch shows Amanda's placeholder bucket logo instead of a text label (Fluent Emoji "bucket" icon, Microsoft, MIT license; the source file sits in the project folder).
+    - Opened bucket: name, dot/emoji and count on the left like the tile; the 3-dot menu (Edit bucket / Delete bucket) and the X on the right. Edit drops the bucket form down from the header; Delete works as on the home page and closes the view.
+    - The opened bucket now floats over the home page, 16px inside the Today card's edges on every side, with a soft shadow, so the Today card and other buckets just show around it. The home page underneath can't be clicked or tabbed into, and its tiles and delete zone don't act as drop targets.
+    - Reply / Forward / reaction / Share in chat line up with the subject and avatar.
+    - Toolbar icon buttons are fixed 36px circles, so they no longer squeeze into ovals on narrow screens.
+  - Round 5 (2026-10-30):
+    - Bucketbox switch: the bucket logo is centered with the label and switch (it was sitting low), sits closer to the switch when the nav is collapsed, and turns Gmail blue (#0b57d0) when Bucketbox is on.
+    - The collapsed Inbox pill now runs to the end of the Compose button (144px).
+    - Layout responds to the number of buckets. Tiles are a fixed 308px wide. With 1–2 buckets they stack in one column and the Today card takes the rest of the width; with 3 or more there are two columns. While an email is open, Today goes back to 420px so the drawer has room, and widens again when it closes. Below 1280px there's always one bucket column.
+    - Mock data v4: four older emails are now unread (Sam Torres and Alex Rivera from yesterday, Xfinity from yesterday, GitHub from 3 days ago). The plain Gmail Inbox count now counts every unread email not archived or deleted, including bucketed ones: 19 at the start.
+  - Round 6 (2026-10-30):
+    - Undo/redo float on top of the bucket area instead of leaving an empty strip along its bottom; the area scrolls the full height, with room at the end so the last tile can scroll clear of them.
+    - Today and the bucket column now share the width evenly, and tiles are at least 340px wide (was a fixed 308px), so Today is narrower and buckets wider. With 3+ buckets (two columns) Today takes what's left (452px at 1440). At 1200px: Today 478px, tiles 430px.
+    - The bucket logo sits 2px higher, to look centered with the label and switch. Hovering the collapsed switch shows "Bucketbox", like the other nav items.
+  - Round 7 (2026-10-30):
+    - All gaps are 16px: Compose to the Today card, Today to the buckets, and between bucket tiles.
+    - Today gets 3 parts of the width and the bucket column 2 (was an even split); tiles stay at least 340px. At 1440 with 1–2 buckets: Today 718px, tiles 446px.
+    - A newly added bucket scrolls into view, so it never appears cut off. In a single column, Add a Bucket sits right below the last bucket instead of centered in a tile-sized space.
+    - ~~Two bucket columns (3+ buckets) hold down to 1292px wide; below that, one column.~~ SUPERSEDED same day: two bucket columns now never drop to one. Tiles keep 340px and Today 320px while there's room; on narrower screens Today and the tiles shrink together until all three columns are equal (303px each at 1200, 244px at 1024, the prototype's narrowest supported width). The bulk buttons wrap to a second line when the Today card is that narrow. **SUPERSEDED again same day** (Amanda: no wrapping, Today always wider than tiles):
+    - Today is never narrower than 340px, so Move / Archive / Delete always fit on one line, and is always wider than a bucket tile.
+    - Two bucket columns: each tile gets 1/3.3 of the room (up to 340px), so Today is about 30% wider than a tile. Widths with 3+ buckets: 1440 → Today 468 / tiles 340; 1366 → 423 / 325; 1280 → 389 / 299.
+    - When tiles would drop below 290px (below about 1250px wide), buckets go to one column: 1200 → Today 574 / tile 350; 1024 → 468 / 280. No sideways scrolling at any of these widths.
+  - Disabled undo/redo use #80868b (3.5:1 on the page color, up from 3.0:1). Active undo/redo stay #444746 (8.8:1).
+- Checked: drawer open, thread expand, archive/junk/move/mark unread each moving on, undo, inert tooltip, Escape/outside/X close with focus back on the row, switching emails, bucket view default pane unread then read on click, bulk archive in a bucket, delete moving to next, back home, opening from a tile row; clean console; build works.
+
+### 2026-10-30 — Stage 7b: Dragging inside a bucket, compose
+- Done:
+  - Dragging an email inside an opened bucket shows the other buckets as slim pill-shaped drop targets along its header ("Move to" + dot or emoji + name), in the same resting (dashed) and active (solid, stronger tint) styles as the tiles. The delete zone replaces the list's buttons, as on Today. The home page behind stays out of the way (its tiles and delete zone aren't drop targets).
+  - Gmail's compose drawer, bottom right: opened by Reply (To and "Re: subject" filled in, cursor in the message) or by the nav's Compose button (cursor in To). Google-style To and Subject fields, a message area, Send, and Discard. Minimize turns it into a bar at the bottom that keeps the draft; the X closes it.
+  - Send with no recipient shows "Add at least one recipient." Otherwise it closes with a "Message sent" toast; a reply also appears at the end of that email's thread as "me" with the current time. Nothing leaves the browser.
+  - The Compose button in the nav now works (it was inert).
+- Revised after Amanda's review (2026-10-30):
+  - Bucket pills in the header: thinner 1.5px outline with shorter 5/4 dashes (fitted evenly).
+  - Reply now works like Gmail's in-place reply: clicking Reply turns the buttons under the email into a reply box right there (in the Today drawer and the opened bucket), with the recipient ("Taylor Brooks (example.com)"), a message area, Gmail's formatting bar, and Send with its options arrow, attachment tools and trash. Only typing, Send and the trash (discard) work; the rest is inert. Send adds the reply to the thread as "me" with a "Message sent" toast; opening another email clears an unsent reply. Escape while typing doesn't close the drawer.
+  - The compose drawer is now for new messages only (the nav's Compose button).
+  - Fixed: the thread and reply area shared a React key, which logged a warning whenever an email opened.
+  - The reply box's formatting bar and footer scroll sideways when narrow, like Gmail, instead of wrapping.
+  - Your avatar (in the reply box and on your own messages in a thread) is the header's account icon at a lighter stroke (weight 300) in the gray avatar circle, instead of an "M". The icon font now loads weights 300–400 for this.
+  - The message area has no blue focus outline (Gmail has none); the reply card's shadow deepens while you're typing in it.
+  - Undo and redo moved into Gmail's left nav (they kept covering the new-bucket form's Save). **Final layout (same day):** the Bucketbox switch sits just below the Gmail items (8px gap; first tried 16px). While Bucketbox is on, its row is the active nav item, and Inbox looks like the other items (outlined icon, no pill); in the plain Gmail view Inbox is active again. Nav rows match Gmail: 32px pills rounded at both ends, 8px in from the left (lined up with Compose), 16px padding; the active row's icon is Gmail's #202124 (the bucket icon is no longer blue); the bucket icon is 20×20, the same as the other nav icons, and switches to a filled version while Bucketbox is on, like Gmail's active icons (Amanda's own filled drawing, "filled bucket icon.svg"; Claude's first attempt was replaced), and undo/redo sit at the bottom of the nav, 16px from the bottom like the Today card, 16px apart, centered under Compose. Undo's circle lines up with the nav icons above it; redo sits where it was when the pair was centered under Compose (Amanda's final call, same day). Toasts appear just above them, with their left edge lined up with the nav (the Compose button), not the window. They're hidden in the plain Gmail view.
+  - The main area has no outer margin any more, so the bucket area scrolls right to the window's edges; spacing stays inside (16px). The Today card and drawer sit 16px from the bottom; an opened bucket sits 16px inside the cards around it.
+- Checked: drag inside a bucket to another bucket's pill ("Moved 1 to Bills", count 5 → 3 after two moves) and to the delete zone (first-use toast); Today's zone and tiles stay inactive behind the bucket; reply from a bucket and from the Today drawer, minimize and reopen keeping the draft, send adding to the thread, new message with no recipient, discard; clean console in a fresh tab; build works.
+- Approved by Amanda: 2026-10-30 (7a and 7b together)
+- Commit: "Stage 7: email view, opened bucket, reply and compose"
+
 ---
 
 ## Decisions
+- 2026-10-30: The Today list is a rounded card in a calm neutral gray-blue (outline #c7d0dd, header #e9eef6, the search bar's color), to give Bucketbox more personality and set it apart from Gmail. The email drawer runs full height and tucks in behind it; below 1280px wide it covers the buckets completely, with undo/redo floating on top. Reason: Amanda's mock. **SYNC TO PRD** (§5 home page, Today email view; F1)
+- 2026-10-30: Home layout responds to the bucket count (**updated same day**: tiles are at least 340px and share the width evenly with Today, rather than a fixed 308px); 1–2 buckets stack in one column and Today expands; 3+ buckets use two columns; Today returns to 420px while an email is open. Collapsing a cleared Today card is not built (Amanda undecided). Reason: Amanda's review (less wasted space). **SYNC TO PRD** (§5 home page)
+- 2026-10-30: Gmail's Inbox count (plain view) counts every unread email not archived or deleted, including bucketed ones, since buckets act like Gmail labels. Mock data moved to v4, with four older emails unread, so the count looks more like a real inbox. Reason: Amanda's review. **SYNC TO PRD** (§5 Gmail integration; mock data)
+- 2026-10-30: While Bucketbox is on, Gmail's left nav collapses to icons (Compose unchanged) and the switch shows a bucket logo instead of its label. Reason: more room for Bucketbox (Amanda's mock). **SYNC TO PRD** (§5 Gmail integration, "open prototype" button)
+- 2026-10-30: The opened bucket floats over the home page, inset 16px with a soft shadow, so the Today card and other buckets stay just visible behind it (mental model). Its header has the 3-dot menu (edit/delete) and the X on the right. Reason: Amanda's review. **SYNC TO PRD** (§5 bucket view, F2)
+- 2026-10-30: The opened bucket is a single card with a full-width bucket-colored header, so the list and the open email read as one bucket. The whole tile header (except the 3-dot menu) opens a bucket. Buttons and text follow Gmail's measured sizes (36px buttons, 14px/500 labels, 22px/400 headings). Reason: Amanda's review and Gmail inspect notes. **SYNC TO PRD** (§5 bucket view, F2, F5)
+- 2026-10-30: No white panel behind Bucketbox; the Today card, bucket tiles and the opened bucket's list and email are their own cards on Gmail's page color, lined up with Compose (top) and the search bar (left). Add a Bucket sits in the next bucket's spot. Reason: Amanda's review. **SYNC TO PRD** (§5 home page, bucket view; F2 Add a Bucket)
+- 2026-10-30: Under an open email: a divider, then Gmail's Reply (real), Forward, reaction and Share in chat (inert). Gmail's 😊 reaction button stays inert for now; Stage 8 decides whether it opens emoji tags. Reason: Amanda's choice. **SYNC TO PRD** (F5, §4 interaction inventory)
+- 2026-10-30: Email view interaction inventory (PRD §4). **Real:** Archive, Delete, Move to, Mark as unread, Mark as junk (removes the email like Delete, with a "Marked as junk" toast and undo), Reply and the nav's Compose button (open Gmail's compose drawer). **Inert** ("Not part of this prototype"): Remind me, Add to tasks, Labels, More, and the other Gmail toolbar icons. Reason: Amanda's choice. **SYNC TO PRD** (§4 interaction inventory, F5)
+- 2026-10-30: ~~Send closes the compose drawer, shows a "Message sent" toast, and (for a reply) adds the message to the bottom of the thread as "me".~~ **SUPERSEDED (2026-10-30)**: Reply uses Gmail's in-place reply box under the email; its Send adds the message to the thread as "me" with a toast. The compose drawer is only for new messages (Compose button); its Send closes it with a toast. Nothing leaves the browser. Reason: Amanda's choice. **SYNC TO PRD** (F5, §5 compose)
+- 2026-10-30: Inside an opened bucket: the list has checkboxes, Select all and Move / Archive / Delete like Today, plus drag handles. Dragging shows the delete zone in place of the buttons and a slim strip of the other buckets as drop targets along the top. Reason: Amanda's choice. **SYNC TO PRD** (F2, F4, open questions 15 and 19)
+- 2026-10-30: Threads look like Gmail's: older messages collapsed to one line (sender, first words, time), the newest fully open; clicking a collapsed one expands it. Reason: Amanda's choice. **SYNC TO PRD** (F5)
 - 2026-10-30: Stage 6 details (Claude's choices from the approved plan): Gmail's reserved names are blocked as bucket names; deleting a bucket resets undo; the delete toast reads "Deleted the Bills bucket"; Archive is preselected in the delete confirmation; the zero-bucket wording is a placeholder. Adding or editing a bucket shows no toast (the tile itself changes). **SYNC TO PRD** (F2, Flow 1, F8)
 - 2026-10-30: Bucket names are limited to 30 characters. Reason: Amanda's choice; fits the tile and drop target without "…". **SYNC TO PRD** (F2 Name, §12 #2)
 - 2026-10-30: Buckets can have an optional emoji, picked from a full searchable emoji picker (Frimousse library), shown in place of the color dot in the tile header and the Move list (not on the drop target). Reason: Amanda's request, as a fun extra customization independent of emoji tags. This moves "Bucket emoji" from v2 into v1 and adds a library the tech stack didn't list (approved by Amanda in chat). **SYNC TO PRD** (F2, §4 v2 list)
@@ -180,7 +261,8 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-29: The prototype's customer-facing name is **Bucketbox** (Amanda's working name). The switch at the bottom of Gmail's nav reads "Bucketbox". Reason: Amanda's choice. **SYNC TO PRD** (§5 "open prototype" button; product name)
 - 2026-10-29: Gmail's Inbox unread count (in the nav and on the Mail icon) is hidden while Bucketbox is on, and shown in the plain Gmail view. Reason: Bucketbox shows only per-day counts ("Chunk by day" principle). **SYNC TO PRD** (§1 Chunk by day, §5)
 - 2026-10-29: Undo and redo sit in the top-right corner of the Bucketbox panel, level with the "Today" heading, with no toolbar bar. Reason: Amanda found the full-width bar wasted space; the corner position still reads as page-wide. **SYNC TO PRD** (F8 position, §12 #5) **SUPERSEDED (2026-10-29)** by the bottom-right position below.
-- 2026-10-29: Undo and redo sit in the bottom-right corner of the Bucketbox panel, level with the Move / Archive / Delete buttons. Reason: Amanda's choice. **SYNC TO PRD** (F8 position, §12 #5)
+- 2026-10-29: Undo and redo sit in the bottom-right corner of the Bucketbox panel, level with the Move / Archive / Delete buttons. Reason: Amanda's choice. **SYNC TO PRD** (F8 position, §12 #5) **SUPERSEDED (2026-10-30)** by the left-nav position below.
+- 2026-10-30: Undo and redo sit at the bottom of Gmail's left nav, with toasts just above them; the Bucketbox switch moved up to sit just below the Gmail items. Reason: in the bottom-right corner they covered buckets and the new-bucket form (Amanda's review). **SYNC TO PRD** (F8 position, §12 #5)
 - 2026-10-29: Bucket headers get a 15% tint of the bucket color (mixed with white), with the text color unchanged. Reason: tested on 8 colors including black and yellow; the worst case (black) still gives 11.7:1 for the name and 6.7:1 for the gray count (AA needs 4.5:1), so any color a user picks stays readable. 20% would also pass (worst 10.3 / 5.8); 15% stays calmer. The name is always shown, so color is never the only signal. **SYNC TO PRD** (F2 bucket tile)
 - 2026-10-29: Email row text hierarchy. 1 Sender: 15px bold, darkest (#1f1f1f). 2 Time/date: 12px regular, muted gray (#444746), far right. 3 Subject: 14px, dark (#1f1f1f). 4 Preview: 13px regular, lightest gray (#5f6368, 6.2:1 on white), up to 2 lines. Colors follow Gmail's palette. Reason: Amanda's hierarchy spec. **SYNC TO PRD** (F1 row layout)
 - 2026-10-29: Unread vs read. **Unread:** an 8px Gmail-blue dot (#0b57d0, 6.4:1 on white) after the sender name, and the sender and subject bold (#1f1f1f). **Read:** no dot; sender and subject regular weight in a slightly dimmer gray (#444746, 8.7:1 on the read-row tint); Gmail's light row tint stays. Screen readers hear "Unread." before the sender. Reason: Amanda's choice; the dot, weight and tint together mean unread never relies on color alone. **SYNC TO PRD** (F1 "Read/unread state follows Gmail") **SUPERSEDED (2026-10-29)** by the no-fill version below.
@@ -231,12 +313,13 @@ Each stage: preview → Amanda approves → commit → log update.
 14. ~~Bucket reordering~~: resolved 2026-10-30, v2 (see Decisions).
 14a. ~~Unread vs read is subtle~~: resolved 2026-10-29 with a blue dot plus bold/regular weights (see Decisions).
 14b. ~~Drop-target highlight~~: resolved 2026-10-30, Amanda's dashed-outline design (see Decisions).
-15. Bucket-to-bucket drag: ~~on the home page~~ resolved 2026-10-30, allowed between tiles. Still open for Stage 7: inside the expanded bucket view, other buckets are hidden. Is Move to the only path there?
+15. ~~Bucket-to-bucket drag~~: resolved 2026-10-30. Home page: between tiles. Opened bucket: a strip of the other buckets appears while dragging (see Decisions).
 16. ~~Bulk Move on the home page~~: resolved 2026-10-29, allowed (see Decisions).
-17. Which interactions are real, scripted, or visible-but-inert? (PRD §4 interaction inventory.) For example: search, compose/Reply, Remind me, Mark as junk, Gmail nav links (Starred, Trash, All Mail).
+17. ~~Interaction inventory~~: resolved 2026-10-30 for the email view (see Decisions). Search and Gmail nav links stay inert.
 18. What does the "missed email" indicator on the back arrow mean? (PRD §12 #9) Build it in v1 or leave it out?
-19. Delete zone in the expanded bucket view: where does it appear there?
+19. ~~Delete zone in the opened bucket~~: resolved 2026-10-30, in place of the bucket list's buttons, as in Today (see Decisions).
 20. Tag button: hover-only (PRD) is not keyboard-reachable. Can it also show on keyboard focus?
+21. Stage 8: should Gmail's 😊 reaction button under an open email open the emoji tag picker? (Inert until then.)
 
 ---
 
@@ -249,4 +332,6 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
 - ~~2026-10-30: The drop-target bucket name uses the bucket's own color; a light color would be hard to read.~~ Fixed 2026-10-30 in Stage 6: text is always dark.
 - 2026-10-30: While dragging, the chip sits where the row was grabbed, so it can cover the delete zone's label. (Fine for now; revisit in Stage 11 polish.)
+- 2026-10-30: mock_inbox_data_v4.numbers was written by the numbers-parser tool, which hasn't been tested with this version of Numbers. (Amanda to open it in Numbers once to confirm it looks right; v3 is untouched as a backup.)
+- 2026-10-30: When dragging while an email is open with only 1–2 buckets, the drawer closes and the Today card widens mid-drag. (Works; revisit in Stage 11 polish if it feels jumpy.)
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)

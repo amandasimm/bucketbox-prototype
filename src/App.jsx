@@ -6,7 +6,7 @@ import { startingBuckets } from './data/startingSetup.js'
 import { receivedAt } from './utils/dates.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
-// Each email has bucketId (null = unsorted) and removedTo (null, 'archive' or 'trash').
+// Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
 const startingEmails = mockEmails.map((email) => ({
   ...email,
   receivedAt: receivedAt(email.dayOffset, email.time),
@@ -27,6 +27,12 @@ export default function App() {
   // There is no visible setting in v1, and a reload resets it (BUILD-LOG, 2026-10-30).
   const [zoneMode, setZoneMode] = useState('trash') // 'trash' | 'archive'
   const [zoneToastSeen, setZoneToastSeen] = useState(false)
+  // Where the person is (PRD §5): the home page, or one bucket opened up
+  const [view, setView] = useState({ type: 'home' }) // or { type: 'bucket', bucketId }
+  // The email open in the Today drawer or the bucket's pane (null = none chosen)
+  const [openEmailId, setOpenEmailId] = useState(null)
+  // Gmail's compose drawer for new messages (PRD §5): null when closed, or { to, subject, body, minimized }
+  const [compose, setCompose] = useState(null)
 
   // extras: { action: { label, ids }, sticky } for a toast with a button that stays until the next toast
   function showToast(message, extras = {}) {
@@ -40,6 +46,112 @@ export default function App() {
     setSelectedIds([])
     if (toastExtras) showToast(toastExtras.message, toastExtras)
     else showToast(label)
+  }
+
+  // A change that isn't an undoable action (reading an email, sending a reply). It's also
+  // made to the saved undo/redo snapshots, so undoing something later doesn't reverse it.
+  function changeEverywhere(changeEmails) {
+    setEmails(changeEmails(emails))
+    if (lastAction) {
+      setLastAction({ ...lastAction, before: changeEmails(lastAction.before), after: changeEmails(lastAction.after) })
+    }
+  }
+
+  const markRead = (id) => (list) => list.map((email) => (email.id === id ? { ...email, unread: false } : email))
+
+  // An action on the open email (PRD F5, Flow 6). Afterwards the pane moves on to the next
+  // email in the list (or the one before, if this was the last), and that one is read.
+  function paneAction(email, listIds, label, change) {
+    const index = listIds.indexOf(email.id)
+    const nextId = listIds[index + 1] ?? listIds[index - 1] ?? null
+    const after = emails.map((e) => {
+      if (e.id === email.id) return { ...e, ...change }
+      if (e.id === nextId) return { ...e, unread: false }
+      return e
+    })
+    setLastAction({ label, before: emails, after, undone: false })
+    setEmails(after)
+    setSelectedIds([])
+    setOpenEmailId(nextId)
+    showToast(label)
+  }
+
+  // Opening and acting on single emails (PRD F5)
+  const emailView = {
+    view,
+    openEmailId,
+    // Opening an email marks it read
+    open(id) {
+      setOpenEmailId(id)
+      changeEverywhere(markRead(id))
+    },
+    // The bucket's default pane shows the top email but keeps it unread until it's clicked into
+    markRead(id) {
+      changeEverywhere(markRead(id))
+    },
+    close() {
+      setOpenEmailId(null)
+    },
+    openBucket(bucketId, emailId = null) {
+      setView({ type: 'bucket', bucketId })
+      setSelectedIds([])
+      if (emailId) emailView.open(emailId)
+      else setOpenEmailId(null)
+    },
+    closeBucket() {
+      setView({ type: 'home' })
+      setOpenEmailId(null)
+      setSelectedIds([])
+    },
+    archive: (email, listIds) => paneAction(email, listIds, 'Archived 1', { removedTo: 'archive' }),
+    delete: (email, listIds) => paneAction(email, listIds, 'Deleted 1', { removedTo: 'trash' }),
+    junk: (email, listIds) => paneAction(email, listIds, 'Marked as junk', { removedTo: 'junk' }),
+    move: (email, listIds, bucket) => paneAction(email, listIds, `Moved 1 to ${bucket.name}`, { bucketId: bucket.id }),
+    // In the Today drawer this closes the email, like Gmail going back to the inbox.
+    // In a bucket the email stays in the pane, unread until it's clicked into again.
+    markUnread(email) {
+      const after = emails.map((e) => (e.id === email.id ? { ...e, unread: true } : e))
+      setLastAction({ label: 'Marked as unread', before: emails, after, undone: false })
+      setEmails(after)
+      if (view.type === 'home') setOpenEmailId(null)
+      showToast('Marked as unread')
+    },
+  }
+
+  // Reply, from the inline reply box under an open email (Gmail's in-place reply; BUILD-LOG,
+  // 2026-10-30). The message is added to the end of the thread as "me". Nothing is sent
+  // anywhere (CLAUDE.md §5).
+  function sendReply(email, body) {
+    const now = new Date()
+    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    changeEverywhere((list) =>
+      list.map((e) => {
+        if (e.id !== email.id) return e
+        // A one-message email becomes a thread: its original message, then the reply
+        const earlier = e.messages ?? [{ from: e.sender, dayOffset: e.dayOffset, time: e.time, body: e.body }]
+        return { ...e, messages: [...earlier, { from: 'me', dayOffset: 0, time, body }] }
+      }),
+    )
+    showToast('Message sent')
+  }
+
+  // Gmail's compose drawer, for new messages only (PRD §5). Send closes it with a toast and
+  // never sends anything anywhere (CLAUDE.md §5).
+  const composeActions = {
+    compose,
+    openNew() {
+      setCompose({ to: '', subject: '', body: '', minimized: false })
+    },
+    update(fields) {
+      setCompose({ ...compose, ...fields })
+    },
+    close() {
+      setCompose(null)
+    },
+    send() {
+      setCompose(null)
+      showToast('Message sent')
+    },
   }
 
   function applyToSelected(label, change) {
@@ -111,6 +223,7 @@ export default function App() {
       // put emails back into a bucket that no longer exists, so undo starts over.
       setLastAction(null)
       setSelectedIds([])
+      if (view.type === 'bucket' && view.bucketId === bucket.id) emailView.closeBucket()
       showToast(`Deleted the ${bucket.name} bucket`)
     },
   }
@@ -133,14 +246,15 @@ export default function App() {
     },
   }
 
-  // Gmail's Inbox count: unread emails still in the inbox (bucketed or removed emails have left it).
-  // Hidden in Bucketbox, which only shows per-day counts (BUILD-LOG, 2026-10-29).
-  const inboxUnread = prototypeOn
-    ? 0
-    : emails.filter((email) => email.bucketId === null && email.removedTo === null && email.unread).length
+  // Gmail's Inbox count: every unread email still in the inbox, from any day. Buckets work like
+  // Gmail labels, so bucketed emails still count until they're archived or deleted
+  // (BUILD-LOG, 2026-10-30). Hidden in Bucketbox, which only shows per-day counts (2026-10-29).
+  const inboxUnread = prototypeOn ? 0 : emails.filter((email) => email.removedTo === null && email.unread).length
 
   return (
     <GmailShell
+      composeActions={composeActions}
+      history={prototypeOn ? history : null}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
       onTogglePrototype={() => setPrototypeOn((on) => !on)}
@@ -154,10 +268,11 @@ export default function App() {
           onSelect={setSelectedIds}
           actions={actions}
           bucketActions={bucketActions}
-          history={history}
           toast={toast}
           onToastAction={(action) => archiveInstead(action.ids)}
           zoneMode={zoneMode}
+          emailView={emailView}
+          onSendReply={sendReply}
         />
       ) : (
         <div className="stage-placeholder">The plain Gmail view arrives in Stage 10.</div>

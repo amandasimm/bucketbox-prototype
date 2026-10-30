@@ -39,7 +39,7 @@ function DeleteZone({ mode }) {
 
 // Move / Archive / Delete for the selected emails (PRD F7).
 // Always visible, switched off until something is selected.
-export default function BulkActions({ selectedCount, buckets, actions, zoneMode }) {
+export default function BulkActions({ selectedCount, buckets, actions, zoneMode, covered = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [pendingNote, setPendingNote] = useState(null) // 'archive' | 'delete' | null
   const [seenNotes, setSeenNotes] = useState({ archive: false, delete: false })
@@ -48,7 +48,8 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode 
   const noteConfirmRef = useRef(null)
   const moveButtonRef = useRef(null)
 
-  const dragging = useDndContext().active !== null
+  // A list hidden behind an opened bucket doesn't show its own delete zone
+  const dragging = useDndContext().active !== null && !covered
   const nothingSelected = selectedCount === 0
   const showNote = pendingNote !== null && !nothingSelected
 

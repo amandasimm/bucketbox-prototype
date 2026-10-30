@@ -23,3 +23,10 @@ export function formatShortDate(date) {
 export function newestFirst(a, b) {
   return b.receivedAt - a.receivedAt
 }
+
+// Times in an open thread, like Gmail: "10:40 AM" for today, "Oct 29, 6:15 PM" for earlier days
+export function formatMessageTime(date) {
+  const today = new Date()
+  const sameDay = date.toDateString() === today.toDateString()
+  return sameDay ? formatTime(date) : `${formatShortDate(date)}, ${formatTime(date)}`
+}
