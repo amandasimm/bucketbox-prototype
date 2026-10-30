@@ -227,7 +227,9 @@
 /* Buckets */
 .buckets {
   grid-area: buckets;
-  padding: 16px 24px 72px; /* bottom space keeps tiles clear of undo/redo */
+  /* The scrolling area stops above the undo/redo strip, so tiles and forms never slide under them */
+  margin-bottom: 60px;
+  padding: 16px 24px;
   overflow-y: auto;
 }
 .bucket-grid {
@@ -245,21 +247,27 @@
   overflow: hidden;
   background: var(--surface);
 }
+/* Bucket colors (BUILD-LOG, 2026-10-30): the variables come from utils/bucketColors.js.
+   Text on a tile is always dark, never the bucket color. */
 .bucket-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px 12px 24px; /* dot lines up with the start of the row text */
+  box-sizing: border-box;
+  height: 44px; /* fixed, so the 3-dot button can sit centered on the same line */
+  padding: 0 44px 0 14px; /* room on the right for the 3-dot menu */
   border-bottom: 1px solid var(--divider);
-  /* 15% tint of the bucket color. Even a black bucket gives #d9d9d9, which keeps
-     dark text at 11.7:1 and the gray count at 6.9:1 (WCAG AA needs 4.5:1). */
-  background: color-mix(in srgb, var(--bucket-color) 15%, white);
+  /* The color at 20%. Dark text stays above 10:1 on every color in the palette,
+     and the gray count above 6:1. */
+  background: var(--bucket-header);
 }
 .bucket-swatch {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   flex-shrink: 0;
+  background: var(--bucket-color);
+  box-shadow: inset 0 0 0 1px rgba(31, 31, 31, 0.3); /* keeps light colors visible on their own header */
 }
 .bucket-name {
   flex: 1;
@@ -292,6 +300,301 @@
   font-weight: 500;
 }
 .add-bucket-button:hover { background: rgba(11, 87, 208, 0.08); }
+.add-bucket-button[hidden] { display: none; }
+
+/* No buckets left (PRD F2; wording is a placeholder) */
+.buckets-empty {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+/* 3-dot menu, top right of the tile header */
+.bucket-menu-wrap {
+  position: absolute;
+  top: 10px; /* centered on the header line: 2px tile border + (44px - 28px) / 2 */
+  right: 8px;
+  z-index: 3;
+}
+.bucket-menu-wrap .icon-button {
+  width: 28px;
+  height: 28px;
+}
+.bucket-menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 10;
+  min-width: 180px;
+  padding: 8px 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+}
+
+/* Add / Edit bucket form, shown in place of a tile (PRD F2, Flow 1) */
+.bucket-form {
+  gap: 6px;
+  padding: 18px 18px 14px;
+  border: 2px solid var(--bucket-color); /* previews the picked color */
+}
+.bucket-form-label {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+/* Name row: optional emoji button, then the name field */
+.bucket-form-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bucket-form-name-row .text-field { flex: 1; }
+/* Gray round button, same hover fill as the 3-dot button */
+.bucket-emoji-button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+.bucket-emoji-current { font-size: 22px; line-height: 1; }
+/* A bucket's emoji, in place of its color dot */
+.bucket-emoji {
+  width: 18px;
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Emoji picker popover (Frimousse, styled to match Gmail) */
+.emoji-popover {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 8px 8px 4px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3), 0 1px 3px rgba(60, 64, 67, 0.15);
+}
+.emoji-picker {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.emoji-picker-search {
+  height: 40px;
+  margin-bottom: 6px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 20px;
+  background: var(--search-bg);
+  font: inherit;
+  color: var(--text);
+}
+.emoji-picker-search:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
+.emoji-picker-viewport {
+  position: relative;
+  flex: 1;
+  outline: none;
+  overflow-y: auto;
+}
+.emoji-picker-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+.emoji-picker-list { padding-bottom: 6px; user-select: none; }
+.emoji-picker [frimousse-category-header] {
+  padding: 8px 6px 4px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.emoji-picker [frimousse-row] { padding: 0 2px; }
+.emoji-picker [frimousse-emoji] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 22px;
+}
+.emoji-picker [frimousse-emoji][data-active] { background: var(--hover-bg); }
+.emoji-remove { align-self: flex-start; margin-top: 4px; }
+
+/* Google's outlined text field: the label sits inside the box, then moves up onto the
+   outline (small, blue) when the field is focused or filled */
+.text-field { position: relative; }
+.text-field-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #747775;
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+}
+.text-field-input:hover { border-color: var(--text); }
+.text-field-input:focus,
+.text-field-input:focus-visible {
+  outline: none;
+  border: 2px solid var(--focus-ring);
+  padding: 0 13px; /* keeps the text still when the outline thickens */
+}
+.text-field-label {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  padding: 0 4px;
+  background: var(--surface);
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  transition: top 120ms ease, font-size 120ms ease;
+  pointer-events: none;
+}
+.text-field-input:focus + .text-field-label,
+.text-field-input:not(:placeholder-shown) + .text-field-label {
+  top: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.text-field-input:focus + .text-field-label { color: var(--focus-ring); }
+.text-field.has-error .text-field-input { border-color: #b3261e; }
+.text-field.has-error .text-field-label { color: #b3261e; }
+@media (prefers-reduced-motion: reduce) {
+  .text-field-label { transition: none; }
+}
+.bucket-form-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+}
+/* Error text: Gmail's error red (6.5:1 on white), with an icon so it isn't color-only */
+.bucket-form-error {
+  display: flex;
+  gap: 4px;
+  color: #b3261e;
+}
+.bucket-form-count { flex-shrink: 0; }
+.bucket-colors {
+  display: grid;
+  grid-template-columns: repeat(6, 28px);
+  justify-content: space-between;
+  row-gap: 8px;
+  margin: 2px 0 0;
+  padding: 0;
+  border: none;
+}
+.bucket-colors legend { margin-bottom: 6px; }
+.bucket-color-option { cursor: pointer; }
+.bucket-color-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(31, 31, 31, 0.2);
+}
+.bucket-color-option:hover .bucket-color-swatch { box-shadow: inset 0 0 0 1px rgba(31, 31, 31, 0.2), 0 0 0 2px var(--outline); }
+.bucket-color-option input:focus-visible + .visually-hidden + .bucket-color-swatch {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.bucket-form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+}
+.filled-button:disabled {
+  background: rgba(31, 31, 31, 0.12);
+  color: var(--text-disabled);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* Delete-bucket confirmation (PRD F2): one of the two pop-ups the PRD allows */
+.delete-bucket-dialog {
+  width: 420px;
+  padding: 24px 24px 16px;
+  border: none;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3);
+}
+.delete-bucket-dialog::backdrop { background: rgba(31, 31, 31, 0.4); }
+.dialog-title {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 400;
+}
+.dialog-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.dialog-choices legend {
+  margin-bottom: 12px;
+  padding: 0;
+  color: var(--text-muted);
+  line-height: 20px;
+}
+.dialog-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.dialog-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--focus-ring); }
+.dialog-choice-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dialog-select {
+  height: 36px;
+  margin-left: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+}
+.dialog-note {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+}
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
 
 /* Drop targets (Amanda's design, BUILD-LOG 2026-10-30). While an email is being dragged,
    every bucket it can go to shows a light, see-through target so the buckets are as easy
@@ -300,7 +603,7 @@
 .drop-target {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 4; /* above the 3-dot menu */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -310,7 +613,7 @@
   border-radius: 12px; /* same as the tile */
   /* Resting: a 6% tint at 70%, so the tile's emails show through */
   background: color-mix(in srgb, color-mix(in srgb, var(--bucket-color) 6%, white) 70%, transparent);
-  color: var(--bucket-color);
+  color: var(--text);
   pointer-events: none;
 }
 .drop-target-outline {
@@ -322,7 +625,7 @@
 }
 .drop-target-outline rect {
   fill: none;
-  stroke: currentColor;
+  stroke: var(--bucket-color);
   stroke-width: 3; /* dashes (8/6, fitted evenly) come from DashedOutline */
 }
 .drop-target-plus {
@@ -332,7 +635,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--bucket-color) 16%, white); /* solid, so it reads over the emails */
+  background: var(--bucket-header); /* solid, so it reads over the emails */
+  color: var(--text-muted);
 }
 .drop-target-plus svg { width: 18px; height: 18px; }
 .drop-target-plus path {
@@ -363,7 +667,7 @@
 }
 .drop-target.is-over .drop-target-plus {
   background: var(--bucket-color);
-  color: #ffffff;
+  color: var(--bucket-ink); /* white or dark, whichever reads better on the color */
 }
 
 /* Delete zone: only shown while dragging, in place of the bulk buttons (PRD F4) */

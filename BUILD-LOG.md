@@ -13,12 +13,12 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-30_
 
-- **Built:** Stages 0–5. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 6, creating, editing and deleting buckets.
+- **Built:** Stages 0–6. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 7, the email view (drawer, opened bucket, thread stack, compose).
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
-4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete
+4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
@@ -103,9 +103,43 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-30
 - Commit: "Stage 5: drag and drop, delete zone"
 
+### 2026-10-30 — Stage 6: Create, edit and delete buckets
+- Done:
+  - New 12-color palette (6 bold, 6 soft). Priority moved from #1a73e8 to #0b57d0. Tiles get their look from `utils/bucketColors.js`: soft colors fill the whole header and get a slightly deeper outline; text is always dark; the drop-target "+" is white or dark, whichever reads better on the color.
+  - Add a Bucket opens a form tile at the end of the grid (no pop-up): name (30-character limit with a counter), 12 color swatches (a ✓ marks the pick), Cancel and Save. Save stays off until the name is valid. Enter saves, Escape cancels.
+  - Name errors, with an icon and a fix: "You already have a bucket called Bills. Try a different name." and "Gmail already uses Important. Try a different name." (Gmail's reserved names: Inbox, Important, Sent, Drafts, Spam, Trash, Starred, Snoozed, All Mail.)
+  - 3-dot menu on each tile: Edit bucket and Delete bucket. Edit turns the tile into the same form with Delete and Save; Escape or a click outside leaves without saving.
+  - Deleting an empty bucket happens straight away, with a toast. A bucket with emails opens a confirmation: Archive them (preselected), Move them to Trash, or Move them to another bucket (with a list). It says "This can't be undone." Escape or Cancel closes it.
+  - Deleting a bucket resets Undo to "Nothing to undo", so undo can't send emails back into a bucket that no longer exists.
+  - With no buckets, the bucket area shows "Make your first bucket to start sorting." (placeholder) above Add a Bucket.
+- Fixed along the way: the form tile lost its outline; Add a Bucket stayed visible while the form was open; the 3-dot button showed through the drop target.
+- Revised after Amanda's review (2026-10-30):
+  - Undo/redo no longer overlap anything: the bucket area's scrolling stops above their strip.
+  - The name field is a Google-style outlined field: "Bucket name" sits inside the empty box and moves up onto the outline (small, blue) when focused or filled; red when there's an error.
+  - The form's outline previews the picked color.
+  - Every color follows one rule again: the outline is the color itself and the header is the color at 20%. The special handling for soft colors (deeper outline, full-color header) is gone.
+  - The 3-dot button is smaller (28px) and centered on the header line, next to the count.
+  - Opening the form now scrolls the whole form into view, not just the name field.
+  - Colors reordered so each soft color sits under its bold partner (Blue/Sky, Dark pink/Light pink, Orange/Butter, Lime/Mint, Purple/Lavender, Teal/Slate). The "Color" heading is hidden (screen readers still hear it).
+  - New: optional bucket emoji. A round gray button left of the name field (Material "add_reaction" icon, same hover fill as the 3-dot button) opens a searchable emoji picker (Frimousse). The picked emoji replaces the color dot in the tile header and in the Move list. "Remove emoji" brings the dot back. Escape closes only the picker.
+  - Bucket header left padding reduced from 24px to 14px; the dot or emoji no longer lines up with the email text below.
+  - Added the Frimousse library (MIT). Its emoji data (Emojibase 18, MIT, about 790 KB) is copied into `public/emojibase/`, so the picker never loads anything from the internet. Frimousse keeps a copy of that public emoji list in the browser's storage to open faster; nothing a participant types or does is stored.
+- Checked: name validation (empty, reserved, duplicate, 30-character count); add with a color; bucket-to-bucket drag (Priority 5 → 4, Bills 0 → 1, only the other bucket lights up); edit (rename, recolor, click-outside cancels); delete to another bucket, to archive, Escape-cancel, empty-bucket delete; zero-bucket state and "No buckets yet" in Move; soft-color drop target; focus returns to Add a Bucket; clean console; build works.
+- Approved by Amanda: 2026-10-30
+- Commit: "Stage 6: create, edit and delete buckets"
+
 ---
 
 ## Decisions
+- 2026-10-30: Stage 6 details (Claude's choices from the approved plan): Gmail's reserved names are blocked as bucket names; deleting a bucket resets undo; the delete toast reads "Deleted the Bills bucket"; Archive is preselected in the delete confirmation; the zero-bucket wording is a placeholder. Adding or editing a bucket shows no toast (the tile itself changes). **SYNC TO PRD** (F2, Flow 1, F8)
+- 2026-10-30: Bucket names are limited to 30 characters. Reason: Amanda's choice; fits the tile and drop target without "…". **SYNC TO PRD** (F2 Name, §12 #2)
+- 2026-10-30: Buckets can have an optional emoji, picked from a full searchable emoji picker (Frimousse library), shown in place of the color dot in the tile header and the Move list (not on the drop target). Reason: Amanda's request, as a fun extra customization independent of emoji tags. This moves "Bucket emoji" from v2 into v1 and adds a library the tech stack didn't list (approved by Amanda in chat). **SYNC TO PRD** (F2, §4 v2 list)
+- 2026-10-30: Bucket color order: bold row Blue, Dark pink, Orange, Lime, Purple, Teal; soft row Sky, Light pink, Butter, Mint, Lavender, Slate, each under its partner. Reason: Amanda's layout. **SYNC TO PRD** (F2 Color)
+- 2026-10-30: Bucket color rule (after Stage 6 review): for every color, the tile and drop-target outline is the color itself and the header is the color at 20% mixed with white; text stays dark. Reason: Amanda's original styling rule; the soft-color exceptions looked off. **SUPERSEDES** the soft-color handling in the palette entry below. **SYNC TO PRD** (F2 tile)
+- 2026-10-30: Bucket palette: 12 presets, no free picker. **Bold:** Blue #0b57d0 (default), Dark pink #ff4f5e, Orange #ff8d60, Teal #09aba0, Lime #72e721, Purple #8b5cf6. **Soft:** Light pink #ffa3b5, Butter #ffe594, Mint #b4e5cb, Lavender #cbbcff, Sky #a6d3ff, Slate #5f6368 (neutral). Bucket names and other text always use dark text (#1f1f1f), never the bucket color, because most of these colors are too light to be readable as text. ~~Soft colors fill the whole tile header; bold colors and Slate use the 15% tint.~~ (SUPERSEDED 2026-10-30: all colors use a 20% header.) The "+" on drop targets is white on bold colors and dark on soft ones. Green #00bf7d was dropped (too close to Teal and Lime). Reason: Amanda wanted a more fun palette, mixing bold and soft; Claude added Purple, Butter, Lavender and Sky. **SYNC TO PRD** (F2 Color, §12 #3)
+- 2026-10-30: ~~Bucket colors are 12 presets with no free color picker in v1. Each preset is dark enough that the bucket name written in that color passes WCAG AA (4.5:1) on white and on its own 12% tint. Reason: Amanda's choice; nobody can pick an unreadable color. **SYNC TO PRD** (F2 Color, §12 #3)~~ **SUPERSEDED (2026-10-30)** by Amanda's bold + soft palette above.
+- 2026-10-30: Reordering buckets by drag is v2 and left out of v1. New buckets go at the end. Reason: Amanda's choice. **SYNC TO PRD** (F2 Rules, §12 #4)
+- 2026-10-30: Bucket form buttons. Adding a bucket shows Cancel and Save. Editing an existing bucket (3-dot menu) shows Delete and Save; Escape or clicking away leaves without saving. Reason: Amanda's reading of the PRD ("Cancel is to Add as Delete is to Edit"). **SYNC TO PRD** (F2, Flow 1)
 - 2026-10-30: Drop-zone outlines after Stage 5 review: bucket targets use a 3px outline (resting dashed 8/6, active solid; 4px was tried and dropped); the delete zone keeps its 2px gray outline but now uses the same 8/6 dashes (drawn as a shape, since plain CSS dashes can't be sized). Both outlines fit a whole number of dash + gap pairs around their edge, stretched by a fraction of a pixel, so the pattern is even all the way round with no odd dash where it starts and ends. Reason: Amanda's review. **SUPERSEDES** the 2px bucket outline in the entry below. **SYNC TO PRD** (F4)
 - 2026-10-30: Drop targets show on every eligible bucket while dragging, not only on hover. **Resting:** dashed 2px outline (8/6 dashes), a see-through 6% tint (emails show through), a "+" in a light circle and the bucket name at 18px. **Active** (under the pointer): stronger 12% tint, solid outline, "+" filled in the bucket color. Reason: Amanda wanted bucket targets as easy to find as the delete zone, and the first version looked unrefined. **SYNC TO PRD** (F4 drop targets)
 - 2026-10-30: The whole left strip of an email row is the drag handle, not only the icon. Reason: Amanda's request, for tall rows. **SYNC TO PRD** (F1 drag handle)
@@ -189,12 +223,12 @@ Each stage: preview → Amanda approves → commit → log update.
 
 - ~~Qualtrics width~~: resolved 2026-10-29. A new-tab link works in Qualtrics (see Decisions).
 
-9. Bucket name length limit: 50 or 30 characters? (PRD §12 #2)
-10. 12 preset bucket colors: which palette? Is the free color picker in v1? (PRD §12 #3)
+9. ~~Bucket name length limit~~: resolved 2026-10-30, 30 characters (see Decisions).
+10. ~~Bucket palette and color picker~~: resolved 2026-10-30, 12 readable presets, no picker (see Decisions).
 11. ~~Undo/redo position on screen~~: resolved 2026-10-29 (see Decisions). The first proposal, a full-width top bar, was rejected as wasted space.
 12. ~~First-use confirmation~~: resolved 2026-10-29, inline note (see Decisions).
 13. ~~Toast wording~~: resolved 2026-10-29 (see Decisions). Still open: empty-state wording (placeholders from PRD F6 for now), the zero-bucket state, and the undo/redo toast wording ("Undone: Archived 2").
-14. Bucket reordering by drag handle: v1 or v2? (PRD §12 #4)
+14. ~~Bucket reordering~~: resolved 2026-10-30, v2 (see Decisions).
 14a. ~~Unread vs read is subtle~~: resolved 2026-10-29 with a blue dot plus bold/regular weights (see Decisions).
 14b. ~~Drop-target highlight~~: resolved 2026-10-30, Amanda's dashed-outline design (see Decisions).
 15. Bucket-to-bucket drag: ~~on the home page~~ resolved 2026-10-30, allowed between tiles. Still open for Stage 7: inside the expanded bucket view, other buckets are hidden. Is Move to the only path there?
@@ -213,6 +247,6 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: The Gmail logo is an approximation (a red mail icon plus "Gmail"), not Google's official logo file. (Fine for the prototype; revisit if it looks off.)
 - 2026-10-28: Left out of the Gmail frame for simplicity: the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
-- 2026-10-30: The drop-target bucket name uses the bucket's own color. A very light color (like yellow) would be hard to read there. (Handle in Stage 6, when people choose bucket colors.)
+- ~~2026-10-30: The drop-target bucket name uses the bucket's own color; a light color would be hard to read.~~ Fixed 2026-10-30 in Stage 6: text is always dark.
 - 2026-10-30: While dragging, the chip sits where the row was grabbed, so it can cover the delete zone's label. (Fine for now; revisit in Stage 11 polish.)
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)

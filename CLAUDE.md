@@ -40,6 +40,7 @@ Build **v1 only** unless Amanda says otherwise. Full detail: PRD §4 and §6.
 - Undo, redo, and confirmation toasts
 - Gmail reminders preserved (shown at top, excluded from Select all)
 - Gmail chrome (left nav, header, search, compose drawer) kept and familiar
+- Optional bucket emoji, in place of the color dot (moved from v2, decided 2026-10-30)
 - "Open prototype" toggle at the bottom of the left nav, switching to a look-only Gmail-style inbox of the same mock emails (decided 2026-10-28)
 
 Build decisions already made (stacked rows, real "today" date, no reminder emails in the mock data, "Priority" starting with emails) are in `BUILD-LOG.md` → Decisions.
@@ -48,7 +49,7 @@ Build decisions already made (stacked rows, real "today" date, no reminder email
 - Onboarding; hotkeys and type-to-move; filtering (including by tag); edit mode ("Customize"); settings menu
 - Envelope drag animation, sounds, mute, reduced-motion setting
 - Returning a bucketed email to the Today list; Jump to Today; daily/weekly choice; late-arrivals indicator
-- Bucket emoji, bucket-count setting, auto-archive, screen-reader support, hover-only fallbacks
+- Bucket-count setting, auto-archive, screen-reader support, hover-only fallbacks
 - Out entirely: notifications, mobile, compose redesign, AI replies, AI sorting, multiple inboxes
 - Open (v1 or v2?): bucket reordering by drag handle — ask first
 
@@ -113,6 +114,7 @@ Avoid:
 | **In-memory state** (React `useReducer`) | Keeps all data in the browser tab only (nothing saved), and makes undo/redo straightforward. |
 | **Mock data in a JSON/JS file** | One editable file for the fake emails, days, and starting bucket. |
 | **Emoji picker: curated grid, built by hand** | No library. Amanda chooses 24–40 emojis, which is calmer than a full picker. |
+| **Frimousse** (bucket emoji only) | Full searchable emoji picker for a bucket's emoji. Approved 2026-10-30. Its emoji data is self-hosted in `public/emojibase/`, so nothing loads from the internet. |
 
 ## 11. Deployment
 Hosted on **Vercel**, connected to the **GitHub repo** github.com/amandasimm/bucketbox-prototype: every push to `main` redeploys https://bucketbox-prototype-3s9t.vercel.app automatically, so **push only approved stages**. The site must work from a plain link and inside a Qualtrics iframe. **The repo is public**, so `.gitignore` keeps these on Amanda's computer only, never committed or deployed: the `screenshot-gmail-*.png` files (real inbox data), the PRD, the mock data spreadsheet, and the sketches and wireframes. Read them locally as usual.

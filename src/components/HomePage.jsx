@@ -77,6 +77,7 @@ export default function HomePage({
   selectedIds,
   onSelect,
   actions,
+  bucketActions,
   history,
   toast,
   onToastAction,
@@ -135,7 +136,7 @@ export default function HomePage({
           actions={actions}
           zoneMode={zoneMode}
         />
-        <BucketGrid buckets={buckets} emails={emails} />
+        <BucketGrid buckets={buckets} emails={emails} bucketActions={bucketActions} />
         <Toast toast={toast} onAction={onToastAction} />
       </div>
 

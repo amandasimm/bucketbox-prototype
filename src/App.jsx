@@ -17,7 +17,7 @@ export default function App() {
   // true = Bucketbox, false = the plain Gmail view (PRD §5 toggle)
   const [prototypeOn, setPrototypeOn] = useState(true)
   const [emails, setEmails] = useState(startingEmails)
-  const [buckets] = useState(startingBuckets)
+  const [buckets, setBuckets] = useState(startingBuckets)
   const [selectedIds, setSelectedIds] = useState([])
   // Undo covers the last action only (PRD F8): { label, before, after, undone }
   const [lastAction, setLastAction] = useState(null)
@@ -84,6 +84,37 @@ export default function App() {
     drop,
   }
 
+  // Creating, editing and deleting buckets (PRD F2). These aren't covered by undo.
+  const bucketActions = {
+    // emoji is optional (null = show the color dot)
+    add({ name, color, emoji }) {
+      setBuckets([...buckets, { id: `bucket-${Date.now()}`, name, color, emoji }])
+    },
+    edit(id, { name, color, emoji }) {
+      setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
+    },
+    // destination: { type: 'archive' | 'trash' | 'bucket', bucketId }
+    remove(bucket, destination) {
+      const change =
+        destination.type === 'bucket'
+          ? { bucketId: destination.bucketId }
+          : { bucketId: null, removedTo: destination.type }
+      setEmails(
+        emails.map((email) => {
+          if (email.bucketId !== bucket.id) return email
+          // Emails already archived or deleted from this bucket just lose the bucket
+          return email.removedTo === null ? { ...email, ...change } : { ...email, bucketId: null }
+        }),
+      )
+      setBuckets(buckets.filter((b) => b.id !== bucket.id))
+      // Deleting a bucket can't be undone (PRD F2), and undoing an earlier move could
+      // put emails back into a bucket that no longer exists, so undo starts over.
+      setLastAction(null)
+      setSelectedIds([])
+      showToast(`Deleted the ${bucket.name} bucket`)
+    },
+  }
+
   const history = {
     canUndo: lastAction !== null && !lastAction.undone,
     canRedo: lastAction !== null && lastAction.undone,
@@ -122,6 +153,7 @@ export default function App() {
           selectedIds={selectedIds}
           onSelect={setSelectedIds}
           actions={actions}
+          bucketActions={bucketActions}
           history={history}
           toast={toast}
           onToastAction={(action) => archiveInstead(action.ids)}

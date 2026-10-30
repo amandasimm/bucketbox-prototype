@@ -140,7 +140,11 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode 
                 actions.move(bucket)
               }}
             >
-              <span className="bucket-swatch" style={{ background: bucket.color }} aria-hidden="true" />
+              {bucket.emoji ? (
+                <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
+              ) : (
+                <span className="bucket-swatch" style={{ background: bucket.color }} aria-hidden="true" />
+              )}
               {bucket.name}
             </button>
           ))}
