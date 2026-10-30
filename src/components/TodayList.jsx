@@ -20,7 +20,7 @@ function emptyMessage(dayOffset, receivedThatDay) {
 
 // The day's unsorted emails, with the unsorted count (PRD F1), Select all,
 // and the Move / Archive / Delete buttons (PRD F7).
-export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions }) {
+export default function TodayList({ emails, buckets, dayOffset, selectedIds, onSelect, actions, zoneMode }) {
   const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
   const unsorted = dayEmails
     .filter((email) => email.bucketId === null && email.removedTo === null)
@@ -77,7 +77,7 @@ export default function TodayList({ emails, buckets, dayOffset, selectedIds, onS
         </div>
       )}
 
-      <BulkActions selectedCount={selectedHere.length} buckets={buckets} actions={actions} />
+      <BulkActions selectedCount={selectedHere.length} buckets={buckets} actions={actions} zoneMode={zoneMode} />
     </section>
   )
 }

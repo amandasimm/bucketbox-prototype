@@ -11,14 +11,14 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-10-29_
+_Last updated: 2026-10-30_
 
-- **Built:** Stages 0–4. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 5, drag and drop and the delete zone.
+- **Built:** Stages 0–5. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 6, creating, editing and deleting buckets.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
-4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone · 6. Bucket create/edit/delete
+4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete
 7. Email view (drawer, opened bucket, thread stack, compose) · 8. Emoji tags · 9. Day navigation
 10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
@@ -81,9 +81,38 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-29
 - Commit: "Stage 4: selecting, bulk actions, undo/redo, toasts"
 
+### 2026-10-30 — Stage 5: Drag and drop, delete zone
+- Done:
+  - Added the approved drag-and-drop library, dnd-kit (`@dnd-kit/core`).
+  - Drag handles work: always visible on Today rows, on hover (or keyboard focus) on bucket rows. Grabbing a checked Today email brings all the checked ones along.
+  - A blue Gmail-style chip follows the pointer: "Move 1 conversation" / "Move 2 conversations".
+  - Bucket tiles show Amanda's drop-target design while an email is over them. An email can't be dropped back into its own bucket, or onto the Today list.
+  - The delete zone ("Drop here to delete", round trash icon, calm gray) replaces Move / Archive / Delete only while dragging.
+  - First drop on the zone: sticky toast "1 email deleted. Archive instead?". "Archive instead" archives those emails and switches the zone to "Drop here to archive" until reload.
+  - Every drop has a toast and works with undo/redo. After "Archive instead", one undo brings the emails back to the Today list.
+  - Keyboard: Space or Enter on a handle picks the email up, arrow keys jump between buckets and the delete zone, Space drops, Escape cancels. Screen readers hear plain-language updates ("Over Priority bucket.").
+- Checked: keyboard pickup, moving, dropping and cancelling; mouse drag of 2 checked emails into Priority (12 → 10, Priority 5 → 7); bucket email to the zone; its own bucket ignored; Archive instead plus undo; sticky toast still there after 6 s; clean console in a fresh tab; build works.
+- Not checked: bucket-to-bucket with real buckets (there's only one bucket until Stage 6). It uses the same drop code, so I'll check it in Stage 6.
+- Revised after Amanda's review (2026-10-30):
+  - Drop target refined: 18px name (was 36px), 2px stroke with 8/6 dashes (was 4px, 22/22), smaller "+" circle (40px). The "+" and the name sit on solid tinted backgrounds so they stay readable over the emails.
+  - Drop targets now appear on every bucket the email can go to as soon as a drag starts (light, see-through), and the one under the pointer turns active (stronger tint, solid outline, filled "+").
+  - The whole left strip of a row (the handle column, top to bottom) now picks the email up, so tall rows like Aunt Wendy's can be grabbed anywhere below the icon.
+  - First-use zone toast now reads "1 email deleted." with the "Archive instead" button.
+  - Fixed: the drop target sat inside the tile's border, so it was 2px smaller with tighter corners, and email text could peek out at the edge. It now sits on a wrapper around the tile and matches it exactly (same size, 12px corners).
+- Testing note: the browser pane kept reporting the page as hidden, which cancels drags and pauses animation. I worked around this only inside the test scripts; the prototype itself is unchanged.
+- Approved by Amanda: 2026-10-30
+- Commit: "Stage 5: drag and drop, delete zone"
+
 ---
 
 ## Decisions
+- 2026-10-30: Drop targets show on every eligible bucket while dragging, not only on hover. **Resting:** dashed 2px outline (8/6 dashes), a see-through 6% tint (emails show through), a "+" in a light circle and the bucket name at 18px. **Active** (under the pointer): stronger 12% tint, solid outline, "+" filled in the bucket color. Reason: Amanda wanted bucket targets as easy to find as the delete zone, and the first version looked unrefined. **SYNC TO PRD** (F4 drop targets)
+- 2026-10-30: The whole left strip of an email row is the drag handle, not only the icon. Reason: Amanda's request, for tall rows. **SYNC TO PRD** (F1 drag handle)
+- 2026-10-30: The delete zone's first-use toast reads "1 email deleted." plus the "Archive instead" text button (the question was redundant with the button). Reason: Amanda's choice. **SUPERSEDES** the "N emails deleted. Archive instead?" wording below. **SYNC TO PRD** (F4, F8 Toast)
+- 2026-10-30: Drop-target look (Stage 5). While an email is dragged over a bucket, the tile shows Amanda's design: a dashed stroke in the bucket's color, a very light tint of that color, and a "+" in a soft circle above the bucket name, all centered. The emails already in the tile stay faintly visible underneath. Colors come from each bucket's own color, so it works for any bucket. Reason: Amanda's mockup and choice. **SYNC TO PRD** (F4 "outline in the bucket's color") **SUPERSEDED (2026-10-30)** by the always-visible resting/active targets above.
+- 2026-10-30: Drag details (Claude's choices from the approved plan): dragging a checked Today email moves all checked emails; drop toasts reuse the existing wording ("Moved 2 to Priority", "Deleted 1", "Archived 1"); the "Archive instead?" toast stays until the next toast; after Archive instead the toast reads "Archived 1. Dropped emails will be archived from now on." (placeholder wording); the delete zone reads "Drop here to delete" / "Drop here to archive". **SYNC TO PRD** (F4, F8 Toast)
+- 2026-10-30: Emails can be dragged from one bucket tile to another on the home page. Reason: Amanda's choice (matches PRD F4). The expanded bucket view is decided in Stage 7.
+- 2026-10-30: Delete zone first use. The first drop on the delete zone deletes the emails and shows a toast: "N emails deleted. Archive instead?" (wording **SUPERSEDED 2026-10-30**: now "N emails deleted.") with "Archive instead" as a low-emphasis text button. Clicking it moves those emails from Trash to All Mail (archived), and from then on the zone archives instead of deleting. There is no visible setting in v1: the toast is the only way to switch, and it resets when the page reloads. The setting affects the delete zone only, not the Delete button. Reason: Amanda's choice; keeps a settings menu out of v1 (PRD F10 is v2). **SYNC TO PRD** (F4 delete zone, Flow 2, F10 possible settings)
 <!-- Format: - YYYY-MM-DD: Decision. Reason. [SYNC TO PRD] [SUPERSEDED (date) by ...] -->
 
 - 2026-10-28: Build v1 only, using the PRD as the source of truth; PRD text wins over assets. Reason: Amanda's setup instructions.
@@ -166,8 +195,8 @@ Each stage: preview → Amanda approves → commit → log update.
 13. ~~Toast wording~~: resolved 2026-10-29 (see Decisions). Still open: empty-state wording (placeholders from PRD F6 for now), the zero-bucket state, and the undo/redo toast wording ("Undone: Archived 2").
 14. Bucket reordering by drag handle: v1 or v2? (PRD §12 #4)
 14a. ~~Unread vs read is subtle~~: resolved 2026-10-29 with a blue dot plus bold/regular weights (see Decisions).
-14b. **Drop-target highlight (Stage 5):** bucket tiles now always have a stroke in their own color, but PRD F4 uses "an outline in the bucket's color" as the drag highlight. The highlight needs a different signal, e.g. a thicker stroke plus a light tint of the bucket color, or the name growing slightly.
-15. Bucket-to-bucket drag: in the expanded bucket view other buckets are hidden. Is dragging between buckets only from the home-page tiles, or is Move to the path inside a bucket?
+14b. ~~Drop-target highlight~~: resolved 2026-10-30, Amanda's dashed-outline design (see Decisions).
+15. Bucket-to-bucket drag: ~~on the home page~~ resolved 2026-10-30, allowed between tiles. Still open for Stage 7: inside the expanded bucket view, other buckets are hidden. Is Move to the only path there?
 16. ~~Bulk Move on the home page~~: resolved 2026-10-29, allowed (see Decisions).
 17. Which interactions are real, scripted, or visible-but-inert? (PRD §4 interaction inventory.) For example: search, compose/Reply, Remind me, Mark as junk, Gmail nav links (Starred, Trash, All Mail).
 18. What does the "missed email" indicator on the back arrow mean? (PRD §12 #9) Build it in v1 or leave it out?
@@ -183,4 +212,6 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-28: The Gmail logo is an approximation (a red mail icon plus "Gmail"), not Google's official logo file. (Fine for the prototype; revisit if it looks off.)
 - 2026-10-28: Left out of the Gmail frame for simplicity: the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
+- 2026-10-30: The drop-target bucket name uses the bucket's own color. A very light color (like yellow) would be hard to read there. (Handle in Stage 6, when people choose bucket colors.)
+- 2026-10-30: While dragging, the chip sits where the row was grabbed, so it can cover the delete zone's label. (Fine for now; revisit in Stage 11 polish.)
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)

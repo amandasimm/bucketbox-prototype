@@ -1,3 +1,4 @@
+import { useDraggable } from '@dnd-kit/core'
 import Icon from './Icon.jsx'
 import { formatShortDate, formatTime } from '../utils/dates.js'
 
@@ -5,7 +6,12 @@ import { formatShortDate, formatTime } from '../utils/dates.js'
 // sender and time on top, then subject, preview and attachments.
 // Today rows show the time, a checkbox and an always-visible drag handle. Bucket tile rows
 // show the date, no checkbox, and only show the handle on hover (PRD F1, F2; BUILD-LOG, 2026-10-29).
+// The handle starts a drag with the mouse, or with Space / Enter from the keyboard (PRD F4).
 export default function EmailRow({ email, inBucket = false, selected = false, onToggleSelected }) {
+  const { setNodeRef, setActivatorNodeRef, listeners, attributes } = useDraggable({
+    id: email.id,
+    data: { email, label: `email from ${email.sender}` },
+  })
   const threadSize = email.messages?.length ?? 1
   const received = inBucket ? formatShortDate(email.receivedAt) : formatTime(email.receivedAt)
   const rowClasses = [
@@ -16,10 +22,17 @@ export default function EmailRow({ email, inBucket = false, selected = false, on
   ].join(' ')
 
   return (
-    <li className={rowClasses}>
-      <span className="drag-handle" aria-hidden="true">
+    <li className={rowClasses} ref={setNodeRef}>
+      <button
+        type="button"
+        className="drag-handle"
+        ref={setActivatorNodeRef}
+        {...listeners}
+        {...attributes}
+        aria-label={`Drag email from ${email.sender}`}
+      >
         <Icon name="drag_indicator" size={20} />
-      </span>
+      </button>
       {!inBucket && (
         <input
           type="checkbox"

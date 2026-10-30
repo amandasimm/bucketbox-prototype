@@ -73,6 +73,7 @@
   position: relative;
   display: flex;
   gap: 8px;
+  min-height: 61px; /* same height whether it shows the buttons or the delete zone */
   padding: 12px 16px;
   border-top: 1px solid var(--divider);
 }
@@ -107,15 +108,23 @@
 .email-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3); }
 
 .drag-handle {
+  /* The whole left strip of the row, top to bottom, picks the email up, with the
+     icon at the top (BUILD-LOG, 2026-10-30) */
+  align-self: stretch;
   display: flex;
-  align-items: center;
-  height: 21px;
+  align-items: flex-start;
+  margin: -10px 0;
+  padding: 10px 0;
+  border-radius: 4px;
   color: var(--text-muted);
   cursor: grab;
+  touch-action: none;
 }
-/* Bucket rows only show the handle on hover, as in Gmail (PRD F2) */
-.email-row.in-bucket .drag-handle { visibility: hidden; }
-.email-row.in-bucket:hover .drag-handle { visibility: visible; }
+/* Bucket rows only show the handle on hover, as in Gmail (PRD F2).
+   It still appears when reached with the keyboard. */
+.email-row.in-bucket .drag-handle { opacity: 0; }
+.email-row.in-bucket:hover .drag-handle,
+.email-row.in-bucket .drag-handle:focus-visible { opacity: 1; }
 
 .email-checkbox {
   width: 18px;
@@ -226,6 +235,7 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
+.bucket-slot { position: relative; }
 .bucket-tile {
   display: flex;
   flex-direction: column;
@@ -282,6 +292,130 @@
   font-weight: 500;
 }
 .add-bucket-button:hover { background: rgba(11, 87, 208, 0.08); }
+
+/* Drop targets (Amanda's design, BUILD-LOG 2026-10-30). While an email is being dragged,
+   every bucket it can go to shows a light, see-through target so the buckets are as easy
+   to find as the delete zone. The one under the pointer switches to a stronger version. */
+.bucket-tile.is-drop-target { border-color: transparent; }
+.drop-target {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border-radius: 12px; /* same as the tile */
+  /* Resting: a 6% tint at 70%, so the tile's emails show through */
+  background: color-mix(in srgb, color-mix(in srgb, var(--bucket-color) 6%, white) 70%, transparent);
+  color: var(--bucket-color);
+  pointer-events: none;
+}
+.drop-target-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.drop-target-outline rect {
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+.drop-target-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bucket-color) 16%, white); /* solid, so it reads over the emails */
+}
+.drop-target-plus svg { width: 18px; height: 18px; }
+.drop-target-plus path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.5; /* about 2.25px once drawn at 18px */
+  stroke-linecap: round;
+}
+.drop-target-name {
+  max-width: 100%;
+  padding: 2px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bucket-color) 6%, white); /* solid, so it reads over the emails */
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Active: the target under the pointer. A stronger tint covers the emails more,
+   the outline turns solid, and the "+" fills in. */
+.drop-target.is-over {
+  background: color-mix(in srgb, color-mix(in srgb, var(--bucket-color) 12%, white) 94%, transparent);
+}
+.drop-target.is-over .drop-target-outline rect { stroke-dasharray: none; }
+.drop-target.is-over .drop-target-name {
+  background: color-mix(in srgb, var(--bucket-color) 12%, white);
+}
+.drop-target.is-over .drop-target-plus {
+  background: var(--bucket-color);
+  color: #ffffff;
+}
+
+/* Delete zone: only shown while dragging, in place of the bulk buttons (PRD F4) */
+.delete-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: -6px 0;
+  border: 2px dashed var(--outline);
+  border-radius: 24px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.delete-zone-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--hover-bg);
+}
+.delete-zone.is-over {
+  border-color: var(--text-muted);
+  background: var(--hover-bg);
+  color: var(--text);
+}
+.delete-zone.is-over .delete-zone-circle {
+  background: var(--text-muted);
+  color: #ffffff;
+}
+
+/* Gmail's drag chip */
+.drag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 20px 0 16px;
+  border-radius: 4px;
+  background: #1a73e8; /* white text on it: 4.5:1 */
+  color: #ffffff;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  cursor: grabbing;
+}
 
 /* Selected rows: Gmail's light blue */
 .email-row.is-selected { background: var(--selected-row-bg); }
@@ -380,6 +514,21 @@
   box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3);
   animation: toast-in 150ms ease-out;
 }
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Low-emphasis text button on the dark toast (Gmail's light blue, 7.6:1 on the toast) */
+.toast-action {
+  height: 32px;
+  margin: -6px -8px -6px 0;
+  padding: 0 8px;
+  border-radius: 4px;
+  color: #a8c7fa;
+  font-weight: 500;
+}
+.toast-action:hover { background: rgba(168, 199, 250, 0.12); }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }

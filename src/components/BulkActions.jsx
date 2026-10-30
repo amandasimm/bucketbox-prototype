@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useDndContext, useDroppable } from '@dnd-kit/core'
 import Icon from './Icon.jsx'
 
 // Shown above the buttons the first time someone uses Archive or Delete, instead of a
@@ -14,9 +15,28 @@ const FIRST_USE_NOTES = {
   },
 }
 
+// The delete zone (PRD F4): replaces the buttons only while an email is being dragged.
+// It deletes, or archives once someone picks "Archive instead" (BUILD-LOG, 2026-10-30).
+// Calm gray, not red: nothing alarming (PRD §9).
+function DeleteZone({ mode }) {
+  const verb = mode === 'archive' ? 'archive' : 'delete'
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'delete-zone',
+    data: { target: { type: 'zone' }, label: `the ${verb} zone` },
+  })
+  return (
+    <div ref={setNodeRef} className={`delete-zone ${isOver ? 'is-over' : ''}`}>
+      <span className="delete-zone-circle">
+        <Icon name={verb} size={22} />
+      </span>
+      Drop here to {verb}
+    </div>
+  )
+}
+
 // Move / Archive / Delete for the selected emails (PRD F7).
 // Always visible, switched off until something is selected.
-export default function BulkActions({ selectedCount, buckets, actions }) {
+export default function BulkActions({ selectedCount, buckets, actions, zoneMode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [pendingNote, setPendingNote] = useState(null) // 'archive' | 'delete' | null
   const [seenNotes, setSeenNotes] = useState({ archive: false, delete: false })
@@ -25,6 +45,7 @@ export default function BulkActions({ selectedCount, buckets, actions }) {
   const noteConfirmRef = useRef(null)
   const moveButtonRef = useRef(null)
 
+  const dragging = useDndContext().active !== null
   const nothingSelected = selectedCount === 0
   const showNote = pendingNote !== null && !nothingSelected
 
@@ -52,6 +73,21 @@ export default function BulkActions({ selectedCount, buckets, actions }) {
   useEffect(() => {
     if (showNote) noteConfirmRef.current?.focus()
   }, [showNote])
+
+  // A drag closes the Move list and any first-use note
+  useEffect(() => {
+    if (!dragging) return
+    setMenuOpen(false)
+    setPendingNote(null)
+  }, [dragging])
+
+  if (dragging) {
+    return (
+      <footer className="bulk-actions">
+        <DeleteZone mode={zoneMode} />
+      </footer>
+    )
+  }
 
   function startAction(kind) {
     setMenuOpen(false)

@@ -23,17 +23,57 @@ export default function App() {
   const [lastAction, setLastAction] = useState(null)
   // A new key restarts the toast's timer even when the message repeats
   const [toast, setToast] = useState(null)
+  // The delete zone deletes until someone picks "Archive instead" on its first-use toast.
+  // There is no visible setting in v1, and a reload resets it (BUILD-LOG, 2026-10-30).
+  const [zoneMode, setZoneMode] = useState('trash') // 'trash' | 'archive'
+  const [zoneToastSeen, setZoneToastSeen] = useState(false)
 
-  function showToast(message) {
-    setToast({ message, key: Date.now() })
+  // extras: { action: { label, ids }, sticky } for a toast with a button that stays until the next toast
+  function showToast(message, extras = {}) {
+    setToast({ message, key: Date.now(), ...extras })
   }
 
-  function applyToSelected(label, change) {
-    const after = emails.map((email) => (selectedIds.includes(email.id) ? { ...email, ...change } : email))
+  function applyTo(ids, label, change, toastExtras) {
+    const after = emails.map((email) => (ids.includes(email.id) ? { ...email, ...change } : email))
     setLastAction({ label, before: emails, after, undone: false })
     setEmails(after)
     setSelectedIds([])
-    showToast(label)
+    if (toastExtras) showToast(toastExtras.message, toastExtras)
+    else showToast(label)
+  }
+
+  function applyToSelected(label, change) {
+    applyTo(selectedIds, label, change)
+  }
+
+  // A drop from drag and drop (PRD F4): onto a bucket, or onto the delete zone
+  function drop(ids, target) {
+    const count = ids.length
+    if (target.type === 'bucket') {
+      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id })
+    } else if (zoneMode === 'archive') {
+      applyTo(ids, `Archived ${count}`, { removedTo: 'archive' })
+    } else if (!zoneToastSeen) {
+      setZoneToastSeen(true)
+      applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' }, {
+        message: `${count} ${count === 1 ? 'email' : 'emails'} deleted.`,
+        action: { label: 'Archive instead', ids },
+        sticky: true,
+      })
+    } else {
+      applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' })
+    }
+  }
+
+  // "Archive instead" on the delete zone's first-use toast: the dropped emails go to All Mail,
+  // and the zone archives from now on. It replaces the drop as the last action, so one undo
+  // still brings the emails back to the Today list.
+  function archiveInstead(ids) {
+    const after = emails.map((email) => (ids.includes(email.id) ? { ...email, removedTo: 'archive' } : email))
+    setLastAction({ ...lastAction, label: `Archived ${ids.length}`, after })
+    setEmails(after)
+    setZoneMode('archive')
+    showToast(`Archived ${ids.length}. Dropped emails will be archived from now on.`)
   }
 
   // Toast wording (BUILD-LOG, 2026-10-29): "Archived 3", "Deleted 3", "Moved 3 to Priority"
@@ -41,6 +81,7 @@ export default function App() {
     archive: () => applyToSelected(`Archived ${selectedIds.length}`, { removedTo: 'archive' }),
     delete: () => applyToSelected(`Deleted ${selectedIds.length}`, { removedTo: 'trash' }),
     move: (bucket) => applyToSelected(`Moved ${selectedIds.length} to ${bucket.name}`, { bucketId: bucket.id }),
+    drop,
   }
 
   const history = {
@@ -83,6 +124,8 @@ export default function App() {
           actions={actions}
           history={history}
           toast={toast}
+          onToastAction={(action) => archiveInstead(action.ids)}
+          zoneMode={zoneMode}
         />
       ) : (
         <div className="stage-placeholder">The plain Gmail view arrives in Stage 10.</div>
