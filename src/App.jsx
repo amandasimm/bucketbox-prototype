@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import GmailInbox from './components/GmailInbox.jsx'
 import GmailShell from './components/GmailShell.jsx'
 import HomePage from './components/HomePage.jsx'
 import { mockEmails } from './data/mockEmails.js'
@@ -263,6 +264,7 @@ export default function App() {
   return (
     <GmailShell
       composeActions={composeActions}
+      buckets={buckets}
       history={prototypeOn ? history : null}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
@@ -285,7 +287,7 @@ export default function App() {
           onSendReply={sendReply}
         />
       ) : (
-        <div className="stage-placeholder">The plain Gmail view arrives in Stage 10.</div>
+        <GmailInbox emails={emails} buckets={buckets} />
       )}
     </GmailShell>
   )

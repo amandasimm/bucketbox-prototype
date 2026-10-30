@@ -87,7 +87,7 @@ function AppRail({ inboxUnread }) {
 
 // While Bucketbox is on, the nav collapses to icons (names show on hover and to screen
 // readers) to give Bucketbox more room. Compose keeps its size and place (BUILD-LOG, 2026-10-30).
-function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history }) {
+function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history, buckets }) {
   const collapsed = prototypeOn
   return (
     <nav className="gmail-nav" aria-label="Mail folders">
@@ -124,6 +124,30 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
         ))}
       </ul>
 
+      {/* In the plain Gmail view, buckets appear as Gmail labels (look-only; BUILD-LOG, 2026-10-30) */}
+      {!prototypeOn && (
+        <div className="gmail-labels">
+          <div className="gmail-labels-header">
+            <h2 className="gmail-labels-title">Labels</h2>
+            <InertButton label="Create new label" className="icon-button" tooltipAlign="right">
+              <Icon name="add" size={20} />
+            </InertButton>
+          </div>
+          <ul className="gmail-nav-list">
+            {buckets.map((bucket) => (
+              <li key={bucket.id}>
+                <InertButton label={bucket.name} className="gmail-nav-item" tooltipAlign="left" nameOnHover={false}>
+                  <span className="gmail-label-icon" style={{ color: bucket.color }}>
+                    <Icon name="label" filled />
+                  </span>
+                  <span className="gmail-nav-label">{bucket.name}</span>
+                </InertButton>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <button
         type="button"
         role="switch"
@@ -150,7 +174,7 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
   )
 }
 
-export default function GmailShell({ composeActions, history, inboxUnread, prototypeOn, onTogglePrototype, children }) {
+export default function GmailShell({ composeActions, buckets, history, inboxUnread, prototypeOn, onTogglePrototype, children }) {
   return (
     <div className={`gmail-shell ${prototypeOn ? 'nav-collapsed' : ''}`}>
       <GmailHeader />
@@ -161,6 +185,7 @@ export default function GmailShell({ composeActions, history, inboxUnread, proto
         onTogglePrototype={onTogglePrototype}
         onCompose={composeActions.openNew}
         history={history}
+        buckets={buckets}
       />
       <main className="gmail-main">{children}</main>
       {composeActions.compose && <ComposeDrawer composeActions={composeActions} />}

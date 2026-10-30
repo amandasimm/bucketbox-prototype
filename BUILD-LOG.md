@@ -13,14 +13,14 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-30_
 
-- **Built:** Stages 0–7 and 9 (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 10, the plain Gmail view.
+- **Built:** Stages 0–7, 9 and 10 (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** Stage 11, polish, accessibility check and a final click-through.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
 4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
 7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. ~~Emoji tags~~ (skipped for now) · 9. Day navigation ✅
-10. Plain Gmail view toggle · 11. Polish, accessibility check, final click-through
+10. Plain Gmail view toggle ✅ · 11. Polish, accessibility check, final click-through
 Each stage: preview → Amanda approves → commit → log update.
 
 ---
@@ -215,9 +215,20 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-30
 - Commit: "Stage 9: day navigation"
 
+### 2026-10-30 — Stage 10: Plain Gmail view
+- Done:
+  - With Bucketbox switched off, the main area shows Gmail's inbox in a white rounded panel: a toolbar (select, refresh, more, "1–N of N", newer/older) and Gmail's one-line rows (checkbox, star, sender with thread count, subject - preview, time for today or date for earlier days, attachment chips under the row). Unread rows are bold on white; read rows regular on Gmail's light tint; rows get Gmail's hover shadow.
+  - It lists every email not archived or deleted, from every day, newest first (27 at the start), and reflects what was done in Bucketbox. Bucketed emails show a label chip with the bucket's name in its color.
+  - Look-only: rows, checkboxes, stars and toolbar icons show "Not part of this prototype". Compose still works. Switching back returns to Bucketbox exactly as it was.
+  - The nav shows a "Labels" section listing the buckets with their colors (look-only); undo/redo are hidden in this view.
+- Checked: archive and move in Bucketbox, then switch off (26 rows, Netflix with a Priority chip, count 18); look-only note on a row; switching back keeps Bucketbox's state; fresh tab at 1366×768 (27 rows, count 19, the list scrolls, no sideways scrolling, Compose opens); clean console; build works.
+- Approved by Amanda: 2026-10-30
+- Commit: "Stage 10: plain Gmail view"
+
 ---
 
 ## Decisions
+- 2026-10-30: Plain Gmail view (Stage 10), look-only: every email not archived or deleted, from every day, newest first, in Gmail's one-line rows; bucketed emails show their bucket as a Gmail-style label chip. Rows, checkboxes and toolbar icons show "Not part of this prototype". It reflects whatever was done in Bucketbox. The nav gets a "Labels" section listing the buckets with their colors (look-only). Reason: Amanda's choices; a familiar comparison point that hints buckets are Gmail labels. **SYNC TO PRD** (§5 open prototype toggle)
 - 2026-10-30: Day navigation (Stage 9): "‹ Today ›" on the left of the Today card header and the calendar icon in its right corner; the unsorted count sits on the Select all row (updated same day); the next arrow is hidden on Today (PRD "when applicable"). The back arrow shows a small blue dot (the unread dot's color, #0b57d0) when the previous day still has unsorted emails, with a text label for hover and screen readers, so it isn't color-only. Reason: Amanda's choices. **SYNC TO PRD** (F6, §12 #9)
 - 2026-10-30: Emoji tags (Stage 8) are skipped for now; the build moves on to day navigation. Open questions 20 and 21 wait until tags come back. Bucket emoji (Stage 6) is separate and stays. Reason: Amanda's choice; she may drop tags. **SYNC TO PRD** (F3, §4 v1 scope)
 - 2026-10-30: The Today list is a rounded card in a calm neutral gray-blue (outline #c7d0dd, header #e9eef6, the search bar's color), to give Bucketbox more personality and set it apart from Gmail. The email drawer runs full height and tucks in behind it; below 1280px wide it covers the buckets completely, with undo/redo floating on top. Reason: Amanda's mock. **SYNC TO PRD** (§5 home page, Today email view; F1)

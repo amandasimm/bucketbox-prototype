@@ -342,3 +342,23 @@
   top: auto;
   bottom: calc(100% + 4px);
 }
+
+/* Gmail's Labels section (plain view only): buckets listed as labels, look-only */
+.gmail-labels { margin-top: 16px; }
+.gmail-labels-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 0 24px;
+}
+.gmail-labels-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.gmail-labels-header .icon-button {
+  width: 40px;
+  height: 40px;
+}
+.gmail-label-icon { display: flex; }
+.gmail-nav-item .gmail-label-icon .icon { color: inherit; } /* the bucket's color */

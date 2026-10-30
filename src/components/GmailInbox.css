@@ -1,0 +1,132 @@
+/* Gmail's plain inbox (Stage 10): a white rounded panel with Gmail's one-line rows,
+   following screenshot-gmail-default-inbox.png */
+.gmail-inbox {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 16px);
+  margin: 0 16px 16px 0;
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.gmail-inbox-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 8px 0 12px;
+}
+.gmail-inbox-toolbar .icon-button {
+  width: 40px;
+  height: 40px;
+}
+.gmail-inbox-select {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 4px 0 10px;
+  border-radius: 20px;
+  color: var(--text-muted);
+}
+.gmail-inbox-select:hover { background: var(--hover-bg); }
+.gmail-inbox-range {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.gmail-inbox-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.gmail-inbox-list > li { border-bottom: 1px solid #f1f3f4; }
+/* One row. Unread: white and bold. Read: Gmail's light tint, regular weight. */
+.gmail-inbox-row {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0 16px 0 14px;
+  text-align: left;
+  font-size: 14px;
+}
+.gmail-inbox-row.is-read { background: #f2f6fc; }
+.gmail-inbox-row.is-unread { background: var(--surface); }
+.gmail-inbox-row:hover {
+  z-index: 1;
+  box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+.gmail-inbox-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  min-width: 0;
+}
+.gmail-inbox-row .icon { color: #c4c7c5; }
+.gmail-inbox-sender {
+  flex-shrink: 0;
+  width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.gmail-inbox-count {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-meta);
+}
+.gmail-inbox-text {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.gmail-inbox-subject {
+  flex-shrink: 0;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.gmail-inbox-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-preview);
+}
+/* A bucket shown as a Gmail label chip, in the bucket's color */
+.gmail-inbox-label {
+  flex-shrink: 0;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.gmail-inbox-date {
+  flex-shrink: 0;
+  width: 64px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.is-unread .gmail-inbox-sender,
+.is-unread .gmail-inbox-subject,
+.is-unread .gmail-inbox-date { font-weight: 700; color: var(--text); }
+.gmail-inbox-attachments {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 10px 288px; /* lines up under the subject */
+}
+/* The look-only note appears just under the row */
+.gmail-inbox-row .tooltip { left: 50%; }
