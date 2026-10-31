@@ -167,7 +167,8 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
   useEffect(() => {
     if (buckets.length > bucketCount.current) {
       const tiles = gridRef.current?.querySelectorAll('.bucket-slot:not(.add-bucket-slot)')
-      tiles?.[tiles.length - 1]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      tiles?.[tiles.length - 1]?.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' })
     }
     bucketCount.current = buckets.length
   }, [buckets.length])

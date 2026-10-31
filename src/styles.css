@@ -116,8 +116,14 @@ button {
 .has-tooltip:hover > .tooltip.no-hover:not(.showing),
 .has-tooltip:focus-visible > .tooltip.no-hover:not(.showing) { opacity: 0; }
 
-/* Temporary message shown in the main area until a stage fills it */
-.stage-placeholder {
-  padding: 48px;
-  color: var(--text-muted);
+/* For people whose computer asks for less motion: no slides, fades or smooth scrolling
+   anywhere (WCAG 2.3.3; BUILD-LOG, 2026-10-31) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

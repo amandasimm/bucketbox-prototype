@@ -11,17 +11,57 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-10-30_
+_Last updated: 2026-10-31_
 
-- **Built:** Stages 0–7, 9 and 10 (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** Stage 11, polish, accessibility check and a final click-through.
+- **Built:** Stages 0–7 and 9–11, the full approved plan (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** placeholder wording decisions (see Open questions) and updating the PRD from the SYNC TO PRD summary below.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
 4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
 7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. ~~Emoji tags~~ (skipped for now) · 9. Day navigation ✅
-10. Plain Gmail view toggle ✅ · 11. Polish, accessibility check, final click-through
+10. Plain Gmail view toggle ✅ · 11. Polish, accessibility check, final click-through ✅
 Each stage: preview → Amanda approves → commit → log update.
+
+---
+
+## SYNC TO PRD summary (current as of 2026-10-31)
+<!-- The decisions below change or add to the PRD. Full wording and reasons are in Decisions; superseded ones are left out here. -->
+
+**Product and scope**
+- Name: **Bucketbox**. Gmail's left nav switch turns it on and off; it sits just below the Gmail items and shows a bucket logo (outline; filled when on).
+- Emoji tags (F3) are skipped for now. Bucket emoji (optional, from a full searchable picker) moved from v2 into v1.
+- No reminder emails in the mock data, so reminder behavior (F9) isn't shown.
+- Mock data: generic personal inbox, real "today" date, Today's emails 6:52 AM–12:42 PM (testing after 1 PM), newest first everywhere; all Gmail categories feed the Today list.
+- Qualtrics: participants open the prototype in a new tab.
+
+**Gmail frame (§5)**
+- While Bucketbox is on, Gmail's nav collapses to icons (Compose unchanged) and the Inbox unread count is hidden; Bucketbox's row is the active nav item.
+- Undo and redo live at the bottom of the left nav, with toasts just above them (F8 position, §12 #5).
+- No white panel behind Bucketbox: the Today list, buckets and opened bucket are their own cards on Gmail's page color.
+- Plain Gmail view (switch off): look-only Gmail inbox of every email not archived or deleted, buckets shown as label chips and listed under Labels; its count includes bucketed mail.
+
+**Today list (F1, F6)**
+- A rounded neutral card (gray-blue header). Header: "‹ Today ›" plus a calendar icon; the unsorted count sits on the Select all row.
+- Rows are stacked (sender/time, subject, 2-line preview). Unread: blue dot + bold; read: regular, slightly dimmer, no fill. The whole left strip is the drag handle.
+- Day navigation: next arrow hidden on Today; back arrow gets a soft blue circle and a blue dot when the previous day has unsorted emails ("missed" indicator, §12 #9); calendar dots mark days with unsorted emails; full month names, plus the year for other years. Past days with nothing left show a cleared message.
+
+**Buckets (F2)**
+- Tiles: color outline, 20% color header, the whole header opens the bucket, 3-dot menu (edit/delete). No checkboxes on tile rows. Tiles at least 340px; layout adapts to 1–2 vs 3+ buckets.
+- Names: 30 characters, unique, Gmail reserved names blocked. 12 preset colors (6 bold, 6 soft), no free picker; text is always dark.
+- Add: inline form tile (Google-style field) in the next bucket's spot, Cancel/Save. Edit: same form, Delete/Save. Delete: empty buckets go straight away; otherwise a confirmation asks where emails go; resets undo.
+- Reordering by drag is v2 (§12 #4).
+
+**Sorting (F4, F7)**
+- Drop targets appear on every eligible bucket while dragging (dashed resting, solid active); bucket-to-bucket drag allowed; inside an opened bucket, the other buckets appear as pills in its header.
+- Delete zone replaces the bulk buttons while dragging; its first drop offers "Archive instead", which switches the zone to archive (no settings menu in v1).
+- First use of the Archive/Delete buttons shows an inline note (not a modal) (§12 #6). Bulk Move opens a small "Move to" list.
+- Toasts: "Archived 3", "Deleted 3", "Moved 3 to Priority" (§12 #7).
+
+**Email view (F5)**
+- Today drawer: full height, tucked behind the Today card; covers the buckets below 1280px.
+- Opened bucket: one card over the home page, inset 16px, list + open email; Escape or X closes it. Top email shows but stays unread until clicked into.
+- Gmail toolbar: Archive, junk, Delete, Mark as unread, Move to are real; the rest inert. Threads Gmail-style. Reply is Gmail's in-place reply box; the compose drawer is for new messages only. Nothing is ever sent.
 
 ---
 
@@ -225,6 +265,19 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-30
 - Commit: "Stage 10: plain Gmail view"
 
+### 2026-10-31 — Stage 11: Polish, accessibility check, click-through
+- Done:
+  - Contrast scan of every screen (home, drawer + reply box, opened bucket, calendar, bucket form, compose, plain Gmail view): all text passes WCAG AA. Fixed the plain view's checkbox/star/paperclip icons (1.7:1 → 4.2–4.5:1).
+  - Reduced motion: when the computer asks for less motion, all slides, fades, transitions and smooth scrolling are off (one global rule, plus the new-bucket scroll).
+  - The browser tab is titled "Bucketbox"; the page has a main heading for screen readers ("Bucketbox", or "Inbox" in the plain view); the unused Stage 1 placeholder style is gone.
+  - Drag chip: sits just below and right of the pointer (like Gmail), flipping above it near the bottom of the screen, so it never covers the delete zone's label. Keyboard dragging unchanged.
+  - Layout no longer jumps mid-drag: if an email was open when a drag starts, Today keeps its narrower width until the drop.
+  - Keyboard: Escape now closes an opened bucket (after any menu, form or reply inside it), and closing a bucket returns focus to its tile. Walked every flow with the keyboard: 71 tab stops on the home page, all named, none out of order; Enter opens emails and buckets; Escape closes drawer, bucket, menus, calendar and pop-ups in the right order; focus lands sensibly each time.
+  - Log cleanup: SYNC TO PRD summary at the top; mock data summary updated to v4; outdated entries marked.
+- Not changed (needs Amanda): placeholder wording listed under Open questions.
+- Approved by Amanda: 2026-10-31
+- Commit: "Stage 11: polish, accessibility and click-through fixes"
+
 ---
 
 ## Decisions
@@ -294,11 +347,11 @@ Each stage: preview → Amanda approves → commit → log update.
 - 2026-10-29: Undo and redo sit in the top-right corner of the Bucketbox panel, level with the "Today" heading, with no toolbar bar. Reason: Amanda found the full-width bar wasted space; the corner position still reads as page-wide. **SYNC TO PRD** (F8 position, §12 #5) **SUPERSEDED (2026-10-29)** by the bottom-right position below.
 - 2026-10-29: Undo and redo sit in the bottom-right corner of the Bucketbox panel, level with the Move / Archive / Delete buttons. Reason: Amanda's choice. **SYNC TO PRD** (F8 position, §12 #5) **SUPERSEDED (2026-10-30)** by the left-nav position below.
 - 2026-10-30: Undo and redo sit at the bottom of Gmail's left nav, with toasts just above them; the Bucketbox switch moved up to sit just below the Gmail items. Reason: in the bottom-right corner they covered buckets and the new-bucket form (Amanda's review). **SYNC TO PRD** (F8 position, §12 #5)
-- 2026-10-29: Bucket headers get a 15% tint of the bucket color (mixed with white), with the text color unchanged. Reason: tested on 8 colors including black and yellow; the worst case (black) still gives 11.7:1 for the name and 6.7:1 for the gray count (AA needs 4.5:1), so any color a user picks stays readable. 20% would also pass (worst 10.3 / 5.8); 15% stays calmer. The name is always shown, so color is never the only signal. **SYNC TO PRD** (F2 bucket tile)
+- 2026-10-29: **SUPERSEDED (2026-10-30)** by the 20% color rule. Bucket headers get a 15% tint of the bucket color (mixed with white), with the text color unchanged. Reason: tested on 8 colors including black and yellow; the worst case (black) still gives 11.7:1 for the name and 6.7:1 for the gray count (AA needs 4.5:1), so any color a user picks stays readable. 20% would also pass (worst 10.3 / 5.8); 15% stays calmer. The name is always shown, so color is never the only signal. **SYNC TO PRD** (F2 bucket tile)
 - 2026-10-29: Email row text hierarchy. 1 Sender: 15px bold, darkest (#1f1f1f). 2 Time/date: 12px regular, muted gray (#444746), far right. 3 Subject: 14px, dark (#1f1f1f). 4 Preview: 13px regular, lightest gray (#5f6368, 6.2:1 on white), up to 2 lines. Colors follow Gmail's palette. Reason: Amanda's hierarchy spec. **SYNC TO PRD** (F1 row layout)
 - 2026-10-29: Unread vs read. **Unread:** an 8px Gmail-blue dot (#0b57d0, 6.4:1 on white) after the sender name, and the sender and subject bold (#1f1f1f). **Read:** no dot; sender and subject regular weight in a slightly dimmer gray (#444746, 8.7:1 on the read-row tint); Gmail's light row tint stays. Screen readers hear "Unread." before the sender. Reason: Amanda's choice; the dot, weight and tint together mean unread never relies on color alone. **SYNC TO PRD** (F1 "Read/unread state follows Gmail") **SUPERSEDED (2026-10-29)** by the no-fill version below.
 - 2026-10-29: Read rows have **no background fill** (Gmail's light tint removed). Read and unread look identical in the Today list and in buckets. **Unread:** blue dot after the sender, sender and subject bold (#1f1f1f). **Read:** no dot, sender and subject regular weight in #444746 (9.4:1 on white). Screen readers hear "Unread." Reason: Amanda found the fill distracting; the dot plus the weight change still mean unread never relies on color alone. **SYNC TO PRD** (F1 "Read/unread state follows Gmail")
-- 2026-10-29: Home page visual refinements: no "Buckets" heading; the unsorted count is the same size as the day label; bucket tiles have a 2px stroke in the bucket's color. Reason: Amanda's review of Stage 2. **SYNC TO PRD** (§5 home page, F1 "large unsorted count", F2 tile)
+- 2026-10-29: Home page visual refinements (the count's size and place were **SUPERSEDED 2026-10-30**: it now sits on the Select all row at 18px): no "Buckets" heading; the unsorted count is the same size as the day label; bucket tiles have a 2px stroke in the bucket's color. Reason: Amanda's review of Stage 2. **SYNC TO PRD** (§5 home page, F1 "large unsorted count", F2 tile)
 - 2026-10-28: Any past day with no unsorted emails shows the past-tense celebration empty state, even a day where no mail arrived (e.g. 2 days ago). Reason: Amanda's choice; keeps the tone rewarding. **SYNC TO PRD** (F6 empty states)
 - 2026-10-28: Assume concept testing happens after 1 PM. Today's emails are spread across the morning, 6:52 AM to 12:42 PM, in the same order as before. They're saved in a new copy, `mock_inbox_data_v3.numbers`, which is now the mock data source (v2 is kept unchanged). Reason: "today" is the real date, so no email should look like it arrived in the future. **SYNC TO PRD** (§4 mock data; concept-testing scheduling)
 
@@ -322,12 +375,13 @@ Each stage: preview → Amanda approves → commit → log update.
 - Final name for the starting bucket ("Priority" is still a placeholder, PRD §12 #1).
 - ~~Switch wording~~: resolved 2026-10-29, "Bucketbox" (see Decisions).
 - ~~Inbox count in the nav~~: resolved 2026-10-29, hidden in Bucketbox (see Decisions).
-- **Compose button:** shows "Not part of this prototype" until Stage 7 makes the compose drawer real.
+- ~~**Compose button:** shows "Not part of this prototype" until Stage 7 makes the compose drawer real.~~ Resolved in Stage 7 (it opens the compose drawer).
 - ~~Future times on Today~~: resolved 2026-10-28. Testing is after 1 PM, and Today's emails end at 12:42 PM (see Decisions).
 
-**Mock data at a glance (from `mock_inbox_data_v3.numbers`, 2026-10-28)**
+**Mock data at a glance (from `mock_inbox_data_v4.numbers`, updated 2026-10-31)**
 - Today: 12 unsorted (all unread), 6:52 AM to 12:42 PM, including the Cabin weekend thread and the interview request.
-- Yesterday: 8 unsorted (all read). 2 days ago: none (shows the celebration). 3 days ago: 2 unsorted.
+- Yesterday: 8 unsorted (3 unread: Sam Torres, Alex Rivera, Xfinity). 2 days ago: none (shows the cleared message). 3 days ago: 2 unsorted (GitHub unread).
+- 19 unread in all at the start (Gmail's Inbox count in the plain view).
 - Priority bucket: 5 emails from 3–6 days ago (3 unread). Days 4–6 have nothing left unsorted.
 - Attachments are shown as labels only ("3 photos", "Lease renewal.pdf"); there are no real files.
 - Times are written as 24-hour in the sheet and shown Gmail-style (e.g. 4:30 PM).
@@ -349,6 +403,7 @@ Each stage: preview → Amanda approves → commit → log update.
 17. ~~Interaction inventory~~: resolved 2026-10-30 for the email view (see Decisions). Search and Gmail nav links stay inert.
 18. ~~"Missed email" indicator~~: resolved 2026-10-30, a blue dot on the back arrow when the previous day still has unsorted emails (see Decisions).
 19. ~~Delete zone in the opened bucket~~: resolved 2026-10-30, in place of the bucket list's buttons, as in Today (see Decisions).
+22. **Placeholder wording (Amanda to decide or keep):** cleared Today "Way to go! Your daily inbox is cleared right now."; nothing yet "Nothing yet, go enjoy your day."; cleared past day "You cleared this day. Nice work."; no buckets "Make your first bucket to start sorting."; undo/redo toasts "Undone: Archived 2" / "Redone: Archived 2"; after Archive instead "Archived 1. Dropped emails will be archived from now on."; starting bucket name "Priority".
 20. Tag button: hover-only (PRD) is not keyboard-reachable. Can it also show on keyboard focus?
 21. Stage 8: should Gmail's 😊 reaction button under an open email open the emoji tag picker? (Inert until then.)
 
@@ -359,10 +414,10 @@ Each stage: preview → Amanda approves → commit → log update.
 
 - ~~2026-10-28: Commits use a placeholder email.~~ Fixed 2026-10-29: all commits were rewritten to Amanda's GitHub private address before the first upload.
 - 2026-10-28: The Gmail logo is an approximation (a red mail icon plus "Gmail"), not Google's official logo file. (Fine for the prototype; revisit if it looks off.)
-- 2026-10-28: Left out of the Gmail frame for simplicity: the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
+- 2026-10-28: Left out of the Gmail frame for simplicity (Labels added back in the plain Gmail view, Stage 10): the "Labels" section, Categories, the right-hand side panel (Calendar, Keep, Tasks) and the status/calendar chip in the header. (Add back if testing shows they're missed.)
 - 2026-10-28: If someone tests before 12:42 PM, a few Today emails will look like they arrived later that day. (Accepted, since testing is planned after 1 PM.)
 - ~~2026-10-30: The drop-target bucket name uses the bucket's own color; a light color would be hard to read.~~ Fixed 2026-10-30 in Stage 6: text is always dark.
-- 2026-10-30: While dragging, the chip sits where the row was grabbed, so it can cover the delete zone's label. (Fine for now; revisit in Stage 11 polish.)
+- ~~2026-10-30: While dragging, the chip sits where the row was grabbed, so it can cover the delete zone's label.~~ Fixed 2026-10-31 (Stage 11): the chip follows beside the pointer.
 - 2026-10-30: mock_inbox_data_v4.numbers was written by the numbers-parser tool, which hasn't been tested with this version of Numbers. (Amanda to open it in Numbers once to confirm it looks right; v3 is untouched as a backup.)
-- 2026-10-30: When dragging while an email is open with only 1–2 buckets, the drawer closes and the Today card widens mid-drag. (Works; revisit in Stage 11 polish if it feels jumpy.)
+- ~~2026-10-30: When dragging while an email is open with only 1–2 buckets, the Today card widens mid-drag.~~ Fixed 2026-10-31 (Stage 11): Today keeps its width until the drop.
 - 2026-10-28: Re-importing the spreadsheet needs the `numbers-parser` Python package, which isn't part of the project. (Claude installs it in a temporary folder when needed.)

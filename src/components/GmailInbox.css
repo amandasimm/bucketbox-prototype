@@ -66,7 +66,8 @@
   height: 40px;
   min-width: 0;
 }
-.gmail-inbox-row .icon { color: #c4c7c5; }
+/* Checkbox and star: Gmail's gray (#747775), 4.2:1 on read rows and 4.5:1 on unread (icons need 3:1) */
+.gmail-inbox-row-main > .icon { color: #747775; }
 .gmail-inbox-sender {
   flex-shrink: 0;
   width: 200px;

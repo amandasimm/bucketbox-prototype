@@ -52,6 +52,22 @@ function jumpBetweenTargets(event, { context }) {
   }
 }
 
+// The drag chip sits just below and to the right of the pointer, like Gmail's, so it never
+// covers the bucket or delete zone under the pointer (BUILD-LOG, 2026-10-31). With the
+// keyboard there's no pointer, so it stays where dnd-kit puts it.
+// Near the bottom of the screen it flips above the pointer so it stays fully visible.
+function chipBesidePointer({ transform, activatorEvent, draggingNodeRect, overlayNodeRect }) {
+  if (!activatorEvent || !draggingNodeRect || !('clientX' in activatorEvent)) return transform
+  const pointerY = activatorEvent.clientY + transform.y
+  const chipHeight = overlayNodeRect?.height ?? 44
+  const below = pointerY + 12 + chipHeight <= window.innerHeight
+  return {
+    ...transform,
+    x: transform.x + activatorEvent.clientX - draggingNodeRect.left + 12,
+    y: transform.y + activatorEvent.clientY - draggingNodeRect.top + (below ? 12 : -12 - chipHeight),
+  }
+}
+
 // Plain-language messages for screen readers while dragging
 const screenReaderInstructions = {
   draggable:
@@ -85,6 +101,9 @@ export default function HomePage({
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
   const [draggedIds, setDraggedIds] = useState([])
+  // When a drag starts with an email open, the drawer closes; this keeps Today at the narrower
+  // "email open" width until the drop, so the page doesn't jump mid-drag (BUILD-LOG, 2026-10-31)
+  const [holdLayout, setHoldLayout] = useState(false)
   const sensors = useSensors(
     // A small movement before a drag starts, so a click on the handle doesn't count as a drag
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -95,11 +114,15 @@ export default function HomePage({
     const email = active.data.current.email
     setDraggedIds(selectedIds.includes(email.id) ? selectedIds : [email.id])
     // The Today drawer covers the buckets, so it closes when a drag starts
-    if (emailView.view.type === 'home') emailView.close()
+    if (emailView.view.type === 'home' && emailView.openEmailId) {
+      setHoldLayout(true)
+      emailView.close()
+    }
   }
 
   function onDragEnd({ over }) {
     if (over) actions.drop(draggedIds, over.data.current.target)
+    setHoldLayout(false)
     setDraggedIds([])
   }
 
@@ -117,14 +140,17 @@ export default function HomePage({
       accessibility={{ announcements, screenReaderInstructions }}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      onDragCancel={() => setDraggedIds([])}
+      onDragCancel={() => {
+        setDraggedIds([])
+        setHoldLayout(false)
+      }}
     >
       {/* Bucket tiles never change width. With 1–2 buckets they stack in one column and the
           Today card takes the rest of the room; with 3 or more there are two columns.
           While an email is open, Today goes back to its usual width so the drawer has room
           (BUILD-LOG, 2026-10-30). */}
       <div
-        className={`home-page ${drawerEmail && !openBucket ? 'drawer-open' : ''}`}
+        className={`home-page ${(drawerEmail && !openBucket) || holdLayout ? 'drawer-open' : ''}`}
         data-bucket-cols={buckets.length <= 2 ? 1 : 2}
         style={{ '--bucket-cols': buckets.length <= 2 ? 1 : 2 }}
       >
@@ -182,7 +208,7 @@ export default function HomePage({
       </div>
 
       {/* Gmail's drag chip, which follows the pointer (screenshot-gmail-move-email.png) */}
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={null} modifiers={[chipBesidePointer]}>
         {count > 0 && (
           <div className="drag-chip">
             <Icon name="mail" size={20} />

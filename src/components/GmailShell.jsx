@@ -187,7 +187,11 @@ export default function GmailShell({ composeActions, buckets, history, inboxUnre
         history={history}
         buckets={buckets}
       />
-      <main className="gmail-main">{children}</main>
+      <main className="gmail-main">
+        {/* The page's main heading, for screen readers (the screen shows it through layout) */}
+        <h1 className="visually-hidden">{prototypeOn ? 'Bucketbox' : 'Inbox'}</h1>
+        {children}
+      </main>
       {composeActions.compose && <ComposeDrawer composeActions={composeActions} />}
     </div>
   )

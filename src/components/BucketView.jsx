@@ -60,6 +60,28 @@ export default function BucketView({
     closeRef.current?.querySelector('button')?.focus()
   }, [bucket.id])
 
+  // Closing returns keyboard focus to the bucket's tile on the home page (BUILD-LOG, 2026-10-31)
+  function close() {
+    emailView.closeBucket()
+    setTimeout(() => {
+      document.querySelector(`#bucket-${bucket.id} .bucket-header-button`)?.focus()
+    }, 0)
+  }
+
+  // Escape closes the bucket, unless something inside it is open first (a menu, the edit
+  // form, a dialog, a reply or the compose drawer), which Escape closes instead
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      const busy =
+        document.querySelector('[role="menu"], dialog[open], .bucket-view-edit, .emoji-popover, .day-picker') ||
+        event.target.closest?.('.reply-box, .compose-drawer, form')
+      if (!busy) close()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  })
+
   function toggle(id) {
     onSelect(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id])
   }
@@ -82,7 +104,7 @@ export default function BucketView({
         </span>
         <BucketMenu bucket={bucket} onEdit={() => setEditing(true)} onDelete={startDelete} />
         <span ref={closeRef}>
-          <IconButton label="Close bucket" tooltipAlign="right" onClick={emailView.closeBucket}>
+          <IconButton label="Close bucket" tooltipAlign="right" onClick={close}>
             <Icon name="close" size={20} />
           </IconButton>
         </span>
