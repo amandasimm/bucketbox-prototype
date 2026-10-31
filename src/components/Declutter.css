@@ -1,0 +1,245 @@
+/* Declutter (PRD F13): a calm full card over the home page, in the Today card's neutral colors */
+.declutter {
+  position: absolute;
+  inset: 8px 16px 16px 0; /* lines up with the Today card behind it */
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 3px solid var(--card-stroke);
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--card-gradient-start), var(--card-gradient-end));
+  /* The first shadow hides buckets scrolled behind it, around its edges */
+  box-shadow: 0 0 0 16px var(--page-bg);
+  overflow: hidden;
+}
+.declutter-exit { position: absolute; top: 8px; right: 8px; z-index: 4; }
+
+/* The bucket bar: at most two rows, then it scrolls sideways */
+.declutter-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.declutter-bar-label { flex-shrink: 0; line-height: 32px; font-weight: 500; color: var(--text-muted); }
+.declutter-bar-scroll { flex: 1; min-width: 0; overflow-x: auto; padding: 2px; }
+.declutter-bar-rows { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.declutter-no-buckets { line-height: 32px; color: var(--text-muted); }
+.declutter-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px 0 12px;
+  border: 2px solid var(--bucket-color);
+  border-radius: 16px;
+  background: var(--bucket-header);
+  color: #1f1f1f;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.declutter-pill:hover { background: var(--surface); }
+
+/* The card takes all the height, with the controls at its bottom right */
+.declutter-stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 400px) 376px;
+  justify-content: center;
+  gap: 32px;
+  padding: 12px 24px 0;
+}
+.declutter-reader { min-height: 0; display: flex; flex-direction: column; }
+.declutter-title {
+  margin: 0 0 2px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+.declutter-count {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.declutter-progress {
+  flex-shrink: 0;
+  height: 6px;
+  margin-bottom: 12px;
+  border-radius: 3px;
+  background: #cfdcf0;
+  overflow: hidden;
+}
+.declutter-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--focus-ring);
+  transition: width 140ms;
+}
+
+/* The next card's top edge shows below this one and runs off the bottom of the screen */
+.declutter-deck { position: relative; flex: 1; min-height: 0; padding-bottom: 28px; }
+.declutter-deck.has-next::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 16px;
+  border-radius: 16px 16px 0 0;
+  background: #f8fafd;
+  box-shadow: 0 -1px 4px rgba(31, 60, 110, 0.1);
+}
+.declutter-deck:not(.has-next) { padding-bottom: 16px; }
+
+.declutter-card {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(31, 60, 110, 0.1), 0 8px 24px rgba(31, 60, 110, 0.12);
+  transition: box-shadow 140ms;
+}
+.declutter-card:hover { box-shadow: 0 1px 3px rgba(31, 60, 110, 0.14), 0 12px 32px rgba(31, 60, 110, 0.16); }
+.declutter-card-open {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 20px 20px 12px;
+  border-radius: 16px;
+  text-align: left;
+  overflow: hidden;
+}
+.declutter-card-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  animation: declutter-card-in 140ms ease-out;
+}
+/* Long messages fade out; opening the card shows the rest */
+.declutter-card-content::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 48px;
+  background: linear-gradient(transparent, var(--surface));
+}
+@keyframes declutter-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+.declutter-subject { flex-shrink: 0; font-size: 22px; line-height: 28px; }
+.declutter-sender-row { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding-right: 32px; }
+.declutter-sender { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.declutter-sender-name { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; }
+.declutter-thread-size { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+.declutter-time { font-size: 12px; color: var(--text-muted); }
+.declutter-body { font-size: 16px; line-height: 24px; white-space: pre-line; }
+.declutter-attachments { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.declutter-card-hint {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+/* Lines up with the sender row. It sits on the card, not inside the card's own button */
+.declutter-card-menu { position: absolute; top: var(--menu-top, 76px); right: 12px; z-index: 3; transform: translateY(-50%); }
+.declutter-card-menu .pane-menu { left: auto; right: 0; }
+
+/* Lines up with the bottom of the email card */
+.declutter-controls {
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  margin-bottom: 28px;
+}
+
+/* Rectangular buttons, so they read differently from the round bucket pills */
+.declutter-keys {
+  display: grid;
+  grid-template-columns: 132px 104px 132px;
+  grid-template-rows: 36px 36px 36px;
+  gap: 12px 4px;
+  justify-content: center;
+}
+.declutter-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--focus-ring);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--focus-ring);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.declutter-action:hover { background: var(--selected-row-bg); }
+.declutter-action.is-main {
+  background: var(--focus-ring);
+  color: #ffffff;
+}
+.declutter-action.is-main:hover { background: #0842a0; }
+.declutter-action:not(.is-main) { border-color: var(--button-outline); }
+.declutter-action[aria-disabled='true'] {
+  border-color: #dbe4f0;
+  color: #5f6368;
+  background: transparent;
+  cursor: default;
+}
+.declutter-keys .is-up { grid-area: 1 / 2; }
+.declutter-keys .is-left { grid-area: 2 / 1; }
+.declutter-keys .is-right { grid-area: 2 / 3; }
+.declutter-keys .is-down { grid-area: 3 / 2; }
+
+/* An opened email pauses the flow */
+.declutter-open {
+  flex: 1;
+  min-height: 0;
+  width: min(100% - 112px, 860px); /* leaves room for the X in the corner */
+  margin: 16px auto;
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.declutter-open .email-pane { height: 100%; }
+
+/* The confirmation screen: the message sits where the email card was */
+.declutter-end {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding-bottom: 28px;
+  text-align: center;
+}
+.declutter-end-title { margin: 0; font-size: 22px; font-weight: 400; }
+.declutter-end-title:focus { outline: none; }
+.declutter-end-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 15px; }
+.declutter-end-count { font-size: 18px; font-weight: 500; }
+.declutter-end-buttons {
+  grid-area: 2 / 1 / 3 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.declutter-bar-holder { visibility: hidden; }

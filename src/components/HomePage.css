@@ -29,8 +29,9 @@
   flex-direction: column;
   min-height: 0; /* lets the email list scroll inside the card */
   margin: 8px 0 16px; /* top lines up with Compose, left edge with the search bar; 16px from the bottom */
-  border: 2px solid #c7d0dd;
-  border-radius: 12px;
+  border: 2px solid var(--card-stroke);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
   background: var(--surface);
 }
@@ -100,11 +101,12 @@
   gap: 6px;
   height: 36px;
   padding: 0 14px 0 10px;
-  border: 1px solid var(--outline);
-  border-radius: 18px;
+  border: 1px solid var(--button-outline);
+  border-radius: var(--button-radius);
+  color: var(--focus-ring);
   font-weight: 500;
 }
-.bulk-button:hover:not(:disabled) { background: var(--hover-bg); }
+.bulk-button:hover:not(:disabled) { background: var(--selected-row-bg); }
 .bulk-button:disabled {
   color: var(--text-disabled);
   border-color: var(--divider);
@@ -295,9 +297,10 @@
   flex-direction: column;
   height: 280px;
   border: 2px solid var(--bucket-color);
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   overflow: hidden;
   background: var(--surface);
+  box-shadow: var(--card-shadow);
 }
 /* Bucket colors (BUILD-LOG, 2026-10-30): the variables come from utils/bucketColors.js.
    Text on a tile is always dark, never the bucket color. */
@@ -370,7 +373,7 @@
   gap: 6px;
   height: 36px; /* Gmail's button height */
   padding: 0 16px 0 12px;
-  border-radius: 18px;
+  border-radius: var(--button-radius);
   color: var(--focus-ring);
   font-weight: 500;
 }
@@ -684,7 +687,7 @@
   justify-content: center;
   gap: 10px;
   padding: 0 24px;
-  border-radius: 12px; /* same as the tile */
+  border-radius: var(--card-radius); /* same as the tile */
   /* Resting: a 6% tint at 70%, so the tile's emails show through */
   background: color-mix(in srgb, color-mix(in srgb, var(--bucket-color) 6%, white) 70%, transparent);
   color: var(--text);
@@ -811,6 +814,7 @@
 
 /* Empty Today list (PRD F6) */
 .empty-state {
+  background: linear-gradient(160deg, var(--card-gradient-start), var(--card-gradient-end));
   flex: 1;
   display: flex;
   align-items: center;
@@ -876,7 +880,7 @@
 .filled-button {
   height: 36px;
   padding: 0 16px;
-  border-radius: 18px;
+  border-radius: var(--button-radius);
   font-weight: 500;
 }
 .text-button { color: var(--focus-ring); }
@@ -1048,8 +1052,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e8eaed;
-  color: var(--text-muted);
+  background: var(--selected-row-bg);
+  color: #0842a0;
   font-size: 14px;
   font-weight: 500;
 }
@@ -1146,7 +1150,7 @@
   flex-direction: column;
   min-height: 0;
   border: 2px solid var(--bucket-color);
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   overflow: hidden;
   background: var(--surface);
   box-shadow: 0 4px 24px rgba(60, 64, 67, 0.22), 0 1px 4px rgba(60, 64, 67, 0.12);

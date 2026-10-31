@@ -68,7 +68,7 @@ function MoveToButton({ buckets, onMove }) {
 
 // A sender's avatar: their first letter, or for your own messages ("me") the account icon
 // from the top right of the header, drawn lighter (BUILD-LOG, 2026-10-30)
-function Avatar({ from }) {
+export function Avatar({ from }) {
   if (from === 'me') {
     return (
       <span className="thread-avatar is-me" aria-hidden="true">
@@ -80,7 +80,7 @@ function Avatar({ from }) {
 }
 
 // The messages in an email, oldest first. A single email is a thread of one.
-function threadMessages(email) {
+export function threadMessages(email) {
   if (email.messages) return email.messages
   return [{ from: email.sender, dayOffset: email.dayOffset, time: email.time, body: email.body }]
 }

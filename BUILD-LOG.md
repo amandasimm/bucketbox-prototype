@@ -13,14 +13,14 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ## Current status
 _Last updated: 2026-10-31_
 
-- **Built:** Stages 0–7 and 9–11, the full approved plan (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** placeholder wording decisions (see Open questions) and updating the PRD from the SYNC TO PRD summary below.
+- **Built:** Stages 0–7 and 9–12, the full approved plan plus Declutter (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Next:** placeholder wording decisions (see Open questions) and updating the PRD from the SYNC TO PRD summary below (F13's section 12 items are newly decided). The PRD is now `updated-prd-neuroinclusive-inbox Prototype.md`.
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
 4. Selection, bulk actions, undo/redo, toasts ✅ · 5. Drag and drop + delete zone ✅ · 6. Bucket create/edit/delete ✅
 7. Email view (drawer, opened bucket, thread stack, compose) ✅ · 8. ~~Emoji tags~~ (skipped for now) · 9. Day navigation ✅
-10. Plain Gmail view toggle ✅ · 11. Polish, accessibility check, final click-through ✅
+10. Plain Gmail view toggle ✅ · 11. Polish, accessibility check, final click-through ✅ · 12. Declutter ✅
 Each stage: preview → Amanda approves → commit → log update.
 
 ---
@@ -62,6 +62,24 @@ Each stage: preview → Amanda approves → commit → log update.
 - Today drawer: full height, tucked behind the Today card; covers the buckets below 1280px.
 - Opened bucket: one card over the home page, inset 16px, list + open email; Escape or X closes it. Top email shows but stays unread until clicked into.
 - Gmail toolbar: Archive, junk, Delete, Mark as unread, Move to are real; the rest inert. Threads Gmail-style. Reply is Gmail's in-place reply box; the compose drawer is for new messages only. Nothing is ever sent.
+
+**Declutter (F13, Flow 7, §12 rapid sort; decided 2026-10-31)**
+- Right on a read email keeps it read and moves on. Archive, Mark as read and a pill click all advance. Opening a card marks it read.
+- Pills: Tab then Enter, no number keys. At most two rows, then sideways scrolling.
+- Cards are newest first with no wrapping; Next on the last card goes to the end screen. The total stays fixed ("4 of 12"); Previous skips emails that left the deck.
+- Screen readers hear position, unread status, sender and subject on each card; buttons name their arrow key.
+- Undo steps back through every action in the current day's run, including from the end screen, and redo works; after exit or a new day it returns to last action only.
+- End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("You went through Today" if emails were skipped); Previous stays in place; Declutter Previous Day (tertiary, nearest earlier day with unsorted emails) and Done (primary) below it. No expandable lists.
+- A day with nothing unsorted goes straight to the end screen. An opened email's toolbar works as usual, and an action that removes it returns to the next card.
+- New toast: "Marked as read". Declutter's Archive doesn't count as first use.
+- Screen: one card with a 3px stroke and gradient; small "Declutter" title, count and progress bar above a phone-shaped email card; the next card peeks below; controls and pills bottom right. Replaces "pills below the card" (PRD already updated). Rectangular buttons, labeled Previous, Archive, Mark as read, Next.
+- Card 3-dot menu: Mute, Block sender, Unsubscribe (Promotions and Social only) are inert; Report spam works like Mark as junk.
+- Entry: a gray outlined button below the Bucketbox switch, not a nav item.
+- **F13 Test still mentions "the forced choice", which no longer exists.**
+
+**Bucketbox styling (decided 2026-10-31; §5, F1, F2)**
+- Today card stroke #A6B8D4; header stays static gray-blue. Cards use 16px corners and a soft blue-tinted shadow. Avatars are light blue.
+- Bucketbox's buttons are rectangular (8px corners); Gmail's own stay oval. Add a Bucket is tertiary. Empty messages sit on a soft gradient.
 
 ---
 
@@ -278,9 +296,27 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-31
 - Commit: "Stage 11: polish, accessibility and click-through fixes"
 
+### 2026-10-31 — Stage 12: Declutter
+- Done:
+  - Protected `updated-prd-neuroinclusive-inbox Prototype.md` and `screenshot-mobile-view-reference.png` in `.gitignore`; CLAUDE.md now points to the updated PRD and lists Declutter.
+  - Declutter button below the Bucketbox switch opens the viewed day's unsorted emails as a fixed deck of cards. Up/Down move, Left archives, Right marks read, pills sort, Escape or the X exits. Everything already done stays done.
+  - Opening a card pauses the flow; replying works; closing returns to the same card.
+  - Undo and redo in the nav step through cards, then hand off to the usual last-action undo on exit.
+  - End screen with progress and Declutter Previous Day, which skips days with nothing unsorted.
+  - Home page styling: stroke, shadows, corners, rectangular buttons, avatars, empty-message gradient (see the SYNC summary).
+- Revised after Amanda's review (2026-10-31): rebuilt from her mock (taller card, pills moved beside the buttons, no header bar, small title, 16px body text, 4px gaps between buttons); removed a white controls panel and button shadows; rebuilt the end screen; removed a Today header gradient; the entry button went from a nav item to a Compose-style button to the gray rectangular button. The Bucketbox switch moved 4px right so it lines up with Compose's label and Declutter's.
+- Checked: every key and button, skipping removed cards, Right on a read email, undo/redo including from the end screen, reply, toolbar actions in an opened email, arrow keys ignored while typing or in a menu, Escape order, Previous Day skipping an empty day, an empty day, 13 buckets in two rows, 1366 and 1024 wide (1024 last checked before the final styling rounds), text colors AA.
+- Not checked: a real screen reader, reduced-motion emulation, the bucket drop target's new corners during a real drag, the email drawer with the new avatars, the confirmation dialog buttons.
+- Approved by Amanda: 2026-10-31
+- Commit: "Stage 12: Declutter and styling updates"
+
 ---
 
 ## Decisions
+- 2026-10-31: Declutter details (Stage 12): Amanda approved the proposed defaults for all PRD §12 rapid sort items, plus fixed deck totals, undo stepping within a day's run, and "Declutter Previous Day". Full list in the SYNC TO PRD summary. Reason: Amanda's choices; progress, "not a moving target". **SYNC TO PRD** (F13, Flow 7, §12)
+- 2026-10-31: Declutter's bucket pills sit at the bottom right under the buttons, not across the top or below the card, so the email is the focus for F and Z scanning. Reason: Amanda's review. PRD updated.
+- 2026-10-31: End-screen wording: "Today is Decluttered" shows only when nothing was left unreviewed; otherwise "You went through Today". Reason: messages match the real inbox state (CLAUDE.md §7); Amanda to confirm. **SYNC TO PRD** (F13)
+- 2026-10-31: Bucketbox styling: shared stroke, 16px corners, soft shadows, rectangular buttons distinct from bucket pills, Gmail's own buttons stay oval. Reason: Amanda's review of Declutter. **SYNC TO PRD** (§5, F1, F2, F7)
 - 2026-10-30: Plain Gmail view (Stage 10), look-only: every email not archived or deleted, from every day, newest first, in Gmail's one-line rows; bucketed emails show their bucket as a Gmail-style label chip. Rows, checkboxes and toolbar icons show "Not part of this prototype". It reflects whatever was done in Bucketbox. The nav gets a "Labels" section listing the buckets with their colors (look-only). Reason: Amanda's choices; a familiar comparison point that hints buckets are Gmail labels. **SYNC TO PRD** (§5 open prototype toggle)
 - 2026-10-30: Day navigation (Stage 9): "‹ Today ›" on the left of the Today card header and the calendar icon in its right corner; the unsorted count sits on the Select all row (updated same day); the next arrow is hidden on Today (PRD "when applicable"). The back arrow shows a small blue dot (the unread dot's color, #0b57d0) when the previous day still has unsorted emails, with a text label for hover and screen readers, so it isn't color-only. Reason: Amanda's choices. **SYNC TO PRD** (F6, §12 #9)
 - 2026-10-30: Emoji tags (Stage 8) are skipped for now; the build moves on to day navigation. Open questions 20 and 21 wait until tags come back. Bucket emoji (Stage 6) is separate and stays. Reason: Amanda's choice; she may drop tags. **SYNC TO PRD** (F3, §4 v1 scope)
@@ -403,6 +439,7 @@ Each stage: preview → Amanda approves → commit → log update.
 17. ~~Interaction inventory~~: resolved 2026-10-30 for the email view (see Decisions). Search and Gmail nav links stay inert.
 18. ~~"Missed email" indicator~~: resolved 2026-10-30, a blue dot on the back arrow when the previous day still has unsorted emails (see Decisions).
 19. ~~Delete zone in the opened bucket~~: resolved 2026-10-30, in place of the bucket list's buttons, as in Today (see Decisions).
+23. Declutter placeholders (Amanda to decide or keep): the name "Declutter"; "Open to read or reply"; "You went through Today"; "Marked as read" toast; the stacked-cards icon.
 22. **Placeholder wording (Amanda to decide or keep):** cleared Today "Way to go! Your daily inbox is cleared right now."; nothing yet "Nothing yet, go enjoy your day."; cleared past day "You cleared this day. Nice work."; no buckets "Make your first bucket to start sorting."; undo/redo toasts "Undone: Archived 2" / "Redone: Archived 2"; after Archive instead "Archived 1. Dropped emails will be archived from now on."; starting bucket name "Priority".
 20. Tag button: hover-only (PRD) is not keyboard-reachable. Can it also show on keyboard focus?
 21. Stage 8: should Gmail's 😊 reaction button under an open email open the emoji tag picker? (Inert until then.)

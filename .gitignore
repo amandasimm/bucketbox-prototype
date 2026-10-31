@@ -12,6 +12,8 @@ dist/
 # Research material stays on Amanda's computer only (public repo).
 # Claude can still read these locally.
 prd-neuroinclusive-inbox-prototype.md
+updated-prd-*.md
+screenshot-mobile-view-reference.png
 mock_inbox_data_v*.numbers
 sketch-*.png
 wireframe-*.png

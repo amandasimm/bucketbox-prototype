@@ -9,8 +9,8 @@ function lowerFirst(text) {
 // Gmail's left nav, so they apply to the whole screen and never cover a bucket or a form
 // (BUILD-LOG, 2026-10-30).
 export default function PageHistory({ history }) {
-  const undoLabel = history.canUndo ? `Undo: ${lowerFirst(history.label)}` : 'Nothing to undo'
-  const redoLabel = history.canRedo ? `Redo: ${lowerFirst(history.label)}` : 'Nothing to redo'
+  const undoLabel = history.canUndo ? `Undo: ${lowerFirst(history.undoLabel)}` : 'Nothing to undo'
+  const redoLabel = history.canRedo ? `Redo: ${lowerFirst(history.redoLabel)}` : 'Nothing to redo'
   return (
     <div className="page-history" role="group" aria-label="Undo and redo">
       <IconButton label={undoLabel} disabled={!history.canUndo} onClick={history.undo} tooltipAlign="left">

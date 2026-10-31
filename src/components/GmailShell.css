@@ -166,6 +166,20 @@
   margin-top: 8px;
   font-weight: 500;
 }
+/* Declutter, just below the switch (PRD F13) */
+.compose-button.declutter-button {
+  margin: 16px 0 0 8px;
+  /* The icon lines up with the nav icons, the label with Compose's and the switch */
+  gap: 16px;
+  width: 136px; /* same as Compose */
+  height: 36px; /* Bucketbox's button style, in gray */
+  padding: 0 8px 0 14px;
+  border: 2px solid var(--outline);
+  border-radius: var(--button-radius);
+  background: none;
+}
+.compose-button.declutter-button:hover { background: var(--hover-bg); box-shadow: none; }
+.compose-button.declutter-button.is-on { background: var(--nav-active-bg); }
 .switch-track {
   display: flex;
   align-items: center;
@@ -215,7 +229,7 @@
 .nav-collapsed .prototype-switch {
   width: 136px; /* the pill lines up with Compose at both ends */
 }
-.nav-collapsed .prototype-switch { gap: 12px; }
+.nav-collapsed .prototype-switch { gap: 16px; } /* the switch lines up with Compose's label */
 
 /* Main area: the white rounded panel the prototype lives in */
 .gmail-main {
@@ -301,7 +315,7 @@
   justify-content: space-between;
   padding: 8px 12px 12px 16px;
 }
-.compose-send { padding: 0 24px; }
+.compose-send { padding: 0 24px; border-radius: 18px; } /* Gmail's own, so it stays oval */
 /* Minimized: a bar along the bottom, like Gmail's collapsed draft */
 .compose-drawer.is-minimized {
   flex-direction: row;

@@ -11,6 +11,8 @@ import './GmailShell.css'
 // Wording for the switch at the bottom of the nav (PRD §5 "open prototype" button).
 // Bucketbox is Amanda's working customer-facing name (BUILD-LOG, 2026-10-29).
 const PROTOTYPE_SWITCH_LABEL = 'Bucketbox'
+// A placeholder name (PRD F13)
+const DECLUTTER_LABEL = 'Declutter'
 
 const navItems = [
   { label: 'Starred', icon: 'star' },
@@ -87,7 +89,7 @@ function AppRail({ inboxUnread }) {
 
 // While Bucketbox is on, the nav collapses to icons (names show on hover and to screen
 // readers) to give Bucketbox more room. Compose keeps its size and place (BUILD-LOG, 2026-10-30).
-function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history, buckets }) {
+function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, declutterOn, onToggleDeclutter, onCompose, history, buckets }) {
   const collapsed = prototypeOn
   return (
     <nav className="gmail-nav" aria-label="Mail folders">
@@ -168,13 +170,27 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
         </span>
       </button>
 
+      {/* Declutter (PRD F13), below the switch, a secondary version of Compose. It only works on Bucketbox's day lists */}
+      {prototypeOn && (
+        <button
+          type="button"
+          id="declutter-button"
+          className={`compose-button declutter-button ${declutterOn ? 'is-on' : ''}`}
+          aria-pressed={declutterOn}
+          onClick={onToggleDeclutter}
+        >
+          <Icon name="stacks" size={20} filled={declutterOn} />
+          <span>{DECLUTTER_LABEL}</span>
+        </button>
+      )}
+
       {/* Undo and redo sit at the bottom of the nav while Bucketbox is on */}
       {history && <PageHistory history={history} />}
     </nav>
   )
 }
 
-export default function GmailShell({ composeActions, buckets, history, inboxUnread, prototypeOn, onTogglePrototype, children }) {
+export default function GmailShell({ composeActions, buckets, history, inboxUnread, prototypeOn, onTogglePrototype, declutterOn, onToggleDeclutter, children }) {
   return (
     <div className={`gmail-shell ${prototypeOn ? 'nav-collapsed' : ''}`}>
       <GmailHeader />
@@ -183,6 +199,8 @@ export default function GmailShell({ composeActions, buckets, history, inboxUnre
         inboxUnread={inboxUnread}
         prototypeOn={prototypeOn}
         onTogglePrototype={onTogglePrototype}
+        declutterOn={declutterOn}
+        onToggleDeclutter={onToggleDeclutter}
         onCompose={composeActions.openNew}
         history={history}
         buckets={buckets}

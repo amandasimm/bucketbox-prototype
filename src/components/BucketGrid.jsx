@@ -142,7 +142,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
       )}
       {showTarget && (
         <div className={`drop-target ${isOver ? 'is-over' : ''}`} aria-hidden="true">
-          <DashedOutline className="drop-target-outline" inset={1.5} radius={10.5} />
+          <DashedOutline className="drop-target-outline" inset={1.5} radius={14.5} />
           <span className="drop-target-plus">
             <svg width="28" height="28" viewBox="0 0 28 28">
               <path d="M14 2v24M2 14h24" />

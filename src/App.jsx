@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { dayLabel } from './components/DayNav.jsx'
 import GmailInbox from './components/GmailInbox.jsx'
 import GmailShell from './components/GmailShell.jsx'
 import HomePage from './components/HomePage.jsx'
+import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
 import { startingBuckets } from './data/startingSetup.js'
 import { receivedAt } from './utils/dates.js'
@@ -13,6 +15,25 @@ const startingEmails = mockEmails.map((email) => ({
   receivedAt: receivedAt(email.dayOffset, email.time),
   removedTo: null,
 }))
+
+const isUnsorted = (email) => email?.bucketId === null && email?.removedTo === null
+const patchEmail = (list, id, fields) => list.map((email) => (email.id === id ? { ...email, ...fields } : email))
+
+// The next card after this one that's still unsorted, or the deck's length (the end screen)
+function nextCard(list, deck, from) {
+  for (let i = from + 1; i < deck.length; i += 1) {
+    if (isUnsorted(list.find((email) => email.id === deck[i]))) return i
+  }
+  return deck.length
+}
+
+// The card before this one that's still unsorted, or -1 if there isn't one
+function previousCard(list, deck, from) {
+  for (let i = from - 1; i >= 0; i -= 1) {
+    if (isUnsorted(list.find((email) => email.id === deck[i]))) return i
+  }
+  return -1
+}
 
 export default function App() {
   // true = Bucketbox, false = the plain Gmail view (PRD §5 toggle)
@@ -36,6 +57,10 @@ export default function App() {
   const [compose, setCompose] = useState(null)
   // Which day the Today card shows (PRD F6): 0 = today, -1 = yesterday
   const [dayOffset, setDayOffset] = useState(0)
+  // Declutter (PRD F13), null when it isn't running. The deck is fixed when a day starts, so the
+  // count shows progress, not a moving target. Each step remembers only the fields it changed:
+  // { deck, dayOffset, position, openId, steps, undoneSteps }
+  const [declutter, setDeclutter] = useState(null)
 
   // Switching days closes any open email and clears the checkboxes
   function changeDay(offset) {
@@ -238,10 +263,102 @@ export default function App() {
     },
   }
 
-  const history = {
+  // Declutter (PRD F13, Flow 7). Starts on the given day with a fresh deck, newest first.
+  function startDeclutter(day) {
+    setDayOffset(day)
+    setView({ type: 'home' })
+    setOpenEmailId(null)
+    setSelectedIds([])
+    setDeclutter({
+      dayOffset: day,
+      deck: unsortedFor(emails, day).map((email) => email.id),
+      position: 0,
+      openId: null,
+      steps: [],
+      undoneSteps: [],
+    })
+  }
+
+  // Stepping back through cards only runs inside one day's Declutter. Leaving it hands the
+  // latest step to the usual "last action" undo (BUILD-LOG, 2026-10-31).
+  function settleDeclutter() {
+    const applied = declutter.steps.at(-1)
+    const step = applied ?? declutter.undoneSteps.at(-1)
+    if (!step) return
+    setLastAction({
+      label: step.label,
+      before: patchEmail(emails, step.id, step.previous),
+      after: patchEmail(emails, step.id, step.change),
+      undone: !applied,
+    })
+  }
+
+  function exitDeclutter() {
+    settleDeclutter()
+    setDeclutter(null)
+    setTimeout(() => document.getElementById('declutter-button')?.focus(), 0)
+  }
+
+  // One action on a card. It works like the same action elsewhere, without a first-use note
+  function declutterStep(email, label, kind, change, advance = true) {
+    const after = patchEmail(emails, email.id, change)
+    const previous = Object.fromEntries(Object.keys(change).map((key) => [key, email[key]]))
+    const step = { id: email.id, label, kind, change, previous, advance, position: declutter.position }
+    setEmails(after)
+    setDeclutter({
+      ...declutter,
+      steps: [...declutter.steps, step],
+      undoneSteps: [],
+      openId: null,
+      position: advance ? nextCard(after, declutter.deck, declutter.position) : declutter.position,
+    })
+    showToast(label)
+  }
+
+  const declutterActions = {
+    exit: exitDeclutter,
+    previousDay: (day) => {
+      settleDeclutter()
+      startDeclutter(day)
+    },
+    next() {
+      setDeclutter({ ...declutter, position: nextCard(emails, declutter.deck, declutter.position) })
+    },
+    previous() {
+      const position = previousCard(emails, declutter.deck, declutter.position)
+      if (position >= 0) setDeclutter({ ...declutter, position })
+    },
+    archive: (email) => declutterStep(email, 'Archived 1', 'archive', { removedTo: 'archive' }),
+    // An email that's already read stays read and the next card comes up
+    markRead(email) {
+      if (email.unread) declutterStep(email, 'Marked as read', 'read', { unread: false })
+      else declutterActions.next()
+    },
+    move: (email, bucket) => declutterStep(email, `Moved 1 to ${bucket.name}`, 'move', { bucketId: bucket.id }),
+    // Opening a card pauses the flow; closing it returns to the same card
+    open(email) {
+      setDeclutter({ ...declutter, openId: email.id })
+      changeEverywhere(markRead(email.id))
+    },
+    close() {
+      setDeclutter({ ...declutter, openId: null })
+    },
+  }
+
+  // The open email's toolbar works as usual. An action that removes it returns to the next card.
+  const declutterEmailView = {
+    archive: declutterActions.archive,
+    delete: (email) => declutterStep(email, 'Deleted 1', 'trash', { removedTo: 'trash' }),
+    junk: (email) => declutterStep(email, 'Marked as junk', 'junk', { removedTo: 'junk' }),
+    move: (email, listIds, bucket) => declutterActions.move(email, bucket),
+    markUnread: (email) => declutterStep(email, 'Marked as unread', 'unread', { unread: true }, false),
+  }
+
+  const lastActionHistory = {
     canUndo: lastAction !== null && !lastAction.undone,
     canRedo: lastAction !== null && lastAction.undone,
-    label: lastAction?.label,
+    undoLabel: lastAction?.label,
+    redoLabel: lastAction?.label,
     undo() {
       setEmails(lastAction.before)
       setLastAction({ ...lastAction, undone: true })
@@ -256,6 +373,84 @@ export default function App() {
     },
   }
 
+  // While Declutter runs, undo and redo step back and forward one card at a time. Before its
+  // first step they still reach the last action from before it started.
+  const steps = declutter?.steps ?? []
+  const undoneSteps = declutter?.undoneSteps ?? []
+  const redoLastAction = steps.length === 0 && lastActionHistory.canRedo
+  const history = declutter
+    ? {
+        canUndo: steps.length > 0 || lastActionHistory.canUndo,
+        canRedo: undoneSteps.length > 0 || redoLastAction,
+        undoLabel: steps.at(-1)?.label ?? lastActionHistory.undoLabel,
+        redoLabel: redoLastAction ? lastActionHistory.redoLabel : undoneSteps.at(-1)?.label,
+        undo() {
+          const step = steps.at(-1)
+          if (!step) {
+            lastActionHistory.undo()
+            return
+          }
+          setEmails(patchEmail(emails, step.id, step.previous))
+          setDeclutter({
+            ...declutter,
+            steps: steps.slice(0, -1),
+            undoneSteps: [...undoneSteps, step],
+            position: step.position,
+            openId: null,
+          })
+          showToast(`Undone: ${step.label}`)
+        },
+        redo() {
+          if (redoLastAction) {
+            lastActionHistory.redo()
+            return
+          }
+          const step = undoneSteps.at(-1)
+          const after = patchEmail(emails, step.id, step.change)
+          setEmails(after)
+          setDeclutter({
+            ...declutter,
+            steps: [...steps, step],
+            undoneSteps: undoneSteps.slice(0, -1),
+            position: step.advance ? nextCard(after, declutter.deck, step.position) : step.position,
+            openId: null,
+          })
+          showToast(`Redone: ${step.label}`)
+        },
+      }
+    : lastActionHistory
+
+  // What the Declutter screen shows. If an undo changes the current card, it moves on to the next one.
+  function declutterScreen() {
+    const { deck, position, dayOffset: day } = declutter
+    const deckEmails = deck.map((id) => emails.find((email) => email.id === id))
+    const inDeck = position < deck.length && isUnsorted(deckEmails[position])
+    const shownPosition = inDeck ? position : nextCard(emails, deck, position)
+    const unsortedLeft = deckEmails.filter(isUnsorted)
+    const readIds = steps.filter((step) => step.kind === 'read').map((step) => step.id)
+    const earlierDays = emails.filter((email) => isUnsorted(email) && email.dayOffset < day).map((email) => email.dayOffset)
+    return {
+      dayOffset: day,
+      dayName: dayLabel(day),
+      total: deck.length,
+      position: shownPosition,
+      email: deckEmails[shownPosition] ?? null,
+      openEmail: emails.find((email) => email.id === declutter.openId) ?? null,
+      hasPrevious: previousCard(emails, deck, shownPosition) >= 0,
+      hasNext: nextCard(emails, deck, shownPosition) < deck.length,
+      previousDay: earlierDays.length > 0 ? Math.max(...earlierDays) : null,
+      progress: {
+        archived: deckEmails.filter((email) => email.removedTo === 'archive').length,
+        moved: deckEmails.filter((email) => email.removedTo === null && email.bucketId !== null).length,
+        deleted: deckEmails.filter((email) => email.removedTo === 'trash' || email.removedTo === 'junk').length,
+        read: unsortedLeft.filter((email) => readIds.includes(email.id)).length,
+        left: unsortedLeft.length,
+      },
+      actions: declutterActions,
+      emailView: declutterEmailView,
+    }
+  }
+
   // Gmail's Inbox count: every unread email still in the inbox, from any day. Buckets work like
   // Gmail labels, so bucketed emails still count until they're archived or deleted
   // (BUILD-LOG, 2026-10-30). Hidden in Bucketbox, which only shows per-day counts (2026-10-29).
@@ -268,7 +463,12 @@ export default function App() {
       history={prototypeOn ? history : null}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
-      onTogglePrototype={() => setPrototypeOn((on) => !on)}
+      onTogglePrototype={() => {
+        if (declutter) exitDeclutter()
+        setPrototypeOn((on) => !on)
+      }}
+      declutterOn={declutter !== null}
+      onToggleDeclutter={() => (declutter ? exitDeclutter() : startDeclutter(dayOffset))}
     >
       {prototypeOn ? (
         <HomePage
@@ -285,6 +485,7 @@ export default function App() {
           zoneMode={zoneMode}
           emailView={emailView}
           onSendReply={sendReply}
+          declutter={declutter && declutterScreen()}
         />
       ) : (
         <GmailInbox emails={emails} buckets={buckets} />

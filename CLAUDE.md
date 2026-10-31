@@ -5,7 +5,7 @@ A clickable, fully interactive mock of a Gmail inbox, redesigned for neurodiverg
 It is a **prototype for concept testing** in Amanda Simmons's master's thesis (embedded in a Qualtrics survey, 5–10 participants). It is **not a production product** and does not connect to Gmail.
 
 ## 2. Source of truth
-- **`prd-neuroinclusive-inbox-prototype.md` is the source of truth** for scope and behavior. Read the relevant section before building a feature. Don't copy the PRD into this file.
+- **`updated-prd-neuroinclusive-inbox Prototype.md` is the source of truth** for scope and behavior. Read the relevant section before building a feature. Don't copy the PRD into this file.
 - If an asset (sketch, wireframe, screenshot) conflicts with the PRD text, **the PRD wins**. PRD §1A lists the known conflicts for wireframe-v2.png.
 - **Gmail screenshots** = Gmail's current UI, to preserve. **Sketches and wireframes** = the redesigned views.
 - Decisions made during the build live in `BUILD-LOG.md` and override the PRD only where the log says so.
@@ -22,6 +22,7 @@ It is a **prototype for concept testing** in Amanda Simmons's master's thesis (e
 | sketch-click-email-from-today.png | Today list with an email drawer sliding over the buckets, X at top right | §5 Today email view, F5, Flow 6 | Current |
 | sketch-drag-zones.png | Circular trash (delete zone) under the Today list, buckets on the right | F4 delete zone, Flow 2 | Current for the delete-zone concept. **Undo placement is illustrative only**; zone shows only while dragging |
 | wireframe-v2.png | Home page: Gmail placeholders, Today column, bucket grid | §5 home page, F1, F2, F4 | Current, **but many details conflict with the PRD** (see PRD §1A) |
+| screenshot-mobile-view-reference.png | Gmail's mobile email view, a real email | F13 card look | Current. Layout reference only; never copy its content |
 | wireframe-v1.png | Early Today page concept ("bin" wording) | — | **Superseded.** Don't build from it |
 
 **Privacy note:** the Gmail screenshots show a real inbox and email address. Use them only as visual reference. Never copy their content into mock data, and keep them out of the deployed site.
@@ -41,6 +42,7 @@ Build **v1 only** unless Amanda says otherwise. Full detail: PRD §4 and §6.
 - Gmail reminders preserved (shown at top, excluded from Select all)
 - Gmail chrome (left nav, header, search, compose drawer) kept and familiar
 - Optional bucket emoji, in place of the color dot (moved from v2, decided 2026-10-30)
+- Declutter (rapid sort): one card at a time through the viewed day's unsorted emails (PRD F13, Flow 7; added 2026-10-31)
 - "Open prototype" toggle at the bottom of the left nav, switching to a look-only Gmail-style inbox of the same mock emails (decided 2026-10-28)
 
 Build decisions already made (stacked rows, real "today" date, no reminder emails in the mock data, "Priority" starting with emails) are in `BUILD-LOG.md` → Decisions.
@@ -117,6 +119,6 @@ Avoid:
 | **Frimousse** (bucket emoji only) | Full searchable emoji picker for a bucket's emoji. Approved 2026-10-30. Its emoji data is self-hosted in `public/emojibase/`, so nothing loads from the internet. |
 
 ## 11. Deployment
-Hosted on **Vercel**, connected to the **GitHub repo** github.com/amandasimm/bucketbox-prototype: every push to `main` redeploys https://bucketbox-prototype-3s9t.vercel.app automatically, so **push only approved stages**. The site must work from a plain link and inside a Qualtrics iframe. **The repo is public**, so `.gitignore` keeps these on Amanda's computer only, never committed or deployed: the `screenshot-gmail-*.png` files (real inbox data), the PRD, the mock data spreadsheet, and the sketches and wireframes. Read them locally as usual.
+Hosted on **Vercel**, connected to the **GitHub repo** github.com/amandasimm/bucketbox-prototype: every push to `main` redeploys https://bucketbox-prototype-3s9t.vercel.app automatically, so **push only approved stages**. The site must work from a plain link and inside a Qualtrics iframe. **The repo is public**, so `.gitignore` keeps these on Amanda's computer only, never committed or deployed: the `screenshot-gmail-*.png` files and the mobile reference screenshot (real inbox data), the PRD, the mock data spreadsheet, and the sketches and wireframes. Read them locally as usual.
 
 **Mock data:** `mock_inbox_data_v4.numbers` → `scripts/import-mock-data.py` → `src/data/mockEmails.js` (generated, don't hand-edit). Buckets and emojis live in `src/data/startingSetup.js`. **Preview:** `npm run dev` (or the "prototype" entry in `.claude/launch.json`), at http://localhost:5173.

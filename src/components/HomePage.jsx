@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/core'
 import BucketGrid from './BucketGrid.jsx'
 import BucketView from './BucketView.jsx'
+import Declutter from './Declutter.jsx'
 import EmailDrawer from './EmailDrawer.jsx'
 import Icon from './Icon.jsx'
 import Toast from './Toast.jsx'
@@ -97,6 +98,7 @@ export default function HomePage({
   zoneMode,
   emailView,
   onSendReply,
+  declutter,
 }) {
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
@@ -156,7 +158,7 @@ export default function HomePage({
       >
         {/* The home page stays underneath an opened bucket, just visible around its edges,
             but can't be clicked or tabbed into until the bucket closes */}
-        <div className="home-layer" inert={openBucket ? true : undefined}>
+        <div className="home-layer" inert={openBucket || declutter ? true : undefined}>
           <TodayList
             emails={emails}
             buckets={buckets}
@@ -168,7 +170,7 @@ export default function HomePage({
             zoneMode={zoneMode}
             openEmailId={drawerEmail?.id}
             onOpen={emailView.open}
-            covered={Boolean(openBucket)}
+            covered={Boolean(openBucket || declutter)}
           />
           <div className="home-right">
             <BucketGrid
@@ -176,7 +178,7 @@ export default function HomePage({
               emails={emails}
               bucketActions={bucketActions}
               onOpenBucket={emailView.openBucket}
-              covered={Boolean(openBucket)}
+              covered={Boolean(openBucket || declutter)}
             />
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (
@@ -203,6 +205,9 @@ export default function HomePage({
             onSendReply={onSendReply}
             bucketActions={bucketActions}
           />
+        )}
+        {declutter && (
+          <Declutter key={declutter.dayOffset} declutter={declutter} buckets={buckets} onSendReply={onSendReply} />
         )}
         <Toast toast={toast} onAction={onToastAction} />
       </div>
