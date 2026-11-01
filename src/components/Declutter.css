@@ -6,6 +6,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* The email card, then the controls. On narrower screens the controls give up room first,
+     down to a 32px gap between Archive and Mark as read; only then does the card shrink. */
+  --declutter-columns: minmax(0, 400px) clamp(296px, calc(100% - 432px), 376px);
   border: 3px solid var(--card-stroke);
   border-radius: 16px;
   background: linear-gradient(160deg, var(--card-gradient-start), var(--card-gradient-end));
@@ -49,7 +52,7 @@
   min-height: 0;
   display: grid;
   --declutter-head: 68px; /* the title, count and progress bar above the card */
-  grid-template-columns: minmax(0, 400px) 376px;
+  grid-template-columns: var(--declutter-columns);
   grid-template-rows: minmax(0, 1fr);
   justify-content: center;
   gap: 32px;
@@ -175,10 +178,9 @@
 /* Rectangular buttons, so they read differently from the round bucket pills */
 .declutter-keys {
   display: grid;
-  grid-template-columns: 132px 104px 132px;
+  grid-template-columns: 132px minmax(0, 1fr) 132px; /* the middle is the gap between Archive and Mark as read */
   grid-template-rows: 36px 36px 36px;
-  gap: 12px 4px;
-  justify-content: center;
+  row-gap: 12px;
 }
 .declutter-action {
   display: inline-flex;
@@ -206,10 +208,12 @@
   background: transparent;
   cursor: default;
 }
-.declutter-keys .is-up { grid-area: 1 / 2; }
+.declutter-keys .is-up,
+.declutter-keys .is-down { width: 104px; justify-self: center; } /* centered over that gap */
+.declutter-keys .is-up { grid-area: 1 / 1 / 2 / -1; }
 .declutter-keys .is-left { grid-area: 2 / 1; }
 .declutter-keys .is-right { grid-area: 2 / 3; }
-.declutter-keys .is-down { grid-area: 3 / 2; }
+.declutter-keys .is-down { grid-area: 3 / 1 / 4 / -1; }
 
 /* An opened email pauses the flow: Declutter stays behind a soft 20% tint and blur. The layer
    uses the same columns as the screen below, so the email starts where the card preview does. */
@@ -218,7 +222,7 @@
   inset: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(0, 400px) 376px;
+  grid-template-columns: var(--declutter-columns);
   grid-template-rows: minmax(0, 1fr);
   justify-content: center;
   gap: 32px;
@@ -261,8 +265,7 @@
 .declutter-end-buttons {
   grid-area: 2 / 1 / 3 / -1;
   display: grid;
-  grid-template-columns: 240px 132px; /* the columns above, so Done starts where Mark as read does */
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) 132px; /* Done starts where Mark as read does */
   justify-items: start;
 }
 .declutter-end-buttons .declutter-action { width: 128px; } /* Previous Day's width, so the pair matches */

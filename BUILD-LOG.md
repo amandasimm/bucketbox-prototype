@@ -325,6 +325,7 @@ Each stage: preview → Amanda approves → commit → log update.
 ---
 
 ## Decisions
+- 2026-11-01: On narrower screens, Declutter's gap between Archive and Mark as read shrinks first, from 112px to 32px (the gap between the email card and Archive), with Back and Next staying centered over it. Only then does the email card narrow. Reason: Amanda's review; it preserves the email preview's width. **SYNC TO PRD** (F13)
 - 2026-11-01: The "New" tag moved from Gmail's Share in chat button to the Declutter button. Reason: Amanda's choice. **SYNC TO PRD** (F5 reply row, F13 entry point)
 - 2026-11-01: Opening an email from Declutter keeps the Declutter window behind it under a 20% blue-gray tint and a 4px blur, with only the email's own X showing (Declutter's X is hidden). The email card hugs a column of 16px text with 24px line height: 640px wide, about 70 characters per line, with its full stroke, a 24px gap inside the Declutter window, and starting where the email card preview starts (so it isn't centered); long emails scroll inside it. Its X and Escape go back to the Declutter card. Reason: Amanda's review; two X buttons were confusing, and a full-width card left too much white space. **SYNC TO PRD** (F13, Flow 7)
 - 2026-11-01: Declutter's Previous button now reads "Back", so it no longer shares a word with Previous Day. Done and Previous Day are the same width (128px) with centered contents; Done starts where Mark as read starts, and Previous Day where Archive starts. Reason: Amanda's choice. **SYNC TO PRD** (F13, Flow 7)
