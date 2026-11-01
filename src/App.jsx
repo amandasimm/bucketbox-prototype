@@ -299,7 +299,9 @@ export default function App() {
     setTimeout(() => document.getElementById('declutter-button')?.focus(), 0)
   }
 
-  // One action on a card. It works like the same action elsewhere, without a first-use note
+  // One action on a card. It works like the same action elsewhere, without a first-use note.
+  // advance is false for changes made in an opened email that keep it open; once it closes, a
+  // sorted email's card is skipped (see declutterScreen).
   function declutterStep(email, label, kind, change, advance = true) {
     const after = patchEmail(emails, email.id, change)
     const previous = Object.fromEntries(Object.keys(change).map((key) => [key, email[key]]))
@@ -309,7 +311,7 @@ export default function App() {
       ...declutter,
       steps: [...declutter.steps, step],
       undoneSteps: [],
-      openId: null,
+      openId: advance ? null : declutter.openId,
       position: advance ? nextCard(after, declutter.deck, declutter.position) : declutter.position,
     })
     showToast(label)
@@ -345,12 +347,13 @@ export default function App() {
     },
   }
 
-  // The open email's toolbar works as usual. An action that removes it returns to the next card.
+  // The open email's toolbar works as usual. Archive, Delete and junk close it and return to the
+  // next card; sorting it into a bucket or marking it unread keep it open (BUILD-LOG, 2026-11-01).
   const declutterEmailView = {
     archive: declutterActions.archive,
     delete: (email) => declutterStep(email, 'Deleted 1', 'trash', { removedTo: 'trash' }),
     junk: (email) => declutterStep(email, 'Marked as junk', 'junk', { removedTo: 'junk' }),
-    move: (email, listIds, bucket) => declutterActions.move(email, bucket),
+    move: (email, listIds, bucket) => declutterStep(email, `Moved 1 to ${bucket.name}`, 'move', { bucketId: bucket.id }, false),
     markUnread: (email) => declutterStep(email, 'Marked as unread', 'unread', { unread: true }, false),
   }
 
@@ -378,6 +381,8 @@ export default function App() {
   const steps = declutter?.steps ?? []
   const undoneSteps = declutter?.undoneSteps ?? []
   const redoLastAction = steps.length === 0 && lastActionHistory.canRedo
+  // Undoing or redoing a change made in the email that's open keeps it open
+  const openIdAfter = (step) => (!step.advance && step.id === declutter.openId ? declutter.openId : null)
   const history = declutter
     ? {
         canUndo: steps.length > 0 || lastActionHistory.canUndo,
@@ -396,7 +401,7 @@ export default function App() {
             steps: steps.slice(0, -1),
             undoneSteps: [...undoneSteps, step],
             position: step.position,
-            openId: null,
+            openId: openIdAfter(step),
           })
           showToast(`Undone: ${step.label}`)
         },
@@ -413,7 +418,7 @@ export default function App() {
             steps: [...steps, step],
             undoneSteps: undoneSteps.slice(0, -1),
             position: step.advance ? nextCard(after, declutter.deck, step.position) : step.position,
-            openId: null,
+            openId: openIdAfter(step),
           })
           showToast(`Redone: ${step.label}`)
         },
