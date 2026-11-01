@@ -72,7 +72,7 @@ Each stage: preview → Amanda approves → commit → log update.
 - End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("That's it for Today" if emails were skipped); Back stays in place; Previous Day (secondary, left arrow key, nearest earlier day with unsorted emails) and Done (primary, right arrow key) below it. No expandable lists.
 - A day with nothing unsorted goes straight to the end screen. An opened email's toolbar works as usual, and an action that removes it returns to the next card.
 - New toast: "Marked as read". Declutter's Archive doesn't count as first use.
-- Screen: one card with a 3px stroke and gradient; small "Declutter" title, count and progress bar above a phone-shaped email card; the next card peeks below; controls and pills bottom right. Replaces "pills below the card" (PRD already updated). Rectangular buttons, labeled Previous, Archive, Mark as read, Next.
+- Screen: one card with a 3px stroke and gradient; small "Declutter" title, count and progress bar above a phone-shaped email card; the next card peeks below; controls start at the top of the email card, with pills wrapping below them (2026-11-01). Rectangular buttons, labeled Back, Archive, Mark as read, Next.
 - Card 3-dot menu: Mute, Block sender, Unsubscribe (Promotions and Social only) are inert; Report spam works like Mark as junk.
 - Entry: a button in the top right corner of the Today card, in the same style as Move / Archive / Delete. Its icon is Amanda's own placeholder drawing. A date from another year in a card under 460px wide makes it icon-only with a tooltip. It starts Declutter on the day being viewed (2026-11-01).
 - **F13 Test still mentions "the forced choice", which no longer exists.**
