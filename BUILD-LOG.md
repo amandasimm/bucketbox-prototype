@@ -320,10 +320,13 @@ Each stage: preview → Amanda approves → commit → log update.
 - Not checked: a real screen reader, the icon-only Declutter tooltip on screen, the new Declutter layout at 1024 wide.
 - Approved by Amanda: 2026-11-01
 - Commit: "Stage 13: Declutter refinements and accessibility review"
+- Follow-up, same day: an email opened from Declutter is a 640px card over the blurred Declutter window, with one X, and the "New" tag moved to the Declutter button. Approved by Amanda: 2026-11-01. Commit: "Declutter: open email card and New tag". Tested: Escape, the email's X, the Move menu, a 6-message thread with the reply box, and toolbar Archive, on the earlier version of this card. The final 24px-gap version was measured for position only.
 
 ---
 
 ## Decisions
+- 2026-11-01: The "New" tag moved from Gmail's Share in chat button to the Declutter button. Reason: Amanda's choice. **SYNC TO PRD** (F5 reply row, F13 entry point)
+- 2026-11-01: Opening an email from Declutter keeps the Declutter window behind it under a 20% blue-gray tint and a 4px blur, with only the email's own X showing (Declutter's X is hidden). The email card hugs a column of 16px text with 24px line height: 640px wide, about 70 characters per line, with its full stroke, a 24px gap inside the Declutter window, and starting where the email card preview starts (so it isn't centered); long emails scroll inside it. Its X and Escape go back to the Declutter card. Reason: Amanda's review; two X buttons were confusing, and a full-width card left too much white space. **SYNC TO PRD** (F13, Flow 7)
 - 2026-11-01: Declutter's Previous button now reads "Back", so it no longer shares a word with Previous Day. Done and Previous Day are the same width (128px) with centered contents; Done starts where Mark as read starts, and Previous Day where Archive starts. Reason: Amanda's choice. **SYNC TO PRD** (F13, Flow 7)
 - 2026-11-01: The end screen's "Declutter Previous Day" button now reads "Previous Day". Reason: Amanda's choice. **SYNC TO PRD** (F13, Flow 7)
 - 2026-11-01: Declutter's end screen. The message "You went through Today" is now "That's it for Today" (the 2026-10-31 entry and the open question below are updated to match). Declutter Previous Day takes the Previous button's secondary style, with a left arrow; Done keeps the main style, with a right arrow, in Mark as read's place. Left presses Declutter Previous Day and Right presses Done; holding a key down from the last card doesn't trigger them. **SYNC TO PRD** (F13, Flow 7)

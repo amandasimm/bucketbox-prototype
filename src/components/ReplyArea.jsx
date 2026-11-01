@@ -49,7 +49,6 @@ export default function ReplyArea({ email, onSendReply }) {
         <InertButton label="Share in chat" className="reply-button" nameOnHover={false}>
           <Icon name="chat_bubble" size={20} />
           Share in chat
-          <span className="new-badge" aria-hidden="true">New</span>
         </InertButton>
       </div>
     )

@@ -211,17 +211,37 @@
 .declutter-keys .is-right { grid-area: 2 / 3; }
 .declutter-keys .is-down { grid-area: 3 / 2; }
 
-/* An opened email pauses the flow */
-.declutter-open {
-  flex: 1;
-  min-height: 0;
-  width: min(100% - 112px, 860px); /* leaves room for the X in the corner */
-  margin: 16px auto;
-  border-radius: 16px;
-  background: var(--surface);
-  overflow: hidden;
+/* An opened email pauses the flow: Declutter stays behind a soft 20% tint and blur. The layer
+   uses the same columns as the screen below, so the email starts where the card preview does. */
+.declutter-open-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 400px) 376px;
+  grid-template-rows: minmax(0, 1fr);
+  justify-content: center;
+  gap: 32px;
+  padding: 24px;
+  background: rgba(31, 60, 110, 0.2);
+  backdrop-filter: blur(4px);
 }
-.declutter-open .email-pane { height: 100%; }
+/* The card hugs a centered email column, so lines stay about 70 characters long, the comfortable
+   range for reading. It's wider than the preview, running on past it. Long emails scroll inside
+   it. Menus can extend past its edges. */
+.declutter-open {
+  display: flex;
+  flex-direction: column;
+  width: 640px;
+  min-height: 0;
+  border: 2px solid var(--card-stroke);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+.declutter-open .email-pane { background: none; }
+.declutter-open .pane-content { padding-inline: 28px; }
+.declutter-open .thread-body { font-size: 16px; line-height: 24px; } /* matches the Declutter card */
 
 /* The confirmation screen: the message starts level with the buttons, so Done sits beside it */
 .declutter-end {

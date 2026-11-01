@@ -277,31 +277,21 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
 
   return (
     <section className="declutter" aria-labelledby="declutter-title" ref={screenRef}>
-      <span className="declutter-exit">
-        <IconButton label="Exit Declutter" tooltipAlign="right" onClick={actions.exit}>
-          <Icon name="close" size={20} />
-        </IconButton>
-      </span>
+      {/* An open email has its own X, which goes back to the card */}
+      {!openEmail && (
+        <span className="declutter-exit">
+          <IconButton label="Exit Declutter" tooltipAlign="right" onClick={actions.exit}>
+            <Icon name="close" size={20} />
+          </IconButton>
+        </span>
+      )}
 
       {/* The toast already says what just happened; this adds where you are now */}
       <p className="visually-hidden" role="status">
         {!atEnd && !openEmail && `${position + 1} of ${total}. ${email.unread ? 'Unread. ' : ''}${email.sender}: ${email.subject}`}
       </p>
 
-      {openEmail ? (
-        <div className="declutter-open">
-          <EmailPane
-            email={openEmail}
-            listIds={[openEmail.id]}
-            buckets={buckets}
-            emailView={emailView}
-            onSendReply={onSendReply}
-            onClose={actions.close}
-            titleRef={titleRef}
-          />
-        </div>
-      ) : (
-          <div className="declutter-stage">
+          <div className="declutter-stage" inert={openEmail ? true : undefined}>
             <div className="declutter-reader">
               {title}
               <p className="declutter-count">{atEnd ? 'Complete' : `${position + 1} of ${total}`}</p>
@@ -356,6 +346,21 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
               {!atEnd && <BucketBar email={email} buckets={buckets} onMove={actions.move} />}
             </div>
           </div>
+      {/* An opened email pauses the flow: it sits on top, with Declutter blurred behind it */}
+      {openEmail && (
+        <div className="declutter-open-layer">
+          <div className="declutter-open">
+            <EmailPane
+              email={openEmail}
+              listIds={[openEmail.id]}
+              buckets={buckets}
+              emailView={emailView}
+              onSendReply={onSendReply}
+              onClose={actions.close}
+              titleRef={titleRef}
+            />
+          </div>
+        </div>
       )}
     </section>
   )

@@ -51,6 +51,7 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onD
         <button type="button" id="declutter-button" className="bulk-button declutter-button has-tooltip" onClick={onDeclutter}>
           <DeclutterIcon size={20} />
           <span className="declutter-button-label">Declutter</span>
+          <span className="new-badge" aria-hidden="true">New</span>
           <span className="tooltip align-right" aria-hidden="true">Declutter</span>
         </button>
       </header>
