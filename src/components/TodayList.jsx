@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import BulkActions from './BulkActions.jsx'
-import DayNav from './DayNav.jsx'
+import DayNav, { dayLabel } from './DayNav.jsx'
+import DeclutterIcon from './DeclutterIcon.jsx'
 import EmailRow from './EmailRow.jsx'
 import { newestFirst } from '../utils/dates.js'
 
@@ -20,7 +21,7 @@ export function unsortedFor(emails, dayOffset) {
 
 // The day's unsorted emails, with the unsorted count (PRD F1), Select all,
 // and the Move / Archive / Delete buttons (PRD F7). Clicking an email opens it in the drawer (PRD F5).
-export default function TodayList({ emails, buckets, dayOffset, onChangeDay, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
+export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onDeclutter, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
   const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
   const unsorted = unsortedFor(emails, dayOffset)
   // Days that still have unsorted emails, for the back arrow's dot and the calendar
@@ -43,8 +44,15 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, sel
 
   return (
     <section className="today-list" aria-labelledby="today-heading">
-      <header className="today-header">
+      {/* A date from another year is long, so Declutter may have to shrink to its icon beside it */}
+      <header className={`today-header ${dayLabel(dayOffset).length > 14 ? 'has-long-date' : ''}`}>
         <DayNav dayOffset={dayOffset} onChangeDay={onChangeDay} daysWithUnsorted={daysWithUnsorted} />
+        {/* Declutter (PRD F13) starts on the day being viewed */}
+        <button type="button" id="declutter-button" className="bulk-button declutter-button has-tooltip" onClick={onDeclutter}>
+          <DeclutterIcon size={20} />
+          <span className="declutter-button-label">Declutter</span>
+          <span className="tooltip align-right" aria-hidden="true">Declutter</span>
+        </button>
       </header>
 
       {/* Select all on the left, the day's unsorted count on the right (BUILD-LOG, 2026-10-30) */}

@@ -78,6 +78,13 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
     if (showNote) noteConfirmRef.current?.focus()
   }, [showNote])
 
+  // Losing the selection (Declutter clears it) closes them too, so they can't reappear later
+  useEffect(() => {
+    if (!nothingSelected) return
+    setMenuOpen(false)
+    setPendingNote(null)
+  }, [nothingSelected])
+
   // A drag closes the Move list and any first-use note
   useEffect(() => {
     if (!dragging) return

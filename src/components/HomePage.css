@@ -22,6 +22,7 @@
    the search bar's gray-blue for the header, a soft gray-blue outline. It sits above the
    email drawer, which slides out from behind it. */
 .today-list {
+  container: today-card / inline-size;
   grid-area: today;
   position: relative;
   z-index: 6;
@@ -72,6 +73,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 24px;
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -101,7 +103,7 @@
   gap: 6px;
   height: 36px;
   padding: 0 14px 0 10px;
-  border: 1px solid var(--button-outline);
+  border: 1px solid currentColor;
   border-radius: var(--button-radius);
   color: var(--focus-ring);
   font-weight: 500;
@@ -111,6 +113,20 @@
   color: var(--text-disabled);
   border-color: var(--divider);
   cursor: default;
+}
+.declutter-button { position: relative; } /* in the Today card's top right corner */
+.declutter-button .tooltip { display: none; }
+/* A long date in a narrow card: icon-only, so the header stays on one line */
+@container today-card (max-width: 460px) {
+  .has-long-date .declutter-button { padding: 0 7px; }
+  .has-long-date .declutter-button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .has-long-date .declutter-button .tooltip { display: block; }
 }
 
 /* Email rows */
@@ -127,6 +143,7 @@
 .email-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3); }
 
 .drag-handle {
+  grid-area: 1 / 1;
   /* The whole left strip of the row, top to bottom, picks the email up, with the
      icon at the top (BUILD-LOG, 2026-10-30) */
   align-self: stretch;
@@ -152,9 +169,21 @@
   accent-color: var(--focus-ring);
   cursor: pointer;
 }
+/* The box stays 18px, lined up with the handle and sender; the clickable area around it is 24px */
+.email-checkbox-target { grid-area: 1 / 2; position: relative; display: flex; }
+.email-checkbox-target::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -3px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
 
 /* The row's text is a button: clicking it opens the email (PRD F1, F5) */
 .email-row-body {
+  grid-area: 1 / -2; /* the last column, in rows with or without a checkbox */
   display: block;
   width: 100%;
   min-width: 0; /* lets long text shorten with "…" */
@@ -1388,16 +1417,19 @@
 }
 .reply-box-discard { margin-left: auto; }
 
-/* Day navigation in the Today card header (PRD F6; BUILD-LOG, 2026-10-30): ‹ label ›, calendar */
+/* Day navigation in the Today card header (PRD F6; BUILD-LOG, 2026-11-01): ‹ label › calendar */
 .day-nav {
   flex: 1;
   display: flex;
   align-items: center;
   gap: 2px;
-  margin: 0 -8px; /* the arrow and calendar circles sit just inside the card's edges */
+  margin: 0 8px 0 -8px; /* the arrow's circle sits just inside the card's edge */
   min-width: 0;
 }
-.day-nav-calendar { margin-left: auto; }
+/* 8px from the next-day arrow, double the 4px between the arrows and the date. Today has no
+   next arrow, so the same 8px starts from the date. */
+.day-nav-calendar { margin-left: 6px; }
+.today-label + .day-nav-calendar { margin-left: 4px; }
 .day-nav .icon-button {
   width: 32px;
   height: 32px;

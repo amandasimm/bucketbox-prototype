@@ -167,19 +167,6 @@
   font-weight: 500;
 }
 /* Declutter, just below the switch (PRD F13) */
-.compose-button.declutter-button {
-  margin: 16px 0 0 8px;
-  /* The icon lines up with the nav icons, the label with Compose's and the switch */
-  gap: 16px;
-  width: 136px; /* same as Compose */
-  height: 36px; /* Bucketbox's button style, in gray */
-  padding: 0 8px 0 14px;
-  border: 2px solid var(--outline);
-  border-radius: var(--button-radius);
-  background: none;
-}
-.compose-button.declutter-button:hover { background: var(--hover-bg); box-shadow: none; }
-.compose-button.declutter-button.is-on { background: var(--nav-active-bg); }
 .switch-track {
   display: flex;
   align-items: center;
@@ -232,6 +219,7 @@
 .nav-collapsed .prototype-switch { gap: 16px; } /* the switch lines up with Compose's label */
 
 /* Main area: the white rounded panel the prototype lives in */
+.gmail-main:focus { outline: none; } /* the skip link's target; it isn't a control */
 .gmail-main {
   grid-area: main;
   /* No margin: the bucket area scrolls right up to the window's edges; the cards keep their

@@ -467,8 +467,6 @@ export default function App() {
         if (declutter) exitDeclutter()
         setPrototypeOn((on) => !on)
       }}
-      declutterOn={declutter !== null}
-      onToggleDeclutter={() => (declutter ? exitDeclutter() : startDeclutter(dayOffset))}
     >
       {prototypeOn ? (
         <HomePage
@@ -476,6 +474,7 @@ export default function App() {
           buckets={buckets}
           dayOffset={dayOffset}
           onChangeDay={changeDay}
+          onDeclutter={() => startDeclutter(dayOffset)}
           selectedIds={selectedIds}
           onSelect={setSelectedIds}
           actions={actions}

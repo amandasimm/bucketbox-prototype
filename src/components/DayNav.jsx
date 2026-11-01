@@ -38,8 +38,7 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
 
   useLayoutEffect(() => {
     const box = anchorRef.current.getBoundingClientRect()
-    // The icon sits in the card's right corner, so the calendar opens leftward from it
-    setPosition({ left: Math.max(8, box.right - POPOVER_WIDTH), top: box.bottom + 6 })
+    setPosition({ left: box.left, top: box.bottom + 6 })
   }, [anchorRef])
 
   useEffect(() => {
@@ -137,7 +136,7 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
   )
 }
 
-// Moving between days (PRD F6): ‹ label › on the left, the calendar in the right corner. The next arrow only appears on
+// Moving between days (PRD F6): ‹ label › then the calendar. The next arrow only appears on
 // past days. The back arrow shows a small blue dot when the day before still has unsorted
 // emails, with a text label so it isn't color-only (BUILD-LOG, 2026-10-30).
 export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted }) {
@@ -164,8 +163,7 @@ export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted }) {
         </IconButton>
       )}
       <span ref={calendarRef} className="day-nav-calendar">
-        {/* Its hover label opens leftward, so the card's edge doesn't cut it off */}
-        <IconButton label="Choose a day" tooltipAlign="right" onClick={() => setPickerOpen(!pickerOpen)}>
+        <IconButton label="Choose a day" onClick={() => setPickerOpen(!pickerOpen)}>
           <Icon name="calendar_month" size={20} />
         </IconButton>
       </span>

@@ -98,6 +98,7 @@ export default function HomePage({
   zoneMode,
   emailView,
   onSendReply,
+  onDeclutter,
   declutter,
 }) {
 
@@ -164,6 +165,7 @@ export default function HomePage({
             buckets={buckets}
             dayOffset={dayOffset}
             onChangeDay={onChangeDay}
+            onDeclutter={onDeclutter}
             selectedIds={selectedIds}
             onSelect={onSelect}
             actions={actions}

@@ -11,9 +11,9 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-10-31_
+_Last updated: 2026-11-01_
 
-- **Built:** Stages 0–7 and 9–12, the full approved plan plus Declutter (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Built:** Stages 0–7 and 9–13, the full approved plan plus Declutter (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
 - **Next:** placeholder wording decisions (see Open questions) and updating the PRD from the SYNC TO PRD summary below (F13's section 12 items are newly decided). The PRD is now `updated-prd-neuroinclusive-inbox Prototype.md`.
 
 **Approved build plan (2026-10-28)**
@@ -25,7 +25,7 @@ Each stage: preview → Amanda approves → commit → log update.
 
 ---
 
-## SYNC TO PRD summary (current as of 2026-10-31)
+## SYNC TO PRD summary (current as of 2026-11-01)
 <!-- The decisions below change or add to the PRD. Full wording and reasons are in Decisions; superseded ones are left out here. -->
 
 **Product and scope**
@@ -65,16 +65,16 @@ Each stage: preview → Amanda approves → commit → log update.
 
 **Declutter (F13, Flow 7, §12 rapid sort; decided 2026-10-31)**
 - Right on a read email keeps it read and moves on. Archive, Mark as read and a pill click all advance. Opening a card marks it read.
-- Pills: Tab then Enter, no number keys. At most two rows, then sideways scrolling.
+- Pills: Tab then Enter, no number keys. They sit under the buttons, wrap freely and scroll down only if they outgrow the space (2026-11-01).
 - Cards are newest first with no wrapping; Next on the last card goes to the end screen. The total stays fixed ("4 of 12"); Previous skips emails that left the deck.
 - Screen readers hear position, unread status, sender and subject on each card; buttons name their arrow key.
 - Undo steps back through every action in the current day's run, including from the end screen, and redo works; after exit or a new day it returns to last action only.
-- End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("You went through Today" if emails were skipped); Previous stays in place; Declutter Previous Day (tertiary, nearest earlier day with unsorted emails) and Done (primary) below it. No expandable lists.
+- End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("That's it for Today" if emails were skipped); Back stays in place; Previous Day (secondary, left arrow key, nearest earlier day with unsorted emails) and Done (primary, right arrow key) below it. No expandable lists.
 - A day with nothing unsorted goes straight to the end screen. An opened email's toolbar works as usual, and an action that removes it returns to the next card.
 - New toast: "Marked as read". Declutter's Archive doesn't count as first use.
 - Screen: one card with a 3px stroke and gradient; small "Declutter" title, count and progress bar above a phone-shaped email card; the next card peeks below; controls and pills bottom right. Replaces "pills below the card" (PRD already updated). Rectangular buttons, labeled Previous, Archive, Mark as read, Next.
 - Card 3-dot menu: Mute, Block sender, Unsubscribe (Promotions and Social only) are inert; Report spam works like Mark as junk.
-- Entry: a gray outlined button below the Bucketbox switch, not a nav item.
+- Entry: a button in the top right corner of the Today card, in the same style as Move / Archive / Delete. Its icon is Amanda's own placeholder drawing. A date from another year in a card under 460px wide makes it icon-only with a tooltip. It starts Declutter on the day being viewed (2026-11-01).
 - **F13 Test still mentions "the forced choice", which no longer exists.**
 
 **Bucketbox styling (decided 2026-10-31; §5, F1, F2)**
@@ -310,12 +310,34 @@ Each stage: preview → Amanda approves → commit → log update.
 - Approved by Amanda: 2026-10-31
 - Commit: "Stage 12: Declutter and styling updates"
 
+### 2026-11-01 — Stage 13: Declutter refinements and accessibility review
+- Done:
+  - Amanda's own Declutter icon. The button moved from the left nav to the Today card's top right corner, and the calendar now follows the day arrows.
+  - Heuristic review fixes: 24 x 24 checkbox click areas, button strokes matching their text, Declutter's buttons at the top of the email card with pills wrapping below them, 14px hint text, a skip link.
+  - End screen: "That's it for Today", Back and Previous Day labels, matching Previous Day and Done buttons, Left and Right arrow keys.
+  - Email rows: content comes first in the keyboard and screen reader order.
+- Checked: spacing on Today, past days and another year's date; 1280 and 1366 wide; an open email; 70 test pills; the skip link; the end screen keys, including a held key.
+- Not checked: a real screen reader, the icon-only Declutter tooltip on screen, the new Declutter layout at 1024 wide.
+- Approved by Amanda: 2026-11-01
+- Commit: "Stage 13: Declutter refinements and accessibility review"
+
 ---
 
 ## Decisions
+- 2026-11-01: Declutter's Previous button now reads "Back", so it no longer shares a word with Previous Day. Done and Previous Day are the same width (128px) with centered contents; Done starts where Mark as read starts, and Previous Day where Archive starts. Reason: Amanda's choice. **SYNC TO PRD** (F13, Flow 7)
+- 2026-11-01: The end screen's "Declutter Previous Day" button now reads "Previous Day". Reason: Amanda's choice. **SYNC TO PRD** (F13, Flow 7)
+- 2026-11-01: Declutter's end screen. The message "You went through Today" is now "That's it for Today" (the 2026-10-31 entry and the open question below are updated to match). Declutter Previous Day takes the Previous button's secondary style, with a left arrow; Done keeps the main style, with a right arrow, in Mark as read's place. Left presses Declutter Previous Day and Right presses Done; holding a key down from the last card doesn't trigger them. **SYNC TO PRD** (F13, Flow 7)
+- 2026-11-01: In each email row, the code order is now email content, checkbox, drag handle, so keyboard and screen reader users meet the email before its controls. The row looks the same, so Tab starts on the content and then steps left. Each email is still three Tab stops. Reason: Amanda's review; you shouldn't have to act on an email before knowing what it is. **SYNC TO PRD** (F1, section 9)
+- 2026-11-01: Fixes from Amanda's heuristic review. Checkboxes stay 18px but each has a 24 x 24 clickable area, and Select all is at least 24px tall (WCAG 2.5.8). Enabled outlined buttons (Move, Archive, Delete, Declutter, Previous, Next) have a stroke matching their text and icon; switched-off buttons keep their faint stroke. Declutter's buttons now line up with the top of the email card, with the bucket pills below them; the pills wrap freely and scroll down only if they outgrow the space, replacing the two-row sideways scroll. "Open to read or reply" is 14px. On the end screen, the message now starts level with the buttons, so Done stays beside it. A "Skip to main content" link appears on the first Tab press (WCAG 2.4.1). **SYNC TO PRD** (F13, Flow 7, F1, section 9)
+- 2026-11-01: Reviewed and left as is, Amanda's choice: Declutter clearing selected emails (ignore for now); rows keep their previews, because showing 6 emails with more context beats more emails with more context switching; moving to a bucket stays Tab then Enter, because Declutter is a quick archive-or-keep triage and bucket sorting can happen on the Today page, until hotkeys in v2; the back arrow's dot stays hover-explained for now.
+- 2026-11-01: Trying a new Today header: "‹ date › calendar" on the left, Declutter in the card's top right corner. The calendar button sits 8px after the next-day arrow, double the 4px between the arrows and the date; on Today, which has no next arrow, the 8px starts from the date. The calendar now opens rightward from its icon. Declutter is icon-only only when a date from another year shares a card under 460px wide. Reason: Amanda's choice. **SYNC TO PRD** (F6 day navigation, F13 entry point, Flow 7) Supersedes the bottom-right position in the entry below.
+- 2026-11-01: The Declutter button moved from the left nav to the bottom right of the Today card, in the same style as Move / Archive / Delete and set apart from them on the right. It stays enabled with nothing selected, because it acts on the whole day. It isn't in an opened bucket, and the delete zone replaces it during a drag, as it does the bulk buttons. When the Today card is under 460px wide (three or more buckets on a narrow screen, or an email open), it's icon-only with a tooltip, so all four buttons fit on one line. The Declutter screen covers the button, so it no longer needs an active state: the gray fill, dark stroke and filled icon are gone from the build, and `declutter-icon-filled.svg` stays in the project folder. Reason: Amanda's choice; it was the only text in the nav, and the button acts on these emails. **SYNC TO PRD** (F13 entry point, Flow 7) Supersedes the three active-state entries below.
+- 2026-11-01: The Declutter button uses Amanda's own placeholder icon (`declutter-icon.svg`, a stack of cards with an envelope in front), replacing Material's `stacks`. It's drawn in the text color at 20px. - 2026-11-01: The Declutter button's active state gets a light gray fill, the same gray as hover (`--hover-bg`, 8% gray). The stroke, icon and label stay #202124. Reason: Amanda's review. **SYNC TO PRD** (F13 entry point)
+- 2026-11-01: The Declutter button's active state has no fill. Its stroke, icon and label all take Gmail's active icon color (#202124), and the icon switches to Amanda's filled version (`declutter-icon-filled.svg`). The blue fill is gone. Reason: Amanda's choice. **SYNC TO PRD** (F13 entry point) The "no fill" part is **SUPERSEDED (2026-11-01)** by the entry above.
+There's no filled version yet, so while Declutter is on the icon stays outlined and the button's blue background shows the state. Reason: Amanda's drawing, "for now". **SYNC TO PRD** (F13 entry point) **SUPERSEDED (2026-11-01)** for the active state by the entry below.
 - 2026-10-31: Declutter details (Stage 12): Amanda approved the proposed defaults for all PRD §12 rapid sort items, plus fixed deck totals, undo stepping within a day's run, and "Declutter Previous Day". Full list in the SYNC TO PRD summary. Reason: Amanda's choices; progress, "not a moving target". **SYNC TO PRD** (F13, Flow 7, §12)
-- 2026-10-31: Declutter's bucket pills sit at the bottom right under the buttons, not across the top or below the card, so the email is the focus for F and Z scanning. Reason: Amanda's review. PRD updated.
-- 2026-10-31: End-screen wording: "Today is Decluttered" shows only when nothing was left unreviewed; otherwise "You went through Today". Reason: messages match the real inbox state (CLAUDE.md §7); Amanda to confirm. **SYNC TO PRD** (F13)
+- **SUPERSEDED (2026-11-01: buttons and pills now start at the top of the email card):** 2026-10-31: Declutter's bucket pills sit at the bottom right under the buttons, not across the top or below the card, so the email is the focus for F and Z scanning. Reason: Amanda's review. PRD updated.
+- 2026-10-31: End-screen wording: "Today is Decluttered" shows only when nothing was left unreviewed; otherwise "That's it for Today". Reason: messages match the real inbox state (CLAUDE.md §7); Amanda to confirm. **SYNC TO PRD** (F13)
 - 2026-10-31: Bucketbox styling: shared stroke, 16px corners, soft shadows, rectangular buttons distinct from bucket pills, Gmail's own buttons stay oval. Reason: Amanda's review of Declutter. **SYNC TO PRD** (§5, F1, F2, F7)
 - 2026-10-30: Plain Gmail view (Stage 10), look-only: every email not archived or deleted, from every day, newest first, in Gmail's one-line rows; bucketed emails show their bucket as a Gmail-style label chip. Rows, checkboxes and toolbar icons show "Not part of this prototype". It reflects whatever was done in Bucketbox. The nav gets a "Labels" section listing the buckets with their colors (look-only). Reason: Amanda's choices; a familiar comparison point that hints buckets are Gmail labels. **SYNC TO PRD** (§5 open prototype toggle)
 - 2026-10-30: Day navigation (Stage 9): "‹ Today ›" on the left of the Today card header and the calendar icon in its right corner; the unsorted count sits on the Select all row (updated same day); the next arrow is hidden on Today (PRD "when applicable"). The back arrow shows a small blue dot (the unread dot's color, #0b57d0) when the previous day still has unsorted emails, with a text label for hover and screen readers, so it isn't color-only. Reason: Amanda's choices. **SYNC TO PRD** (F6, §12 #9)
@@ -439,7 +461,7 @@ Each stage: preview → Amanda approves → commit → log update.
 17. ~~Interaction inventory~~: resolved 2026-10-30 for the email view (see Decisions). Search and Gmail nav links stay inert.
 18. ~~"Missed email" indicator~~: resolved 2026-10-30, a blue dot on the back arrow when the previous day still has unsorted emails (see Decisions).
 19. ~~Delete zone in the opened bucket~~: resolved 2026-10-30, in place of the bucket list's buttons, as in Today (see Decisions).
-23. Declutter placeholders (Amanda to decide or keep): the name "Declutter"; "Open to read or reply"; "You went through Today"; "Marked as read" toast; the stacked-cards icon.
+23. Declutter placeholders (Amanda to decide or keep): the name "Declutter"; "Open to read or reply"; "That's it for Today"; "Marked as read" toast; the icon (Amanda's own drawing since 2026-11-01, "for now").
 22. **Placeholder wording (Amanda to decide or keep):** cleared Today "Way to go! Your daily inbox is cleared right now."; nothing yet "Nothing yet, go enjoy your day."; cleared past day "You cleared this day. Nice work."; no buckets "Make your first bucket to start sorting."; undo/redo toasts "Undone: Archived 2" / "Redone: Archived 2"; after Archive instead "Archived 1. Dropped emails will be archived from now on."; starting bucket name "Priority".
 20. Tag button: hover-only (PRD) is not keyboard-reachable. Can it also show on keyboard focus?
 21. Stage 8: should Gmail's 😊 reaction button under an open email open the emoji tag picker? (Inert until then.)

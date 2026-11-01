@@ -28,25 +28,8 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
 
   return (
     <li className={rowClasses} ref={setNodeRef} data-email-id={email.id}>
-      <button
-        type="button"
-        className="drag-handle"
-        ref={setActivatorNodeRef}
-        {...listeners}
-        {...attributes}
-        aria-label={`Drag email from ${email.sender}`}
-      >
-        <Icon name="drag_indicator" size={20} />
-      </button>
-      {!inTile && (
-        <input
-          type="checkbox"
-          className="email-checkbox"
-          checked={selected}
-          onChange={onToggleSelected}
-          aria-label={`Select email from ${email.sender}: ${email.subject}`}
-        />
-      )}
+      {/* Content comes first, so keyboard and screen reader users hear which email it is before
+          its controls. The layout still shows the handle and checkbox on the left. */}
       <button
         type="button"
         className="email-row-body"
@@ -74,6 +57,27 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
             ))}
           </span>
         )}
+      </button>
+      {!inTile && (
+        <label className="email-checkbox-target">
+          <input
+            type="checkbox"
+            className="email-checkbox"
+            checked={selected}
+            onChange={onToggleSelected}
+            aria-label={`Select email from ${email.sender}: ${email.subject}`}
+          />
+        </label>
+      )}
+      <button
+        type="button"
+        className="drag-handle"
+        ref={setActivatorNodeRef}
+        {...listeners}
+        {...attributes}
+        aria-label={`Drag email from ${email.sender}`}
+      >
+        <Icon name="drag_indicator" size={20} />
       </button>
     </li>
   )

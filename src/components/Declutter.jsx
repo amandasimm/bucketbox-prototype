@@ -9,7 +9,7 @@ import './Declutter.css'
 
 // A labeled action around the card. Its place matches its arrow key (PRD F13). Like the
 // icon buttons, a switched-off one stays focusable.
-function ArrowButton({ className, icon, label, keyName, disabled = false, onClick }) {
+function ArrowButton({ className = '', icon, label, keyName, disabled = false, onClick }) {
   return (
     <button
       type="button"
@@ -147,22 +147,11 @@ function EmailCard({ email, cardRef, onOpen, onReportSpam }) {
 // Pills fill two rows at most; any more scroll sideways, so this sets a width that makes the
 // pills split evenly across the two rows (Amanda's review, 2026-10-31).
 function BucketBar({ email, buckets, onMove }) {
-  const scrollRef = useRef(null)
-  const rowsRef = useRef(null)
-  const [rowsWidth, setRowsWidth] = useState(null)
-
-  useLayoutEffect(() => {
-    const pills = [...rowsRef.current.children].map((pill) => pill.offsetWidth)
-    const total = pills.reduce((sum, width) => sum + width + 8, 0)
-    const widest = Math.max(0, ...pills)
-    setRowsWidth(Math.max(scrollRef.current.clientWidth - 4, Math.ceil(total / 2) + widest)) // 4 = its padding
-  }, [buckets])
-
   return (
     <div className="declutter-bar" role="group" aria-labelledby="declutter-bar-label">
       <span id="declutter-bar-label" className="declutter-bar-label">Move to:</span>
-      <div className="declutter-bar-scroll" ref={scrollRef}>
-        <div className="declutter-bar-rows" ref={rowsRef} style={{ width: rowsWidth ?? undefined }}>
+      <div className="declutter-bar-scroll">
+        <div className="declutter-bar-rows">
           {buckets.length === 0 && <span className="declutter-no-buckets">No buckets yet</span>}
           {buckets.map((bucket) => (
             <button
@@ -200,7 +189,7 @@ function EndMessage({ declutter, headingRef }) {
   ].filter(([count]) => count > 0)
   let message = `${dayName} is Decluttered`
   if (total === 0) message = `Nothing unsorted for ${dayName}`
-  else if (progress.left > 0 && progress.read < progress.left) message = `You went through ${dayName}`
+  else if (progress.left > 0 && progress.read < progress.left) message = `That's it for ${dayName}`
 
   return (
     <div className="declutter-end">
@@ -269,6 +258,9 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       else if (event.key === 'ArrowDown' && !atEnd) actions.next()
       else if (event.key === 'ArrowLeft' && !atEnd) actions.archive(email)
       else if (event.key === 'ArrowRight' && !atEnd) actions.markRead(email)
+      // On the end screen, a held key from the last card doesn't carry over and leave it
+      else if (event.key === 'ArrowLeft' && previousDay !== null && !event.repeat) actions.previousDay(previousDay)
+      else if (event.key === 'ArrowRight' && !event.repeat) actions.exit()
       else return
       event.preventDefault()
     }
@@ -329,14 +321,14 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                 </div>
               )}
             </div>
-            {/* The email comes first in the eye's path; the controls sit bottom right. The
-                buttons sit where their arrow keys point. */}
+            {/* The controls line up with the top of the email, close to where reading starts. The
+                buttons sit where their arrow keys point; the buckets fill the room below. */}
             <div className="declutter-controls">
               <div className="declutter-keys">
                 <ArrowButton
                   className="is-up"
                   icon="keyboard_arrow_up"
-                  label="Previous"
+                  label="Back"
                   keyName="up"
                   disabled={!hasPrevious}
                   onClick={actions.previous}
@@ -344,11 +336,14 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                 {atEnd ? (
                   <div className="declutter-end-buttons">
                     {previousDay !== null && (
-                      <button type="button" className="text-button" onClick={() => actions.previousDay(previousDay)}>
-                        Declutter Previous Day
-                      </button>
+                      <ArrowButton
+                        icon="keyboard_arrow_left"
+                        label="Previous Day"
+                        keyName="left"
+                        onClick={() => actions.previousDay(previousDay)}
+                      />
                     )}
-                    <button type="button" className="filled-button" onClick={actions.exit}>Done</button>
+                    <ArrowButton className="is-done is-main" icon="keyboard_arrow_right" label="Done" keyName="right" onClick={actions.exit} />
                   </div>
                 ) : (
                   <>
@@ -358,10 +353,7 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                   </>
                 )}
               </div>
-              {/* Holds the bucket list's space on the end screen, so Previous stays put */}
-              <div className={atEnd ? 'declutter-bar-holder' : undefined} inert={atEnd ? true : undefined}>
-                <BucketBar email={email} buckets={buckets} onMove={actions.move} />
-              </div>
+              {!atEnd && <BucketBar email={email} buckets={buckets} onMove={actions.move} />}
             </div>
           </div>
       )}

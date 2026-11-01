@@ -15,15 +15,16 @@
 }
 .declutter-exit { position: absolute; top: 8px; right: 8px; z-index: 4; }
 
-/* The bucket bar: at most two rows, then it scrolls sideways */
+/* The bucket list: it wraps, and only scrolls if the buckets outgrow the room under the buttons */
 .declutter-bar {
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: flex-start;
   gap: 12px;
 }
 .declutter-bar-label { flex-shrink: 0; line-height: 32px; font-weight: 500; color: var(--text-muted); }
-.declutter-bar-scroll { flex: 1; min-width: 0; overflow-x: auto; padding: 2px; }
+.declutter-bar-scroll { flex: 1; align-self: stretch; min-width: 0; overflow-y: auto; padding: 2px; }
 .declutter-bar-rows { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .declutter-no-buckets { line-height: 32px; color: var(--text-muted); }
 .declutter-pill {
@@ -42,12 +43,14 @@
 }
 .declutter-pill:hover { background: var(--surface); }
 
-/* The card takes all the height, with the controls at its bottom right */
+/* The card takes all the height, with the controls to its right */
 .declutter-stage {
   flex: 1;
   min-height: 0;
   display: grid;
+  --declutter-head: 68px; /* the title, count and progress bar above the card */
   grid-template-columns: minmax(0, 400px) 376px;
+  grid-template-rows: minmax(0, 1fr);
   justify-content: center;
   gap: 32px;
   padding: 12px 24px 0;
@@ -57,6 +60,7 @@
   margin: 0 0 2px;
   text-align: center;
   font-size: 16px;
+  line-height: 20px;
   font-weight: 500;
   color: var(--text);
 }
@@ -64,6 +68,7 @@
   margin: 0 0 8px;
   text-align: center;
   font-size: 14px;
+  line-height: 20px;
   color: var(--text-muted);
 }
 .declutter-progress {
@@ -150,21 +155,21 @@
   align-items: center;
   gap: 6px;
   padding-top: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 /* Lines up with the sender row. It sits on the card, not inside the card's own button */
 .declutter-card-menu { position: absolute; top: var(--menu-top, 76px); right: 12px; z-index: 3; transform: translateY(-50%); }
 .declutter-card-menu .pane-menu { left: auto; right: 0; }
 
-/* Lines up with the bottom of the email card */
+/* Lines up with the top of the email card, and the buckets end at its bottom */
 .declutter-controls {
-  align-self: end;
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-width: 0;
-  margin-bottom: 28px;
+  min-height: 0;
+  padding: var(--declutter-head) 0 28px;
 }
 
 /* Rectangular buttons, so they read differently from the round bucket pills */
@@ -195,7 +200,6 @@
   color: #ffffff;
 }
 .declutter-action.is-main:hover { background: #0842a0; }
-.declutter-action:not(.is-main) { border-color: var(--button-outline); }
 .declutter-action[aria-disabled='true'] {
   border-color: #dbe4f0;
   color: #5f6368;
@@ -219,16 +223,15 @@
 }
 .declutter-open .email-pane { height: 100%; }
 
-/* The confirmation screen: the message sits where the email card was */
+/* The confirmation screen: the message starts level with the buttons, so Done sits beside it */
 .declutter-end {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 24px;
-  padding-bottom: 28px;
+  padding: 0 0 28px;
   text-align: center;
 }
 .declutter-end-title { margin: 0; font-size: 22px; font-weight: 400; }
@@ -237,9 +240,10 @@
 .declutter-end-count { font-size: 18px; font-weight: 500; }
 .declutter-end-buttons {
   grid-area: 2 / 1 / 3 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 240px 132px; /* the columns above, so Done starts where Mark as read does */
+  gap: 4px;
+  justify-items: start;
 }
-.declutter-bar-holder { visibility: hidden; }
+.declutter-end-buttons .declutter-action { width: 128px; } /* Previous Day's width, so the pair matches */
+.declutter-action.is-done { grid-column: 2; }
