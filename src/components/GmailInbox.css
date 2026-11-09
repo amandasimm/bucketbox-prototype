@@ -26,10 +26,9 @@
   align-items: center;
   height: 40px;
   padding: 0 4px 0 10px;
-  border-radius: 20px;
+  border-radius: var(--md-sys-shape-corner-full);
   color: var(--text-muted);
 }
-.gmail-inbox-select:hover { background: var(--hover-bg); }
 .gmail-inbox-range {
   margin-left: auto;
   margin-right: 8px;
@@ -43,7 +42,7 @@
   list-style: none;
   overflow-y: auto;
 }
-.gmail-inbox-list > li { border-bottom: 1px solid #f1f3f4; }
+.gmail-inbox-list > li { border-bottom: 1px solid var(--divider); }
 /* One row. Unread: white and bold. Read: Gmail's light tint, regular weight. */
 .gmail-inbox-row {
   position: relative;
@@ -53,11 +52,11 @@
   text-align: left;
   font-size: 14px;
 }
-.gmail-inbox-row.is-read { background: #f2f6fc; }
+.gmail-inbox-row.is-read { background: var(--md-sys-color-surface-container); }
 .gmail-inbox-row.is-unread { background: var(--surface); }
 .gmail-inbox-row:hover {
   z-index: 1;
-  box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  box-shadow: inset 1px 0 0 var(--md-sys-color-outline-variant), inset -1px 0 0 var(--md-sys-color-outline-variant), var(--md-sys-elevation-level1);
 }
 .gmail-inbox-row-main {
   display: flex;
@@ -67,7 +66,7 @@
   min-width: 0;
 }
 /* Checkbox and star: Gmail's gray (#747775), 4.2:1 on read rows and 4.5:1 on unread (icons need 3:1) */
-.gmail-inbox-row-main > .icon { color: #747775; }
+.gmail-inbox-row-main > .icon { color: var(--md-sys-color-outline); }
 .gmail-inbox-sender {
   flex-shrink: 0;
   width: 200px;

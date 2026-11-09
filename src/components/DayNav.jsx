@@ -24,7 +24,7 @@ function offsetOf(date) {
 }
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-const POPOVER_WIDTH = 296
+const POPOVER_WIDTH = 300
 
 // A small month calendar (PRD F6). Days with unsorted emails get a blue dot (a status,
 // not a count); future days are switched off. It floats on top of the page, so the

@@ -7,19 +7,35 @@ import { bucketStyle } from '../utils/bucketColors.js'
 import { formatMessageTime, receivedAt } from '../utils/dates.js'
 import './Declutter.css'
 
+// Each button shows its arrow key as a keycap, so the keyboard is a visible option without
+// pushing anyone toward it (BUILD-LOG, 2026-11-08)
+const KEYCAP_ICONS = { up: 'arrow_upward', down: 'arrow_downward', left: 'arrow_back', right: 'arrow_forward' }
+
+// The end screen's button names the day it goes to: "Yesterday", or a short date like "Nov 6"
+// (with the year for another year)
+function dayButtonLabel(dayOffset) {
+  if (dayOffset === -1) return 'Yesterday'
+  const date = new Date()
+  date.setDate(date.getDate() + dayOffset)
+  const otherYear = date.getFullYear() !== new Date().getFullYear()
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: otherYear ? 'numeric' : undefined })
+}
+
 // A labeled action around the card. Its place matches its arrow key (PRD F13). Like the
-// icon buttons, a switched-off one stays focusable.
-function ArrowButton({ className = '', icon, label, keyName, disabled = false, onClick }) {
+// icon buttons, a switched-off one stays focusable. onClick hears 'pointer' for a mouse click.
+function ArrowButton({ className = '', label, spokenLabel = label, keyName, disabled = false, onClick }) {
   return (
     <button
       type="button"
       className={`declutter-action ${className}`}
-      aria-label={`${label}, ${keyName} arrow key`}
+      aria-label={`${spokenLabel}, ${keyName} arrow key`}
       aria-keyshortcuts={`Arrow${keyName.charAt(0).toUpperCase()}${keyName.slice(1)}`}
       aria-disabled={disabled}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : (event) => onClick(event.detail > 0 ? 'pointer' : 'keyboard')}
     >
-      <Icon name={icon} size={20} />
+      <span className="keycap" aria-hidden="true">
+        <Icon name={KEYCAP_ICONS[keyName]} size={14} />
+      </span>
       {label}
     </button>
   )
@@ -263,6 +279,7 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       else if (event.key === 'ArrowRight' && !event.repeat) actions.exit()
       else return
       event.preventDefault()
+      actions.keysUsed()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -317,7 +334,6 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
               <div className="declutter-keys">
                 <ArrowButton
                   className="is-up"
-                  icon="keyboard_arrow_up"
                   label="Back"
                   keyName="up"
                   disabled={!hasPrevious}
@@ -327,19 +343,19 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                   <div className="declutter-end-buttons">
                     {previousDay !== null && (
                       <ArrowButton
-                        icon="keyboard_arrow_left"
-                        label="Previous Day"
+                        label={dayButtonLabel(previousDay)}
+                        spokenLabel={`Declutter ${dayButtonLabel(previousDay)}`}
                         keyName="left"
                         onClick={() => actions.previousDay(previousDay)}
                       />
                     )}
-                    <ArrowButton className="is-done is-main" icon="keyboard_arrow_right" label="Done" keyName="right" onClick={actions.exit} />
+                    <ArrowButton className="is-done is-main" label="Done" keyName="right" onClick={actions.exit} />
                   </div>
                 ) : (
                   <>
-                    <ArrowButton className="is-left is-main" icon="keyboard_arrow_left" label="Archive" keyName="left" onClick={() => actions.archive(email)} />
-                    <ArrowButton className="is-right is-main" icon="keyboard_arrow_right" label="Mark as read" keyName="right" onClick={() => actions.markRead(email)} />
-                    <ArrowButton className="is-down" icon="keyboard_arrow_down" label="Next" keyName="down" onClick={actions.next} />
+                    <ArrowButton className="is-left is-main" label="Archive" keyName="left" onClick={(how) => actions.archive(email, how)} />
+                    <ArrowButton className="is-right is-main" label="Mark as read" keyName="right" onClick={(how) => actions.markRead(email, how)} />
+                    <ArrowButton className="is-down" label="Next" keyName="down" onClick={actions.next} />
                   </>
                 )}
               </div>

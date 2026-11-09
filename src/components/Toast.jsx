@@ -29,7 +29,10 @@ export default function Toast({ toast, onAction }) {
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
-          {toast.message}
+          <span className="toast-text">
+            {toast.message}
+            {toast.tip && <span className="toast-tip">{toast.tip}</span>}
+          </span>
           {toast.action && (
             <button type="button" className="toast-action" onClick={() => onAction(toast.action)}>
               {toast.action.label}

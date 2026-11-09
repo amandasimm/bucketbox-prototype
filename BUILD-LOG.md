@@ -11,9 +11,9 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-11-01_
+_Last updated: 2026-11-08_
 
-- **Built:** Stages 0–7 and 9–13, the full approved plan plus Declutter (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **Built:** Stages 0–7 and 9–14, the full approved plan plus Declutter (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
 - **Next:** placeholder wording decisions (see Open questions) and updating the PRD from the SYNC TO PRD summary below (F13's section 12 items are newly decided). The PRD is now `updated-prd-neuroinclusive-inbox Prototype.md`.
 
 **Approved build plan (2026-10-28)**
@@ -25,7 +25,7 @@ Each stage: preview → Amanda approves → commit → log update.
 
 ---
 
-## SYNC TO PRD summary (current as of 2026-11-01)
+## SYNC TO PRD summary (current as of 2026-11-08)
 <!-- The decisions below change or add to the PRD. Full wording and reasons are in Decisions; superseded ones are left out here. -->
 
 **Product and scope**
@@ -69,7 +69,7 @@ Each stage: preview → Amanda approves → commit → log update.
 - Cards are newest first with no wrapping; Next on the last card goes to the end screen. The total stays fixed ("4 of 12"); Previous skips emails that left the deck.
 - Screen readers hear position, unread status, sender and subject on each card; buttons name their arrow key.
 - Undo steps back through every action in the current day's run, including from the end screen, and redo works; after exit or a new day it returns to last action only.
-- End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("That's it for Today" if emails were skipped); Back stays in place; Previous Day (secondary, left arrow key, nearest earlier day with unsorted emails) and Done (primary, right arrow key) below it. No expandable lists.
+- End screen: "Complete" with a full bar; "Today is Decluttered" where the card sat, plus counts ("That's it for Today" if emails were skipped); Back stays in place; Yesterday or a date like "Nov 6" (secondary, left arrow key, nearest earlier day with unsorted emails) and Done (primary, right arrow key) below it. No expandable lists.
 - A day with nothing unsorted goes straight to the end screen. An opened email's toolbar works as usual, and an action that removes it returns to the next card.
 - New toast: "Marked as read". Declutter's Archive doesn't count as first use.
 - Screen: one card with a 3px stroke and gradient; small "Declutter" title, count and progress bar above a phone-shaped email card; the next card peeks below; controls start at the top of the email card, with pills wrapping below them (2026-11-01). Rectangular buttons, labeled Back, Archive, Mark as read, Next.
@@ -322,9 +322,31 @@ Each stage: preview → Amanda approves → commit → log update.
 - Commit: "Stage 13: Declutter refinements and accessibility review"
 - Follow-up, same day: an email opened from Declutter is a 640px card over the blurred Declutter window, with one X, and the "New" tag moved to the Declutter button. Approved by Amanda: 2026-11-01. Commit: "Declutter: open email card and New tag". Tested: Escape, the email's X, the Move menu, a 6-message thread with the reply box, and toolbar Archive, on the earlier version of this card. The final 24px-gap version was measured for position only.
 
+### 2026-11-08 — Stage 14: Material Design 3 tokens
+- Done: M3 color, type, shape, elevation and state-layer tokens; 16/14px email rows; 1px card strokes; M3 disabled color; spacing on the 4px grid (see Decisions).
+- Checked: 1366 wide home page, Declutter and its open email card, an opened bucket with an email, the calendar, hover state layers, the checkbox and sender lining up (within 1px), the header and buttons fitting, no console errors. Disabled content is exempt from contrast rules; the tooltip (12:1) and drag chip (6.4:1) pass AA.
+- Not checked: compose, the bucket form and emoji picker, the delete dialog, the plain Gmail view, 1024 wide, a real screen reader.
+- Also in this stage: keycaps on Declutter's buttons, a one-time arrow-key tip in the toast, the end screen's day button naming its day, and a shorter email card with more of the next card showing (see Decisions).
+- Approved by Amanda: 2026-11-08
+- Commit: "Stage 14: Material Design 3 tokens and Declutter key signifiers"
+
 ---
 
 ## Decisions
+- 2026-11-08: Declutter end screen: "Previous Day" now names the day it goes to: "Yesterday", or a short date like "Nov 6" (with the year for another year). Screen readers hear "Declutter Yesterday, left arrow key". Keycaps no longer shrink, so every keycap is 20px. The email card is shorter, with 44px of the next card showing below it (was 16px), so the stack reads more clearly; the bucket list still ends level with the card. Reason: Amanda's review. **SYNC TO PRD** (F13, Flow 7)
+- 2026-11-08: Declutter's arrow keys get a signifier, without pushing anyone toward the keyboard. Each Declutter button (Back, Archive, Mark as read, Next, Previous Day, Done) shows its arrow key as a small keycap (a 20px rounded square with a raised bottom edge) in place of the chevron. The first time someone clicks Archive or Mark as read with the mouse, before ever using an arrow key, the toast adds one line: "You can also use the ← key" (or →). It shows once per session and never if the keys were already used. Reason: concept testing showed participants didn't infer the keyboard option; Amanda chose keycaps and a just-in-time tip over a first-open nudge. **SYNC TO PRD** (F13, Flow 7)
+- 2026-11-08: **Material Design 3 tokens (Stage 14).** All colors, type sizes, corners, shadows and hover states point to M3 tokens in `src/styles.css`, in Google's blue scheme that Gmail uses. Most core colors were already M3 values. What changed on screen:
+  - Email rows: sender 16px (M3 title medium) and preview 14px (body medium), up from 15 and 13, because bigger text is more accessible (Amanda). The subject stays 14px; the darker color and bold for unread keep it apart from the preview. Rows are about 5px taller.
+  - Card strokes (#A6B8D4) are 1px on the Today card, the Declutter window and the email card opened from Declutter (were 2–3px). Color and soft blue shadow unchanged.
+  - Disabled content uses M3's disabled color: the text color at 38%, with a 12% outline. This covers switched-off Move / Archive / Delete, Declutter's Back on the first card, Undo and Redo when empty, and future calendar days.
+  - State layers replace the old hovers: 8% of the content color on hover, 10% on keyboard focus (under the focus ring) and 10% when pressed, on every button. Outlined buttons now get a light blue wash on hover instead of a solid light blue fill. Rows, cards, bucket headers and the app rail keep their own hover.
+  - Tooltips and the Mail badge use M3's inverse surface (#303030, text #f2f2f2); the drag chip uses primary blue (#0b57d0, was #1a73e8); the open row and compose header use surface-container (#f0f4f9); the Declutter progress bar is 4px tall and fully round.
+  - Shadows use M3 elevation levels 1–4 in Gmail's shadow gray. Corners use the M3 shape scale; half-height pills are fully round; chips are 8px; the bucket name field is 4px.
+  - Labels at 13px moved to 12px (M3 label medium): calendar days, bucket form labels, the bucket strip label. Declutter's sender and end-screen list are 16px.
+  - Spacing in Bucketbox's own screens is on a 4px grid. Kept off-grid on purpose: the checkbox's 2px drop (lines up with the sender), the icon-only Declutter button's 7px padding (a 36px square), the delete zone's -6px margin (the bar keeps one height) and 2px around Declutter's pills (focus room). Gmail's own frame and the plain Gmail view keep Gmail's measurements. The calendar is 300px wide.
+  - Kept as is (Amanda): the unsorted count and Declutter end counts at 18px; the card stroke color and shadow; the lighter dividers (#e8eaed, lighter than M3's outline-variant, for less visual noise); the page color (#f6f8fc, Gmail's); the preview gray (#5f6368).
+  Reason: Amanda's plan to raise visual fidelity to Material Design 3 with tokens in plain CSS (no new libraries). **SYNC TO PRD** (§5 visual style, F1 row text, F7 buttons, F13, §9)
+- 2026-11-08: The email row sizes in the 2026-10-29 text hierarchy entry are **SUPERSEDED** for the sender (15 to 16px) and preview (13 to 14px); the order and colors stay.
 - 2026-11-01: In an email opened from Declutter, moving it to a bucket, marking it unread and replying all keep it open, and it can be moved again. Only Archive, Delete, Mark as junk or the email's own X and Escape close it. A sorted email's card is skipped once it closes, so the next card shows. Undo and Redo of a move keep it open too. Reason: Amanda's review. **SYNC TO PRD** (F13, Flow 7)
 - 2026-11-01: On narrower screens, Declutter's gap between Archive and Mark as read shrinks first, from 112px to 32px (the gap between the email card and Archive), with Back and Next staying centered over it. Only then does the email card narrow. Reason: Amanda's review; it preserves the email preview's width. **SYNC TO PRD** (F13)
 - 2026-11-01: The "New" tag moved from Gmail's Share in chat button to the Declutter button. Reason: Amanda's choice. **SYNC TO PRD** (F5 reply row, F13 entry point)

@@ -30,7 +30,7 @@
   flex-direction: column;
   min-height: 0; /* lets the email list scroll inside the card */
   margin: 8px 0 16px; /* top lines up with Compose, left edge with the search bar; 16px from the bottom */
-  border: 2px solid var(--card-stroke);
+  border: 1px solid var(--card-stroke);
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   overflow: hidden;
@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px 10px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--divider);
   background: var(--search-bg); /* #e9eef6, the same calm gray-blue as Gmail's search bar */
 }
@@ -54,8 +54,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 37px;
-  padding: 6px 18px 6px 36px; /* Select all lines up with the row checkboxes */
+  min-height: 36px;
+  padding: 4px 20px 4px 36px; /* Select all lines up with the row checkboxes */
   border-bottom: 1px solid var(--divider);
 }
 .unsorted-count {
@@ -100,25 +100,24 @@
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: 36px;
-  padding: 0 14px 0 10px;
+  padding: 0 16px 0 12px;
   border: 1px solid currentColor;
   border-radius: var(--button-radius);
   color: var(--focus-ring);
   font-weight: 500;
 }
-.bulk-button:hover:not(:disabled) { background: var(--selected-row-bg); }
 .bulk-button:disabled {
   color: var(--text-disabled);
-  border-color: var(--divider);
+  border-color: var(--md-sys-color-outline-disabled);
   cursor: default;
 }
 .declutter-button { position: relative; } /* in the Today card's top right corner */
 .declutter-button .tooltip { display: none; }
 /* A long date in a narrow card: icon-only, so the header stays on one line */
 @container today-card (max-width: 460px) {
-  .has-long-date .declutter-button { padding: 0 7px; }
+  .has-long-date .declutter-button { padding: 0 7px; } /* 7px: keeps the icon-only button a 36px square */
   .has-long-date .declutter-button-label {
     position: absolute;
     width: 1px;
@@ -136,11 +135,11 @@
   grid-template-columns: 20px 20px 1fr;
   column-gap: 8px;
   align-items: start;
-  padding: 10px 16px 10px 8px;
+  padding: 12px 16px 12px 8px;
   border-bottom: 1px solid var(--divider);
   cursor: pointer;
 }
-.email-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60, 64, 67, 0.3); }
+.email-row:hover { box-shadow: inset 1px 0 0 var(--md-sys-color-outline-variant), inset -1px 0 0 var(--md-sys-color-outline-variant), var(--md-sys-elevation-level1); }
 
 .drag-handle {
   grid-area: 1 / 1;
@@ -149,8 +148,8 @@
   align-self: stretch;
   display: flex;
   align-items: flex-start;
-  margin: -10px 0;
-  padding: 10px 0;
+  margin: -12px 0;
+  padding: 12px 0;
   border-radius: 4px;
   color: var(--text-muted);
   cursor: grab;
@@ -165,7 +164,7 @@
 .email-checkbox {
   width: 18px;
   height: 18px;
-  margin: 2px 0 0;
+  margin: 2px 0 0; /* 2px: lines the box up with the sender (kept off the 4px grid) */
   accent-color: var(--focus-ring);
   cursor: pointer;
 }
@@ -195,7 +194,7 @@
 .email-subject,
 .email-preview { display: block; }
 /* The email that's open in the drawer or pane */
-.email-row.is-open { background: #e8eef7; }
+.email-row.is-open { background: var(--md-sys-color-surface-container); }
 .email-row.is-open.is-selected { background: var(--selected-row-bg); }
 .email-row-top {
   display: flex;
@@ -220,7 +219,7 @@
   align-items: center;
   flex: 1;
   min-width: 0;
-  font-size: 15px;
+  font-size: 16px; /* M3 title medium (BUILD-LOG, 2026-11-08) */
   font-weight: 400;
   color: var(--text-read);
 }
@@ -234,7 +233,7 @@
 }
 .email-thread-size {
   flex-shrink: 0;
-  margin-left: 6px;
+  margin-left: 8px;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-meta);
@@ -256,9 +255,9 @@
   color: var(--text);
 }
 .email-preview {
-  margin-top: 1px;
-  font-size: 13px;
-  line-height: 19px;
+  margin-top: 0;
+  font-size: 14px; /* M3 body medium */
+  line-height: 20px;
   color: var(--text-preview);
   white-space: normal;
   display: -webkit-box;
@@ -278,8 +277,8 @@
   height: 28px;
   padding: 0 12px 0 8px;
   border: 1px solid var(--outline);
-  border-radius: 14px;
-  font-size: 13px;
+  border-radius: var(--md-sys-shape-corner-small); /* M3 chip shape */
+  font-size: 14px;
   color: var(--text-muted);
 }
 
@@ -360,10 +359,10 @@
 .bucket-header-button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   height: 100%;
-  padding: 0 44px 0 14px; /* room on the right for the 3-dot menu */
+  padding: 0 44px 0 12px; /* room on the right for the 3-dot menu */
   text-align: left;
 }
 .bucket-header-button:hover { background: color-mix(in srgb, var(--bucket-color) 8%, transparent); }
@@ -385,8 +384,8 @@
 }
 .bucket-peek .email-row {
   grid-template-columns: 16px 1fr; /* hover handle, then text (no checkbox on tiles) */
-  column-gap: 6px;
-  padding: 10px 12px 10px 2px;
+  column-gap: 8px;
+  padding: 12px 12px 12px 4px;
 }
 
 /* The space where the next bucket would go, with Add a Bucket centered in it */
@@ -399,14 +398,13 @@
 .add-bucket-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: 36px; /* Gmail's button height */
   padding: 0 16px 0 12px;
   border-radius: var(--button-radius);
   color: var(--focus-ring);
   font-weight: 500;
 }
-.add-bucket-button:hover { background: rgba(11, 87, 208, 0.08); }
 
 /* No buckets left (PRD F2; wording is a placeholder) */
 .buckets-empty {
@@ -435,18 +433,18 @@
   padding: 8px 0;
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
 /* Add / Edit bucket form, shown in place of a tile (PRD F2, Flow 1) */
 .bucket-form {
-  gap: 6px;
-  padding: 18px 18px 14px;
+  gap: 8px;
+  padding: 16px;
   border: 2px solid var(--bucket-color); /* previews the picked color */
 }
 .bucket-form-label {
   padding: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
 }
@@ -484,7 +482,7 @@
   border-radius: 12px;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3), 0 1px 3px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .emoji-picker {
   display: flex;
@@ -494,10 +492,10 @@
 }
 .emoji-picker-search {
   height: 40px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   padding: 0 12px;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--md-sys-shape-corner-full);
   background: var(--search-bg);
   font: inherit;
   color: var(--text);
@@ -517,15 +515,15 @@
   justify-content: center;
   color: var(--text-muted);
 }
-.emoji-picker-list { padding-bottom: 6px; user-select: none; }
+.emoji-picker-list { padding-bottom: 8px; user-select: none; }
 .emoji-picker [frimousse-category-header] {
-  padding: 8px 6px 4px;
+  padding: 8px 8px 4px;
   background: var(--surface);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
 }
-.emoji-picker [frimousse-row] { padding: 0 2px; }
+.emoji-picker [frimousse-row] { padding: 0 4px; }
 .emoji-picker [frimousse-emoji] {
   display: flex;
   align-items: center;
@@ -545,9 +543,9 @@
   box-sizing: border-box;
   width: 100%;
   height: 48px;
-  padding: 0 14px;
-  border: 1px solid #747775;
-  border-radius: 6px;
+  padding: 0 16px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-extra-small);
   background: var(--surface);
   font: inherit;
   font-size: 16px;
@@ -558,7 +556,7 @@
 .text-field-input:focus-visible {
   outline: none;
   border: 2px solid var(--focus-ring);
-  padding: 0 13px; /* keeps the text still when the outline thickens */
+  padding: 0 15px; /* keeps the text still when the outline thickens */
 }
 .text-field-label {
   position: absolute;
@@ -580,8 +578,8 @@
   line-height: 16px;
 }
 .text-field-input:focus + .text-field-label { color: var(--focus-ring); }
-.text-field.has-error .text-field-input { border-color: #b3261e; }
-.text-field.has-error .text-field-label { color: #b3261e; }
+.text-field.has-error .text-field-input { border-color: var(--md-sys-color-error); }
+.text-field.has-error .text-field-label { color: var(--md-sys-color-error); }
 @media (prefers-reduced-motion: reduce) {
   .text-field-label { transition: none; }
 }
@@ -598,7 +596,7 @@
 .bucket-form-error {
   display: flex;
   gap: 4px;
-  color: #b3261e;
+  color: var(--md-sys-color-error);
 }
 .bucket-form-count { flex-shrink: 0; }
 .bucket-colors {
@@ -606,11 +604,11 @@
   grid-template-columns: repeat(6, 28px);
   justify-content: space-between;
   row-gap: 8px;
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   padding: 0;
   border: none;
 }
-.bucket-colors legend { margin-bottom: 6px; }
+.bucket-colors legend { margin-bottom: 8px; }
 .bucket-color-option { cursor: pointer; }
 .bucket-color-swatch {
   display: flex;
@@ -647,7 +645,7 @@
   border-radius: 16px;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .delete-bucket-dialog::backdrop { background: rgba(31, 31, 31, 0.4); }
 .dialog-title {
@@ -658,7 +656,7 @@
 .dialog-choices {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   border: none;
@@ -672,7 +670,7 @@
 .dialog-choice {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
 }
 .dialog-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--focus-ring); }
@@ -714,7 +712,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 24px;
   border-radius: var(--card-radius); /* same as the tile */
   /* Resting: a 6% tint at 70%, so the tile's emails show through */
@@ -753,8 +751,8 @@
 }
 .drop-target-name {
   max-width: 100%;
-  padding: 2px 12px;
-  border-radius: 14px;
+  padding: 4px 12px;
+  border-radius: var(--md-sys-shape-corner-small);
   background: color-mix(in srgb, var(--bucket-color) 6%, white); /* solid, so it reads over the emails */
   font-size: 18px;
   font-weight: 500;
@@ -784,8 +782,8 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: -6px 0;
-  border-radius: 24px;
+  margin: -6px 0; /* 6px: keeps the bar the same height with the zone or the buttons (off the 4px grid) */
+  border-radius: var(--md-sys-shape-corner-full);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -830,11 +828,11 @@
   height: 44px;
   padding: 0 20px 0 16px;
   border-radius: 4px;
-  background: #1a73e8; /* white text on it: 4.5:1 */
+  background: var(--md-sys-color-primary); /* white text on it: 7.6:1 */
   color: #ffffff;
   font-weight: 500;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level2);
   cursor: grabbing;
 }
 
@@ -864,7 +862,7 @@
   padding: 8px 0;
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 .move-menu-title,
 .move-menu-empty {
@@ -881,8 +879,6 @@
   padding: 8px 16px;
   text-align: left;
 }
-.move-menu-item:hover,
-.move-menu-item:focus-visible { background: var(--hover-bg); }
 
 /* First-use note for Archive / Delete: sits above the buttons, not a pop-up */
 .first-use-note {
@@ -891,10 +887,10 @@
   left: 16px;
   right: 16px;
   z-index: 10;
-  padding: 14px 16px 10px;
+  padding: 16px 16px 12px;
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 .first-use-note p {
   margin: 0 0 8px;
@@ -913,12 +909,11 @@
   font-weight: 500;
 }
 .text-button { color: var(--focus-ring); }
-.text-button:hover { background: rgba(11, 87, 208, 0.08); }
 .filled-button {
   background: var(--focus-ring);
   color: #ffffff;
 }
-.filled-button:hover { box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3); }
+.filled-button:hover { box-shadow: var(--md-sys-elevation-level1); }
 
 /* Toast: just above undo/redo in the left nav, so the confirmation sits next to the way back.
    Its left edge lines up with the nav (the Compose button), not the window (BUILD-LOG, 2026-10-30). */
@@ -930,12 +925,12 @@
   max-width: 420px;
 }
 .toast {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 8px;
   background: var(--tooltip-bg);
   color: var(--tooltip-text);
   line-height: 20px;
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3);
+  box-shadow: var(--md-sys-elevation-level2);
   animation: toast-in 150ms ease-out;
 }
 .toast {
@@ -943,16 +938,17 @@
   align-items: center;
   gap: 8px;
 }
+.toast-text { display: flex; flex-direction: column; gap: 4px; }
+.toast-tip { font: var(--md-sys-typescale-body-small) 'Roboto', Arial, sans-serif; } /* Declutter's one-time arrow-key tip */
 /* Low-emphasis text button on the dark toast (Gmail's light blue, 7.6:1 on the toast) */
 .toast-action {
   height: 32px;
-  margin: -6px -8px -6px 0;
+  margin: -8px -8px -8px 0;
   padding: 0 8px;
   border-radius: 4px;
-  color: #a8c7fa;
+  color: var(--md-sys-color-inverse-primary);
   font-weight: 500;
 }
-.toast-action:hover { background: rgba(168, 199, 250, 0.12); }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
@@ -981,7 +977,7 @@
   background: var(--surface);
   box-shadow:
     inset 10px 0 10px -10px rgba(60, 64, 67, 0.35),
-    0 4px 16px rgba(60, 64, 67, 0.2);
+    var(--md-sys-elevation-level3);
   overflow: hidden;
   animation: drawer-in 200ms ease-out;
 }
@@ -1008,8 +1004,8 @@
 .pane-toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 6px 12px;
+  gap: 0;
+  padding: 4px 12px;
 }
 /* Fixed 36px circles: they don't squeeze into ovals when the pane is narrow */
 .pane-toolbar .icon-button {
@@ -1035,7 +1031,7 @@
   padding: 8px 0;
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 .pane-content {
   flex: 1;
@@ -1082,7 +1078,7 @@
   height: 32px;
   border-radius: 50%;
   background: var(--selected-row-bg);
-  color: #0842a0;
+  color: var(--md-ref-palette-primary30);
   font-size: 14px;
   font-weight: 500;
 }
@@ -1141,14 +1137,13 @@
   min-width: 112px; /* Gmail's Reply button width (it uses a wider font than Roboto) */
   height: 36px;
   padding: 0 16px 0 12px;
-  border: 1px solid #747775;
-  border-radius: 18px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
   color: var(--text-muted);
 }
-.reply-button:hover { background: var(--hover-bg); }
 .reply-button.is-round {
   min-width: 0;
   width: 36px;
@@ -1158,8 +1153,8 @@
   position: absolute;
   top: -9px;
   right: -6px;
-  padding: 1px 8px;
-  border-radius: 10px;
+  padding: 0 8px;
+  border-radius: var(--md-sys-shape-corner-full);
   background: var(--focus-ring);
   color: #ffffff;
   font-size: 11px;
@@ -1182,17 +1177,17 @@
   border-radius: var(--card-radius);
   overflow: hidden;
   background: var(--surface);
-  box-shadow: 0 4px 24px rgba(60, 64, 67, 0.22), 0 1px 4px rgba(60, 64, 67, 0.12);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 /* Laid out like the tile's header: dot or emoji, name, count on the left; 3-dot menu and X on the right */
 .bucket-view-header {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
   height: 52px;
-  padding: 0 8px 0 14px;
+  padding: 0 8px 0 12px;
   border-bottom: 1px solid var(--divider);
   background: var(--bucket-header);
 }
@@ -1213,7 +1208,7 @@
   z-index: 12;
   width: 340px;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .bucket-view-header .bucket-emoji { font-size: 20px; width: 24px; }
 .bucket-view-name {
@@ -1255,7 +1250,7 @@
 }
 .bucket-strip-label {
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 .bucket-pill {
@@ -1266,8 +1261,8 @@
   flex-shrink: 1;
   min-width: 0;
   height: 36px;
-  padding: 0 14px 0 12px;
-  border-radius: 18px;
+  padding: 0 16px 0 12px;
+  border-radius: var(--md-sys-shape-corner-full);
   background: color-mix(in srgb, var(--bucket-color) 8%, white);
   font-size: 14px;
   font-weight: 500;
@@ -1316,12 +1311,12 @@
   padding: 8px 12px 12px;
   border-radius: 12px;
   background: var(--surface);
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .reply-box-header {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   height: 36px;
   color: var(--text-muted);
 }
@@ -1343,7 +1338,7 @@
 .reply-box-text {
   min-height: 120px;
   margin: 4px 0 8px;
-  padding: 6px 4px;
+  padding: 8px 4px;
   border: none;
   resize: vertical;
   font: inherit;
@@ -1356,7 +1351,7 @@
 .reply-box-text:focus,
 .reply-box-text:focus-visible { outline: none; }
 .reply-box:focus-within {
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.35), 0 4px 12px 4px rgba(60, 64, 67, 0.2);
+  box-shadow: var(--md-sys-elevation-level4);
 }
 /* Formatting bar: a soft gray pill, like Gmail's */
 /* Like Gmail, the formatting bar and the footer scroll sideways when the reply box is narrow,
@@ -1372,16 +1367,16 @@
 .reply-box-format {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-bottom: 10px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  background: #f2f6fc;
+  gap: 0;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-surface-container);
 }
 .reply-box-divider {
   width: 1px;
   height: 20px;
-  margin: 0 6px;
+  margin: 0 8px;
   background: var(--divider);
 }
 .reply-box-font {
@@ -1393,11 +1388,10 @@
   font-size: 14px;
   color: var(--text-muted);
 }
-.reply-box-font:hover { background: var(--hover-bg); }
 .reply-box-footer {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
 }
 /* Send with its attached options arrow, one blue pill split in two */
 .reply-send-group {
@@ -1406,14 +1400,14 @@
 }
 .reply-send {
   padding: 0 20px;
-  border-radius: 18px 0 0 18px;
+  border-radius: var(--md-sys-shape-corner-full) 0 0 var(--md-sys-shape-corner-full);
 }
 .reply-send-more {
   display: inline-flex;
   align-items: center;
-  padding: 0 6px;
+  padding: 0 8px;
   border-left: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 0 18px 18px 0;
+  border-radius: 0 var(--md-sys-shape-corner-full) var(--md-sys-shape-corner-full) 0;
 }
 .reply-box-discard { margin-left: auto; }
 
@@ -1422,20 +1416,19 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px; /* 4px between the arrows and the date */
   margin: 0 8px 0 -8px; /* the arrow's circle sits just inside the card's edge */
   min-width: 0;
 }
 /* 8px from the next-day arrow, double the 4px between the arrows and the date. Today has no
    next arrow, so the same 8px starts from the date. */
-.day-nav-calendar { margin-left: 6px; }
-.today-label + .day-nav-calendar { margin-left: 4px; }
+.day-nav-calendar { margin-left: 4px; } /* plus the 4px gap: 8px after the arrow or the date */
 .day-nav .icon-button {
   width: 32px;
   height: 32px;
 }
 .day-nav .today-label {
-  margin: 0 2px;
+  margin: 0;
   white-space: nowrap;
 }
 /* When the day before still has unsorted emails: a soft blue circle behind the arrow (Gmail's
@@ -1446,7 +1439,6 @@
   background: color-mix(in srgb, var(--nav-active-bg) 60%, transparent); /* softened, so the header shows through */
   color: var(--unread-dot);
 }
-.day-nav-back.has-waiting .icon-button:hover { background: var(--nav-active-bg); }
 .day-nav-dot {
   position: absolute;
   bottom: 0;
@@ -1466,12 +1458,12 @@
   padding: 8px 12px 12px;
   border-radius: 12px;
   background: var(--surface);
-  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3), 0 1px 3px rgba(60, 64, 67, 0.15);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .day-picker-header {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   margin-bottom: 4px;
 }
 .day-picker-month {
@@ -1487,7 +1479,7 @@
 .day-picker-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 4px;
 }
 .day-picker-weekday {
   padding: 4px 0;
@@ -1502,13 +1494,11 @@
   justify-content: center;
   height: 36px;
   border-radius: 50%;
-  font-size: 13px;
+  font-size: 12px;
 }
-.day-picker-day:hover:not(:disabled) { background: var(--hover-bg); }
 .day-picker-day:disabled { color: var(--text-disabled); cursor: default; }
 .day-picker-day.is-today { box-shadow: inset 0 0 0 1px var(--focus-ring); color: var(--focus-ring); font-weight: 500; }
-.day-picker-day.is-selected { background: var(--focus-ring); color: #ffffff; }
-.day-picker-day.is-selected:hover { background: var(--focus-ring); }
+.day-picker-day.is-selected { background: var(--focus-ring); color: var(--md-sys-color-on-primary); }
 /* Days with unsorted emails: a dot under the number (a status, not a count) */
 .day-picker-dot {
   position: absolute;

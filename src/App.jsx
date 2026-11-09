@@ -61,6 +61,8 @@ export default function App() {
   // count shows progress, not a moving target. Each step remembers only the fields it changed:
   // { deck, dayOffset, position, openId, steps, undoneSteps }
   const [declutter, setDeclutter] = useState(null)
+  // Whether Declutter's arrow-key tip has shown, or isn't needed because the keys were used
+  const [keyTipShown, setKeyTipShown] = useState(false)
 
   // Switching days closes any open email and clears the checkboxes
   function changeDay(offset) {
@@ -302,7 +304,7 @@ export default function App() {
   // One action on a card. It works like the same action elsewhere, without a first-use note.
   // advance is false for changes made in an opened email that keep it open; once it closes, a
   // sorted email's card is skipped (see declutterScreen).
-  function declutterStep(email, label, kind, change, advance = true) {
+  function declutterStep(email, label, kind, change, advance = true, toastExtras = {}) {
     const after = patchEmail(emails, email.id, change)
     const previous = Object.fromEntries(Object.keys(change).map((key) => [key, email[key]]))
     const step = { id: email.id, label, kind, change, previous, advance, position: declutter.position }
@@ -314,11 +316,20 @@ export default function App() {
       openId: advance ? null : declutter.openId,
       position: advance ? nextCard(after, declutter.deck, declutter.position) : declutter.position,
     })
-    showToast(label)
+    showToast(label, toastExtras)
+  }
+
+  // The first time someone clicks Archive or Mark as read with the mouse, before ever using the
+  // arrow keys, the toast mentions the key once. It's a signifier, not a push (BUILD-LOG, 2026-11-08).
+  function keyTip(how, key) {
+    if (how !== 'pointer' || keyTipShown) return {}
+    setKeyTipShown(true)
+    return { tip: `You can also use the ${key} key` }
   }
 
   const declutterActions = {
     exit: exitDeclutter,
+    keysUsed: () => setKeyTipShown(true),
     previousDay: (day) => {
       settleDeclutter()
       startDeclutter(day)
@@ -330,10 +341,10 @@ export default function App() {
       const position = previousCard(emails, declutter.deck, declutter.position)
       if (position >= 0) setDeclutter({ ...declutter, position })
     },
-    archive: (email) => declutterStep(email, 'Archived 1', 'archive', { removedTo: 'archive' }),
+    archive: (email, how) => declutterStep(email, 'Archived 1', 'archive', { removedTo: 'archive' }, true, keyTip(how, '←')),
     // An email that's already read stays read and the next card comes up
-    markRead(email) {
-      if (email.unread) declutterStep(email, 'Marked as read', 'read', { unread: false })
+    markRead(email, how) {
+      if (email.unread) declutterStep(email, 'Marked as read', 'read', { unread: false }, true, keyTip(how, '→'))
       else declutterActions.next()
     },
     move: (email, bucket) => declutterStep(email, `Moved 1 to ${bucket.name}`, 'move', { bucketId: bucket.id }),
@@ -350,7 +361,7 @@ export default function App() {
   // The open email's toolbar works as usual. Archive, Delete and junk close it and return to the
   // next card; sorting it into a bucket or marking it unread keep it open (BUILD-LOG, 2026-11-01).
   const declutterEmailView = {
-    archive: declutterActions.archive,
+    archive: (email) => declutterActions.archive(email),
     delete: (email) => declutterStep(email, 'Deleted 1', 'trash', { removedTo: 'trash' }),
     junk: (email) => declutterStep(email, 'Marked as junk', 'junk', { removedTo: 'junk' }),
     move: (email, listIds, bucket) => declutterStep(email, `Moved 1 to ${bucket.name}`, 'move', { bucketId: bucket.id }, false),
