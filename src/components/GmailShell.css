@@ -232,18 +232,19 @@
   bottom: calc(100% + 4px);
 }
 
-/* Gmail's compose drawer, bottom right (PRD §5; screenshot-gmail-compose.png) */
+/* Gmail's compose drawer, floating at the bottom right with rounded corners (PRD §5;
+   screenshot-gmail-compose.png; BUILD-LOG, 2026-11-08) */
 .compose-drawer {
   position: fixed;
-  right: 24px;
-  bottom: 0;
+  right: 16px;
+  bottom: 16px;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  width: 500px;
-  height: 520px;
-  max-height: calc(100vh - 80px);
-  border-radius: 12px 12px 0 0;
+  width: 540px;
+  height: 560px;
+  max-height: calc(100vh - 96px);
+  border-radius: var(--md-sys-shape-corner-large);
   background: var(--surface);
   box-shadow: var(--md-sys-elevation-level4);
   overflow: hidden;
@@ -251,12 +252,12 @@
 .compose-header {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   height: 40px;
   padding: 0 8px 0 16px;
   background: var(--md-sys-color-surface-container);
 }
-.compose-header .icon-button,
+.compose-drawer .compose-header .icon-button,
 .compose-drawer.is-minimized .icon-button {
   width: 28px;
   height: 28px;
@@ -273,19 +274,32 @@
 .compose-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   flex: 1;
   min-height: 0;
-  padding: 16px 16px 8px;
+  padding: 0 16px;
 }
+/* Recipients and Subject: plain lines with a thin rule under each, like Gmail */
+.compose-line {
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+}
+.compose-line::placeholder { color: var(--text-muted); }
+.compose-line:focus { outline: none; border-bottom-color: var(--focus-ring); }
+.compose-line.has-error { border-bottom-color: var(--md-sys-color-error); }
 .compose-error {
-  margin: -6px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
 }
 .compose-body {
   flex: 1;
   min-height: 0;
-  padding: 8px 2px;
+  padding: 12px 0;
   border: none;
   resize: none;
   font: inherit;
@@ -294,28 +308,24 @@
   color: var(--text);
 }
 .compose-body:focus { outline: none; }
-.compose-body:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
-.compose-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px 12px 16px;
-}
-.compose-send { padding: 0 24px; border-radius: var(--md-sys-shape-corner-full); } /* Gmail's own, so it stays oval */
-/* Minimized: a bar along the bottom, like Gmail's collapsed draft */
+.compose-body:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; border-radius: 4px; }
+.compose-footer { padding: 0 12px 12px 16px; }
+/* Minimized: a floating pill in the same corner, as in Gmail now */
 .compose-drawer.is-minimized {
   flex-direction: row;
   align-items: center;
-  width: 280px;
+  gap: 4px;
+  width: 300px;
   height: 40px;
   padding-right: 8px;
-  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-full);
+  box-shadow: var(--md-sys-elevation-level3);
 }
 .compose-bar {
   flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 0 16px;
+  padding: 0 16px 0 20px;
   text-align: left;
   display: flex;
   align-items: center;

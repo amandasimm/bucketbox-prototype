@@ -1,11 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
+import InertButton from './InertButton.jsx'
+import { FormattingBar, SendRow } from './WritingTools.jsx'
 
 // Gmail's compose drawer, bottom right (PRD §5; screenshot-gmail-compose.png and
 // screenshot-gmail-compose-collapsed-hover.png). Opened by the nav's Compose button, for new
 // messages only; replies happen in place under the email (BUILD-LOG, 2026-10-30).
-// It can be minimized to a bar, so people can keep working behind it. Send closes it with a
+// It can be minimized to a floating pill, as in Gmail now, so people can keep working behind it. Send closes it with a
 // toast and never sends anything anywhere (CLAUDE.md §5; BUILD-LOG, 2026-10-30).
 export default function ComposeDrawer({ composeActions }) {
   const { compose } = composeActions
@@ -42,8 +44,11 @@ export default function ComposeDrawer({ composeActions }) {
           <span className="compose-title">{title}</span>
         </button>
         <IconButton label="Open" onClick={() => composeActions.update({ minimized: false })}>
-          <Icon name="open_in_full" size={18} />
+          <Icon name="minimize" size={18} />
         </IconButton>
+        <InertButton label="Full screen" className="icon-button">
+          <Icon name="open_in_full" size={16} />
+        </InertButton>
         <IconButton label="Save and close" tooltipAlign="right" onClick={composeActions.close}>
           <Icon name="close" size={18} />
         </IconButton>
@@ -58,50 +63,44 @@ export default function ComposeDrawer({ composeActions }) {
         <IconButton label="Minimize" onClick={() => composeActions.update({ minimized: true })}>
           <Icon name="minimize" size={18} />
         </IconButton>
+        <InertButton label="Full screen" className="icon-button">
+          <Icon name="open_in_full" size={16} />
+        </InertButton>
         <IconButton label="Save and close" tooltipAlign="right" onClick={composeActions.close}>
           <Icon name="close" size={18} />
         </IconButton>
       </header>
 
+      {/* Gmail's plain lines with a rule under each, not boxed fields */}
       <div className="compose-fields">
-        <div className={`text-field ${showError ? 'has-error' : ''}`}>
-          <input
-            ref={toRef}
-            id={`${ids}-to`}
-            className="text-field-input"
-            value={compose.to}
-            placeholder=" "
-            autoComplete="off"
-            aria-invalid={showError}
-            aria-describedby={showError ? `${ids}-error` : undefined}
-            onChange={(event) => {
-              setShowError(false)
-              composeActions.update({ to: event.target.value })
-            }}
-          />
-          <label className="text-field-label" htmlFor={`${ids}-to`}>
-            To
-          </label>
-        </div>
+        <input
+          ref={toRef}
+          className={`compose-line ${showError ? 'has-error' : ''}`}
+          value={compose.to}
+          placeholder="Recipients"
+          aria-label="To"
+          autoComplete="off"
+          aria-invalid={showError}
+          aria-describedby={showError ? `${ids}-error` : undefined}
+          onChange={(event) => {
+            setShowError(false)
+            composeActions.update({ to: event.target.value })
+          }}
+        />
         {showError && (
           <p id={`${ids}-error`} className="bucket-form-error compose-error">
             <Icon name="error" size={16} />
             Add at least one recipient.
           </p>
         )}
-        <div className="text-field">
-          <input
-            id={`${ids}-subject`}
-            className="text-field-input"
-            value={compose.subject}
-            placeholder=" "
-            autoComplete="off"
-            onChange={(event) => composeActions.update({ subject: event.target.value })}
-          />
-          <label className="text-field-label" htmlFor={`${ids}-subject`}>
-            Subject
-          </label>
-        </div>
+        <input
+          className="compose-line"
+          value={compose.subject}
+          placeholder="Subject"
+          aria-label="Subject"
+          autoComplete="off"
+          onChange={(event) => composeActions.update({ subject: event.target.value })}
+        />
         <textarea
           ref={bodyRef}
           className="compose-body"
@@ -112,12 +111,15 @@ export default function ComposeDrawer({ composeActions }) {
       </div>
 
       <footer className="compose-footer">
-        <button type="submit" className="filled-button compose-send">
-          Send
-        </button>
-        <IconButton label="Discard draft" tooltipAlign="right" onClick={composeActions.close}>
-          <Icon name="delete" size={20} />
-        </IconButton>
+        <FormattingBar />
+        <SendRow
+          onDiscard={composeActions.close}
+          extraTools={
+            <InertButton label="Set up a time to meet" className="icon-button">
+              <Icon name="calendar_month" size={20} />
+            </InertButton>
+          }
+        />
       </footer>
     </form>
   )

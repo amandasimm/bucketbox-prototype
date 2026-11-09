@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
-import IconButton from './IconButton.jsx'
 import InertButton from './InertButton.jsx'
+import { FormattingBar, SendRow } from './WritingTools.jsx'
 
 // "Grace Xu (buffalo.edu)", as Gmail shows the person you're replying to
 function recipientLabel(email) {
@@ -84,44 +84,8 @@ export default function ReplyArea({ email, onSendReply }) {
           value={body}
           onChange={(event) => setBody(event.target.value)}
         />
-        <div className="reply-box-format" role="toolbar" aria-label="Formatting (not part of this prototype)">
-          <InertButton label="Undo" className="icon-button"><Icon name="undo" size={18} /></InertButton>
-          <InertButton label="Redo" className="icon-button"><Icon name="redo" size={18} /></InertButton>
-          <span className="reply-box-divider" aria-hidden="true" />
-          <InertButton label="Font" className="reply-box-font" nameOnHover={false}>
-            Sans Serif
-            <Icon name="arrow_drop_down" size={18} />
-          </InertButton>
-          <span className="reply-box-divider" aria-hidden="true" />
-          <InertButton label="Size" className="icon-button"><Icon name="format_size" size={18} /></InertButton>
-          <InertButton label="Bold" className="icon-button"><Icon name="format_bold" size={18} /></InertButton>
-          <InertButton label="Italic" className="icon-button"><Icon name="format_italic" size={18} /></InertButton>
-          <InertButton label="Underline" className="icon-button"><Icon name="format_underlined" size={18} /></InertButton>
-          <InertButton label="Text color" className="icon-button"><Icon name="format_color_text" size={18} /></InertButton>
-          <InertButton label="Align" className="icon-button"><Icon name="format_align_left" size={18} /></InertButton>
-          <InertButton label="More formatting options" className="icon-button"><Icon name="arrow_drop_down" size={18} /></InertButton>
-        </div>
-        <div className="reply-box-footer">
-          <span className="reply-send-group">
-            <button type="submit" className="filled-button reply-send">Send</button>
-            <InertButton label="More send options" className="filled-button reply-send-more">
-              <Icon name="arrow_drop_down" size={20} />
-            </InertButton>
-          </span>
-          <InertButton label="Formatting options" className="icon-button"><Icon name="text_format" size={20} /></InertButton>
-          <InertButton label="Attach files" className="icon-button"><Icon name="attach_file" size={20} /></InertButton>
-          <InertButton label="Insert link" className="icon-button"><Icon name="link" size={20} /></InertButton>
-          <InertButton label="Insert emoji" className="icon-button"><Icon name="mood" size={20} /></InertButton>
-          <InertButton label="Insert files using Drive" className="icon-button"><Icon name="add_to_drive" size={20} /></InertButton>
-          <InertButton label="Insert photo" className="icon-button"><Icon name="image" size={20} /></InertButton>
-          <InertButton label="Insert signature" className="icon-button"><Icon name="signature" size={20} /></InertButton>
-          <InertButton label="More options" className="icon-button"><Icon name="more_vert" size={20} /></InertButton>
-          <span className="reply-box-discard">
-            <IconButton label="Discard draft" tooltipAlign="right" onClick={close}>
-              <Icon name="delete" size={20} />
-            </IconButton>
-          </span>
-        </div>
+        <FormattingBar />
+        <SendRow onDiscard={close} />
       </form>
     </div>
   )

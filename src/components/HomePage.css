@@ -1330,7 +1330,8 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.reply-box .icon-button {
+.reply-box .icon-button,
+.compose-footer .icon-button {
   flex-shrink: 0;
   width: 32px;
   height: 32px;
