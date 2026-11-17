@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -13,8 +13,10 @@ import {
 import BucketGrid from './BucketGrid.jsx'
 import BucketView from './BucketView.jsx'
 import Declutter from './Declutter.jsx'
+import { DragMotionProvider, prefersReducedMotion } from './DragMotion.jsx'
 import EmailDrawer from './EmailDrawer.jsx'
-import Icon from './Icon.jsx'
+import Envelope from './Envelope.jsx'
+import Resizer from './Resizer.jsx'
 import Toast from './Toast.jsx'
 import TodayList, { unsortedFor } from './TodayList.jsx'
 import './HomePage.css'
@@ -53,19 +55,26 @@ function jumpBetweenTargets(event, { context }) {
   }
 }
 
-// The drag chip sits just below and to the right of the pointer, like Gmail's, so it never
+// The envelope an email turns into (PRD F4; BUILD-LOG, 2026-11-13)
+const ENVELOPE = 56
+const BESIDE_POINTER = 12
+// How long the envelope takes to fly into a bucket or the delete zone, or back to its row
+const FLIGHT_MS = 420
+const centerOf = (rect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+
+// The envelope sits just below and to the right of the pointer, like Gmail's chip did, so it never
 // covers the bucket or delete zone under the pointer (BUILD-LOG, 2026-10-31). With the
 // keyboard there's no pointer, so it stays where dnd-kit puts it.
 // Near the bottom of the screen it flips above the pointer so it stays fully visible.
 function chipBesidePointer({ transform, activatorEvent, draggingNodeRect, overlayNodeRect }) {
   if (!activatorEvent || !draggingNodeRect || !('clientX' in activatorEvent)) return transform
   const pointerY = activatorEvent.clientY + transform.y
-  const chipHeight = overlayNodeRect?.height ?? 44
-  const below = pointerY + 12 + chipHeight <= window.innerHeight
+  const chipHeight = overlayNodeRect?.height ?? ENVELOPE
+  const below = pointerY + BESIDE_POINTER + chipHeight <= window.innerHeight
   return {
     ...transform,
-    x: transform.x + activatorEvent.clientX - draggingNodeRect.left + 12,
-    y: transform.y + activatorEvent.clientY - draggingNodeRect.top + (below ? 12 : -12 - chipHeight),
+    x: transform.x + activatorEvent.clientX - draggingNodeRect.left + BESIDE_POINTER,
+    y: transform.y + activatorEvent.clientY - draggingNodeRect.top + (below ? BESIDE_POINTER : -BESIDE_POINTER - chipHeight),
   }
 }
 
@@ -91,6 +100,7 @@ export default function HomePage({
   onChangeDay,
   selectedIds,
   onSelect,
+  leavingIds,
   actions,
   bucketActions,
   toast,
@@ -113,7 +123,28 @@ export default function HomePage({
     useSensor(KeyboardSensor, { coordinateGetter: jumpBetweenTargets }),
   )
 
-  function onDragStart({ active }) {
+  // The envelope animation (PRD F4; BUILD-LOG, 2026-11-13), for dragging only:
+  // - pickup: the row shrinks into an envelope at the pointer, and stays behind as a faded ghost
+  // - flight: on a drop the envelope flies to where the email will appear and fades into it;
+  //   if nothing was hit it flies back to its row
+  // - landing: only then does the email actually move, so the count ticks up as it arrives
+  const [pickup, setPickup] = useState(null) // the shrinking outline of the row
+  const [flight, setFlight] = useState(null) // the envelope after it's let go
+  const [landingIds, setLandingIds] = useState([]) // ghosts waiting for their envelope to land
+  const [closingIds, setClosingIds] = useState([]) // ghosts closing up just before it lands
+  const [arrivedIds, setArrivedIds] = useState([]) // rows that just appeared in a bucket
+  const [overColor, setOverColor] = useState(null) // the color of the bucket under the envelope
+  // The Today card's width once someone drags the divider beside it (null = the usual layout).
+  // Nothing is saved; a reload puts it back (BUILD-LOG, 2026-11-16).
+  const [todayWidth, setTodayWidth] = useState(null)
+  const pageRef = useRef(null)
+  const todayCard = () => pageRef.current.querySelector('.today-list').getBoundingClientRect()
+  const startRect = useRef(null)
+  const actionsRef = useRef(actions)
+  actionsRef.current = actions
+  const without = (ids) => (current) => current.filter((id) => !ids.includes(id))
+
+  function onDragStart({ active, activatorEvent }) {
     const email = active.data.current.email
     setDraggedIds(selectedIds.includes(email.id) ? selectedIds : [email.id])
     // The Today drawer covers the buckets, so it closes when a drag starts
@@ -121,12 +152,102 @@ export default function HomePage({
       setHoldLayout(true)
       emailView.close()
     }
+    const row = activatorEvent?.target?.closest?.('.email-row')
+    startRect.current = row?.getBoundingClientRect() ?? null
+    // With the mouse, the row's outline shrinks into the envelope beside the pointer
+    if (startRect.current && 'clientX' in activatorEvent) {
+      const rect = startRect.current
+      const from = centerOf(rect)
+      const to = BESIDE_POINTER + ENVELOPE / 2
+      setPickup({
+        key: Date.now(),
+        style: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          '--move-x': `${activatorEvent.clientX + to - from.x}px`,
+          '--move-y': `${activatorEvent.clientY + to - from.y}px`,
+          '--shrink-x': ENVELOPE / rect.width,
+          '--shrink-y': (ENVELOPE * 0.6) / rect.height,
+        },
+      })
+    }
   }
 
-  function onDragEnd({ over }) {
-    if (over) actions.drop(draggedIds, over.data.current.target)
-    setHoldLayout(false)
+  // Where the envelope is heading: the top of the bucket's list (where the email appears),
+  // a bucket pill, or the circle in the delete zone
+  function landingPoint(over) {
+    const rect = over.rect
+    if (String(over.id).startsWith('bucket:')) return { x: rect.left + 36, y: rect.top + 72 }
+    if (over.id === 'delete-zone') {
+      const circle = [...document.querySelectorAll('.delete-zone-circle')]
+        .map((node) => centerOf(node.getBoundingClientRect()))
+        .find((point) => point.x > rect.left && point.x < rect.left + rect.width && point.y > rect.top && point.y < rect.top + rect.height)
+      if (circle) return circle
+    }
+    return centerOf(rect)
+  }
+
+  function onDragEnd({ over, activatorEvent, delta }) {
+    const ids = draggedIds
+    const target = over?.data.current.target
+    setOverColor(null)
     setDraggedIds([])
+    setPickup(null)
+
+    if (prefersReducedMotion()) {
+      if (target) actions.drop(ids, target)
+      setHoldLayout(false)
+      return
+    }
+
+    // Where the envelope is when it's let go: beside the pointer, or on the target with the keyboard
+    const half = ENVELOPE / 2
+    const from =
+      activatorEvent && 'clientX' in activatorEvent
+        ? { x: activatorEvent.clientX + delta.x + BESIDE_POINTER + half, y: activatorEvent.clientY + delta.y + BESIDE_POINTER + half }
+        : centerOf(over?.rect ?? startRect.current ?? { left: 0, top: 0, width: 0, height: 0 })
+    const to = target ? landingPoint(over) : centerOf(startRect.current ?? { left: from.x, top: from.y, width: 0, height: 0 })
+    setFlight({
+      key: Date.now(),
+      count: ids.length,
+      kind: target ? 'drop' : 'return',
+      tint: target?.bucket?.color ?? null,
+      style: { left: from.x - half, top: from.y - half, '--move-x': `${to.x - from.x}px`, '--move-y': `${to.y - from.y}px` },
+    })
+
+    if (!target) {
+      // Nothing was hit: the envelope goes home and the ghost row comes back
+      setHoldLayout(false)
+      return
+    }
+    setLandingIds((current) => [...current, ...ids])
+    setTimeout(() => setClosingIds((current) => [...current, ...ids]), FLIGHT_MS - 200)
+    setTimeout(() => {
+      actionsRef.current.drop(ids, target)
+      setLandingIds(without(ids))
+      setClosingIds(without(ids))
+      setHoldLayout(false)
+      if (target.type === 'bucket') {
+        setArrivedIds((current) => [...current, ...ids])
+        setTimeout(() => setArrivedIds(without(ids)), 700)
+      }
+    }, FLIGHT_MS)
+  }
+
+  // Escape while dragging: the envelope goes back to its row
+  function onDragCancel() {
+    setOverColor(null)
+    setDraggedIds([])
+    setPickup(null)
+    setHoldLayout(false)
+  }
+
+  const motion = {
+    ghostIds: [...draggedIds, ...landingIds],
+    leavingIds: [...leavingIds, ...closingIds],
+    arrivedIds,
   }
 
   const count = draggedIds.length
@@ -142,20 +263,20 @@ export default function HomePage({
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       accessibility={{ announcements, screenReaderInstructions }}
       onDragStart={onDragStart}
+      onDragOver={({ over }) => setOverColor(over?.data.current.target.bucket?.color ?? null)}
       onDragEnd={onDragEnd}
-      onDragCancel={() => {
-        setDraggedIds([])
-        setHoldLayout(false)
-      }}
+      onDragCancel={onDragCancel}
     >
+      <DragMotionProvider value={motion}>
       {/* Bucket tiles never change width. With 1–2 buckets they stack in one column and the
           Today card takes the rest of the room; with 3 or more there are two columns.
           While an email is open, Today goes back to its usual width so the drawer has room
           (BUILD-LOG, 2026-10-30). */}
       <div
-        className={`home-page ${(drawerEmail && !openBucket) || holdLayout ? 'drawer-open' : ''}`}
+        ref={pageRef}
+        className={`home-page ${(drawerEmail && !openBucket) || holdLayout ? 'drawer-open' : ''} ${todayWidth === null ? '' : 'is-resized'}`}
         data-bucket-cols={buckets.length <= 2 ? 1 : 2}
-        style={{ '--bucket-cols': buckets.length <= 2 ? 1 : 2 }}
+        style={{ '--bucket-cols': buckets.length <= 2 ? 1 : 2, '--today-width': todayWidth === null ? undefined : `${todayWidth}px` }}
       >
         {/* The home page stays underneath an opened bucket, just visible around its edges,
             but can't be clicked or tabbed into until the bucket closes */}
@@ -173,6 +294,14 @@ export default function HomePage({
             openEmailId={drawerEmail?.id}
             onOpen={emailView.open}
             covered={Boolean(openBucket || declutter)}
+          />
+          {/* Drag to make the Today list wider or narrower; the buckets take the rest */}
+          <Resizer
+            label="Resize the Today list and the buckets"
+            className="is-main"
+            onMove={(x) => setTodayWidth(Math.round(x - todayCard().left - 8))}
+            onNudge={(by) => setTodayWidth(Math.round(todayCard().width + by))}
+            onReset={() => setTodayWidth(null)}
           />
           <div className="home-right">
             <BucketGrid
@@ -214,15 +343,37 @@ export default function HomePage({
         <Toast toast={toast} onAction={onToastAction} />
       </div>
 
-      {/* Gmail's drag chip, which follows the pointer (screenshot-gmail-move-email.png) */}
+      </DragMotionProvider>
+
+      {/* The envelope, which follows the pointer in place of Gmail's "Move 1 conversation" chip */}
       <DragOverlay dropAnimation={null} modifiers={[chipBesidePointer]}>
         {count > 0 && (
-          <div className="drag-chip">
-            <Icon name="mail" size={20} />
-            Move {count} {count === 1 ? 'conversation' : 'conversations'}
+          <div className="drag-envelope">
+            <Envelope count={count} size={ENVELOPE} tint={overColor} />
+            <span className="visually-hidden">
+              Moving {count} {count === 1 ? 'email' : 'emails'}
+            </span>
           </div>
         )}
       </DragOverlay>
+      {pickup && (
+        <div key={pickup.key} className="pickup-shrink" style={pickup.style} aria-hidden="true" onAnimationEnd={() => setPickup(null)} />
+      )}
+      {flight && (
+        <div
+          key={flight.key}
+          className={`envelope-flight is-${flight.kind}`}
+          style={flight.style}
+          aria-hidden="true"
+          onAnimationEnd={() => setFlight(null)}
+        >
+          <div className="envelope-flight-down">
+            <div className="envelope-flight-hop">
+              <Envelope count={flight.count} size={ENVELOPE} tint={flight.tint} />
+            </div>
+          </div>
+        </div>
+      )}
     </DndContext>
   )
 }

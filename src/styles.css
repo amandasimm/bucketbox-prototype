@@ -84,9 +84,13 @@
   --header-height: 64px;
   --rail-width: 68px;
   --nav-width: 256px;
+  --nav-width-full: 256px;   /* the header always measures from this, collapsed nav or not */
+  --side-panel-width: 56px;  /* Gmail's right side panel */
   --radius-large: var(--md-sys-shape-corner-large);
 
-  font-family: 'Roboto', Arial, sans-serif;
+  /* Google Sans, the font Gmail uses now (open license; BUILD-LOG, 2026-11-13). Roboto is the fallback. */
+  --font: 'Google Sans', 'Roboto', Arial, sans-serif;
+  font-family: var(--font);
   font-size: 14px;
   color: var(--text);
 }
@@ -188,7 +192,7 @@ button {
   border-radius: var(--md-sys-shape-corner-extra-small);
   background: var(--tooltip-bg);
   color: var(--tooltip-text);
-  font: 400 var(--md-sys-typescale-body-small) 'Roboto', Arial, sans-serif;
+  font: 400 var(--md-sys-typescale-body-small) var(--font);
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;

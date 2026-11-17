@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { prefersReducedMotion } from './DragMotion.jsx'
 import EmailPane, { Avatar, threadMessages } from './EmailPane.jsx'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
@@ -236,6 +237,29 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
 
   const startPoint = () => (atEnd ? endHeadingRef.current : cardRef.current)
 
+  // Directional motion (BUILD-LOG, 2026-11-13): the card that's leaving slides the way its key
+  // points. Archive goes left, Mark as read right, Next up (the next card rises from the stack),
+  // Back down; a card sorted into a bucket shrinks away. A copy of the old card plays the exit.
+  const direction = useRef(null)
+  const shownEmail = useRef(email)
+  const [leavingCard, setLeavingCard] = useState(null)
+  const go = (way, action) => (...args) => {
+    direction.current = way
+    action(...args)
+  }
+  useLayoutEffect(() => {
+    const previous = shownEmail.current
+    shownEmail.current = email
+    if (previous && email && previous.id !== email.id && !prefersReducedMotion()) {
+      const key = Date.now()
+      setLeavingCard({ email: previous, way: direction.current ?? 'fade', key })
+      // A fallback, in case the browser never reports the animation's end
+      setTimeout(() => setLeavingCard((card) => (card?.key === key ? null : card)), 400)
+    }
+    direction.current = null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email?.id])
+
   useEffect(() => {
     startPoint()?.focus()
     // Only when this day's Declutter starts
@@ -270,10 +294,10 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       }
       if (openEmail || document.querySelector('[role="menu"]')) return // the flow is paused
 
-      if (event.key === 'ArrowUp') actions.previous()
-      else if (event.key === 'ArrowDown' && !atEnd) actions.next()
-      else if (event.key === 'ArrowLeft' && !atEnd) actions.archive(email)
-      else if (event.key === 'ArrowRight' && !atEnd) actions.markRead(email)
+      if (event.key === 'ArrowUp') go('down', actions.previous)()
+      else if (event.key === 'ArrowDown' && !atEnd) go('up', actions.next)()
+      else if (event.key === 'ArrowLeft' && !atEnd) go('left', actions.archive)(email)
+      else if (event.key === 'ArrowRight' && !atEnd) go('right', actions.markRead)(email)
       // On the end screen, a held key from the last card doesn't carry over and leave it
       else if (event.key === 'ArrowLeft' && previousDay !== null && !event.repeat) actions.previousDay(previousDay)
       else if (event.key === 'ArrowRight' && !event.repeat) actions.exit()
@@ -285,36 +309,40 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   })
 
-  // A small title, so the email gets the room; screen readers also hear the day
-  const title = (
-    <h2 id="declutter-title" className="declutter-title">
-      Declutter<span className="visually-hidden"> {dayName}</span>
-    </h2>
-  )
-
   return (
     <section className="declutter" aria-labelledby="declutter-title" ref={screenRef}>
-      {/* An open email has its own X, which goes back to the card */}
-      {!openEmail && (
-        <span className="declutter-exit">
+      {/* The same kind of header as the Today card and an opened bucket: the name on the left,
+          the count and the X on the right, progress along its bottom edge (BUILD-LOG, 2026-11-13).
+          Screen readers also hear the day. */}
+      <header className="declutter-header">
+        {/* With an email open, a back arrow returns to its card (like Gmail's reading view) */}
+        {openEmail && (
+          <IconButton label="Back to the card" tooltipAlign="left" onClick={actions.close}>
+            <Icon name="arrow_back" size={20} />
+          </IconButton>
+        )}
+        <h2 id="declutter-title" className="declutter-title">
+          Declutter<span className="visually-hidden"> {dayName}</span>
+        </h2>
+        <p className="declutter-count">{atEnd ? 'Complete' : `${position + 1} of ${total}`}</p>
+        {/* The X leaves Declutter; while an email is open, the back arrow takes its place */}
+        {!openEmail && (
           <IconButton label="Exit Declutter" tooltipAlign="right" onClick={actions.exit}>
             <Icon name="close" size={20} />
           </IconButton>
-        </span>
-      )}
+        )}
+        <div className="declutter-progress" aria-hidden="true">
+          <span style={{ width: atEnd ? '100%' : `${((position + 1) / total) * 100}%` }} />
+        </div>
+      </header>
 
       {/* The toast already says what just happened; this adds where you are now */}
       <p className="visually-hidden" role="status">
         {!atEnd && !openEmail && `${position + 1} of ${total}. ${email.unread ? 'Unread. ' : ''}${email.sender}: ${email.subject}`}
       </p>
 
-          <div className="declutter-stage" inert={openEmail ? true : undefined}>
+          <div className="declutter-stage" hidden={Boolean(openEmail)}>
             <div className="declutter-reader">
-              {title}
-              <p className="declutter-count">{atEnd ? 'Complete' : `${position + 1} of ${total}`}</p>
-              <div className="declutter-progress" aria-hidden="true">
-                <span style={{ width: atEnd ? '100%' : `${((position + 1) / total) * 100}%` }} />
-              </div>
               {atEnd ? (
                 <EndMessage declutter={declutter} headingRef={endHeadingRef} />
               ) : (
@@ -325,19 +353,33 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                     onOpen={() => actions.open(email)}
                     onReportSpam={emailView.junk}
                   />
+                  {leavingCard && (
+                    <div
+                      key={leavingCard.key}
+                      className={`declutter-card-leaving is-${leavingCard.way}`}
+                      aria-hidden="true"
+                      inert
+                      onAnimationEnd={() => setLeavingCard(null)}
+                    >
+                      <EmailCard email={leavingCard.email} onOpen={() => {}} onReportSpam={() => {}} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            {/* The controls line up with the top of the email, close to where reading starts. The
-                buttons sit where their arrow keys point; the buckets fill the room below. */}
-            <div className="declutter-controls">
+            {/* The buttons sit where their arrow keys point. On the end screen they stay at the
+                top, beside the message. */}
+            <div className={`declutter-controls ${atEnd ? 'is-end' : ''}`}>
+              {/* Buckets at the top, level with the start of the email; the arrow buttons at the
+                  bottom, level with the end of the card (BUILD-LOG, 2026-11-13) */}
+              {!atEnd && <BucketBar email={email} buckets={buckets} onMove={go('away', actions.move)} />}
               <div className="declutter-keys">
                 <ArrowButton
                   className="is-up"
                   label="Back"
                   keyName="up"
                   disabled={!hasPrevious}
-                  onClick={actions.previous}
+                  onClick={go('down', actions.previous)}
                 />
                 {atEnd ? (
                   <div className="declutter-end-buttons">
@@ -353,16 +395,16 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                   </div>
                 ) : (
                   <>
-                    <ArrowButton className="is-left is-main" label="Archive" keyName="left" onClick={(how) => actions.archive(email, how)} />
-                    <ArrowButton className="is-right is-main" label="Mark as read" keyName="right" onClick={(how) => actions.markRead(email, how)} />
-                    <ArrowButton className="is-down" label="Next" keyName="down" onClick={actions.next} />
+                    <ArrowButton className="is-left is-main" label="Archive" keyName="left" onClick={(how) => go('left', actions.archive)(email, how)} />
+                    <ArrowButton className="is-right is-main" label="Mark as read" keyName="right" onClick={(how) => go('right', actions.markRead)(email, how)} />
+                    <ArrowButton className="is-down" label="Next" keyName="down" onClick={go('up', actions.next)} />
                   </>
                 )}
               </div>
-              {!atEnd && <BucketBar email={email} buckets={buckets} onMove={actions.move} />}
             </div>
           </div>
-      {/* An opened email pauses the flow: it sits on top, with Declutter blurred behind it */}
+      {/* An opened email pauses the flow. It opens in place: the header stays, and the email takes
+          the room below it, with the card and controls put away until it's closed (BUILD-LOG, 2026-11-13) */}
       {openEmail && (
         <div className="declutter-open-layer">
           <div className="declutter-open">
@@ -372,7 +414,6 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
               buckets={buckets}
               emailView={emailView}
               onSendReply={onSendReply}
-              onClose={actions.close}
               titleRef={titleRef}
             />
           </div>

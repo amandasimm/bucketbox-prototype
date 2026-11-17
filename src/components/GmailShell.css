@@ -1,11 +1,11 @@
 /* Page grid: header across the top, then app rail | nav | main area */
 .gmail-shell {
   display: grid;
-  grid-template-columns: var(--rail-width) var(--nav-width) 1fr;
+  grid-template-columns: var(--rail-width) var(--nav-width) 1fr var(--side-panel-width);
   grid-template-rows: var(--header-height) 1fr;
   grid-template-areas:
-    'header header header'
-    'rail   nav    main';
+    'header header header header'
+    'rail   nav    main   side';
   height: 100vh;
 }
 
@@ -20,7 +20,9 @@
 .gmail-header-start {
   display: flex;
   align-items: center;
-  width: calc(var(--rail-width) + var(--nav-width) - 20px);
+  /* Always the full nav's width, so the logo and search bar stay put when the nav
+     collapses under them (BUILD-LOG, 2026-11-13) */
+  width: calc(var(--rail-width) + var(--nav-width-full) - 20px);
   flex-shrink: 0;
 }
 .gmail-logo {
@@ -119,6 +121,7 @@
   background: var(--compose-bg);
   font-weight: 500;
 }
+.compose-button { position: relative; }
 .compose-button:hover { box-shadow: var(--md-sys-elevation-level1); }
 
 .gmail-nav-list {
@@ -198,11 +201,14 @@
 }
 .prototype-switch[aria-checked='true'] .switch-thumb .icon { color: var(--focus-ring); }
 
-/* Collapsed nav while Bucketbox is on (Amanda's mock, 2026-10-30): just wide enough for
-   Compose, which keeps its size and place; items show icons only, names on hover. */
-.gmail-shell.nav-collapsed { --nav-width: 160px; }
+/* Collapsed nav while Bucketbox is on: Gmail's own collapsed nav (BUILD-LOG, 2026-11-13).
+   A 72px column: Compose is a square with just the pencil, and each item is its icon in a
+   small pill. Names show on hover and to screen readers. */
+.gmail-shell.nav-collapsed { --nav-width: 72px; }
+.nav-collapsed .gmail-nav { padding-right: 8px; }
 .nav-collapsed .gmail-nav-label,
-.nav-collapsed .gmail-nav-count {
+.nav-collapsed .gmail-nav-count,
+.nav-collapsed .compose-button > span:not(.tooltip, .icon) {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -210,11 +216,21 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.nav-collapsed .compose-button {
+  justify-content: center;
+  width: 56px;
+  margin-left: 4px;
+  padding: 0;
+}
 .nav-collapsed .gmail-nav-item,
 .nav-collapsed .prototype-switch {
-  width: 136px; /* the pill lines up with Compose at both ends */
+  justify-content: center;
+  width: 56px;
+  margin-left: 4px;
+  padding: 0;
 }
-.nav-collapsed .prototype-switch { gap: 16px; } /* the switch lines up with Compose's label */
+/* No room for the toggle: the bucket icon in its pill is the switch, and its hover label says so */
+.nav-collapsed .switch-track { display: none; }
 
 /* Main area: the white rounded panel the prototype lives in */
 .gmail-main:focus { outline: none; } /* the skip link's target; it isn't a control */
@@ -236,7 +252,7 @@
    screenshot-gmail-compose.png; BUILD-LOG, 2026-11-08) */
 .compose-drawer {
   position: fixed;
-  right: 16px;
+  right: calc(var(--side-panel-width) + 16px); /* beside Gmail's side panel, as in Gmail */
   bottom: 16px;
   z-index: 50;
   display: flex;
@@ -331,15 +347,16 @@
   align-items: center;
 }
 
-/* Undo and redo, at the bottom of the nav (BUILD-LOG, 2026-10-30), 16px apart and centered
-   under Compose (same left edge and width).
+/* At the bottom of the nav, stacked in the narrow column: undo, then redo
+   (BUILD-LOG, 2026-10-30 and 2026-11-13).
    "Nothing to undo" uses M3's disabled color, the text color at 38% (BUILD-LOG, 2026-11-08). */
 .gmail-nav .page-history {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  width: 136px;
-  margin: auto 0 0 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 56px;
+  margin: auto 0 0 4px;
 }
 .page-history .icon-button {
   width: 40px;
@@ -352,8 +369,9 @@
   bottom: calc(100% + 4px);
 }
 
-/* Gmail's Labels section (plain view only): buckets listed as labels, look-only */
-.gmail-labels { margin-top: 16px; }
+/* Gmail's Labels section (plain view only): buckets listed as labels, look-only.
+   Extra space above keeps the Bucketbox switch apart from the labels. */
+.gmail-labels { margin-top: 32px; }
 .gmail-labels-header {
   display: flex;
   align-items: center;
@@ -371,3 +389,28 @@
 }
 .gmail-label-icon { display: flex; }
 .gmail-nav-item .gmail-label-icon .icon { color: inherit; } /* the bucket's color */
+
+/* Gmail's right side panel (Calendar, Keep, Tasks, Contacts): look-only, and the same in
+   both views, so it never moves (BUILD-LOG, 2026-11-13) */
+.side-panel {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0 16px;
+}
+.side-panel .icon-button {
+  width: 40px;
+  height: 40px;
+}
+.side-panel-divider {
+  width: 20px;
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+}
+.side-panel-hide { margin-top: auto; }
+.side-panel-hide .tooltip {
+  top: auto;
+  bottom: calc(100% + 4px);
+}

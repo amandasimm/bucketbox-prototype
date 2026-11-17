@@ -6,6 +6,8 @@ import DeleteBucketDialog from './DeleteBucketDialog.jsx'
 import EmailRow from './EmailRow.jsx'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
+import Resizer from './Resizer.jsx'
+import RollingNumber from './RollingNumber.jsx'
 import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
@@ -122,7 +124,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
                     <span className="bucket-swatch" aria-hidden="true" />
                   )}
                   <span className="bucket-name">{bucket.name}</span>
-                  <span className="bucket-count">{bucketEmails.length}</span>
+                  <RollingNumber className="bucket-count" value={bucketEmails.length} />
                 </button>
               </h3>
             </header>
@@ -162,6 +164,20 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
   const addButtonRef = useRef(null)
   const gridRef = useRef(null)
   const bucketCount = useRef(buckets.length)
+  // With two columns of buckets, the divider between them can be dragged. The split is the
+  // first column's share of the width (null = even). No column goes below 240px (BUILD-LOG, 2026-11-16).
+  const [columnSplit, setColumnSplit] = useState(null)
+  function splitAt(x) {
+    const grid = gridRef.current.getBoundingClientRect()
+    const room = grid.width - 16
+    const smallest = Math.min(0.5, 240 / room)
+    const share = (x - grid.left - 8) / room
+    setColumnSplit(Math.min(1 - smallest, Math.max(smallest, share)))
+  }
+  const dividerX = () => {
+    const grid = gridRef.current.getBoundingClientRect()
+    return grid.left + 8 + (grid.width - 16) * (columnSplit ?? 0.5)
+  }
 
   // A newly added bucket scrolls into view, so it doesn't appear cut off below the fold
   useEffect(() => {
@@ -196,7 +212,24 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
       {buckets.length === 0 && !adding && (
         <p className="buckets-empty">Make your first bucket to start sorting.</p>
       )}
-      <div className="bucket-grid" ref={gridRef}>
+      <div
+        className={`bucket-grid ${columnSplit === null ? '' : 'is-resized'}`}
+        style={
+          columnSplit === null
+            ? undefined
+            : { '--column-split': columnSplit, '--column-a': `${columnSplit}fr`, '--column-b': `${1 - columnSplit}fr` }
+        }
+        ref={gridRef}
+      >
+        {buckets.length > 2 && (
+          <Resizer
+            label="Resize the two columns of buckets"
+            className="is-columns"
+            onMove={splitAt}
+            onNudge={(by) => splitAt(dividerX() + by)}
+            onReset={() => setColumnSplit(null)}
+          />
+        )}
         {buckets.map((bucket) => (
           <BucketTile
             key={bucket.id}

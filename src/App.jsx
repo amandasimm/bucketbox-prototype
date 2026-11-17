@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { dayLabel } from './components/DayNav.jsx'
 import GmailInbox from './components/GmailInbox.jsx'
 import GmailShell from './components/GmailShell.jsx'
@@ -6,6 +6,7 @@ import HomePage from './components/HomePage.jsx'
 import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
 import { startingBuckets } from './data/startingSetup.js'
+import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
@@ -15,6 +16,9 @@ const startingEmails = mockEmails.map((email) => ({
   receivedAt: receivedAt(email.dayOffset, email.time),
   removedTo: null,
 }))
+
+// How long a row takes to close up before its email leaves the list (BUILD-LOG, 2026-11-13)
+const LEAVE_MS = 200
 
 const isUnsorted = (email) => email?.bucketId === null && email?.removedTo === null
 const patchEmail = (list, id, fields) => list.map((email) => (email.id === id ? { ...email, ...fields } : email))
@@ -63,6 +67,11 @@ export default function App() {
   const [declutter, setDeclutter] = useState(null)
   // Whether Declutter's arrow-key tip has shown, or isn't needed because the keys were used
   const [keyTipShown, setKeyTipShown] = useState(false)
+  // Rows closing up just before their emails leave the list
+  const [leavingIds, setLeavingIds] = useState([])
+  const leaving = useRef(false)
+  const latestEmails = useRef(emails)
+  latestEmails.current = emails
 
   // Switching days closes any open email and clears the checkboxes
   function changeDay(offset) {
@@ -76,13 +85,28 @@ export default function App() {
     setToast({ message, key: Date.now(), ...extras })
   }
 
-  function applyTo(ids, label, change, toastExtras) {
-    const after = emails.map((email) => (ids.includes(email.id) ? { ...email, ...change } : email))
-    setLastAction({ label, before: emails, after, undone: false })
-    setEmails(after)
-    setSelectedIds([])
-    if (toastExtras) showToast(toastExtras.message, toastExtras)
-    else showToast(label)
+  // The rows close up first (leaveMs), then the emails leave and the toast shows. A drop passes
+  // 0, because the home page has already played the envelope's flight by then.
+  function applyTo(ids, label, change, toastExtras, leaveMs = LEAVE_MS) {
+    if (leaving.current) return // a second click while the rows are still closing
+    const commit = () => {
+      leaving.current = false
+      const before = latestEmails.current
+      const after = before.map((email) => (ids.includes(email.id) ? { ...email, ...change } : email))
+      setLastAction({ label, before, after, undone: false })
+      setEmails(after)
+      setSelectedIds([])
+      setLeavingIds([])
+      if (toastExtras) showToast(toastExtras.message, toastExtras)
+      else showToast(label)
+    }
+    if (leaveMs === 0 || prefersReducedMotion()) {
+      commit()
+      return
+    }
+    leaving.current = true
+    setLeavingIds(ids)
+    setTimeout(commit, leaveMs)
   }
 
   // A change that isn't an undoable action (reading an email, sending a reply). It's also
@@ -199,18 +223,18 @@ export default function App() {
   function drop(ids, target) {
     const count = ids.length
     if (target.type === 'bucket') {
-      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id })
+      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id }, null, 0)
     } else if (zoneMode === 'archive') {
-      applyTo(ids, `Archived ${count}`, { removedTo: 'archive' })
+      applyTo(ids, `Archived ${count}`, { removedTo: 'archive' }, null, 0)
     } else if (!zoneToastSeen) {
       setZoneToastSeen(true)
       applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' }, {
         message: `${count} ${count === 1 ? 'email' : 'emails'} deleted.`,
         action: { label: 'Archive instead', ids },
         sticky: true,
-      })
+      }, 0)
     } else {
-      applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' })
+      applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' }, null, 0)
     }
   }
 
@@ -493,6 +517,7 @@ export default function App() {
           onDeclutter={() => startDeclutter(dayOffset)}
           selectedIds={selectedIds}
           onSelect={setSelectedIds}
+          leavingIds={leavingIds}
           actions={actions}
           bucketActions={bucketActions}
           toast={toast}

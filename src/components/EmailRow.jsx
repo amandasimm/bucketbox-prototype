@@ -1,11 +1,14 @@
+import { useLayoutEffect, useRef } from 'react'
 import { useDraggable } from '@dnd-kit/core'
+import { useDragMotion } from './DragMotion.jsx'
 import Icon from './Icon.jsx'
 import { formatShortDate, formatTime } from '../utils/dates.js'
 
 // One email in a list, stacked like Gmail's mobile rows (BUILD-LOG, 2026-10-28):
 // sender and time on top, then subject, preview and attachments.
 // variant:
-// - 'today': time, checkbox, preview, always-visible drag handle (PRD F1)
+// - 'today': time, checkbox, preview, always-visible drag handle (PRD F1). The handle's grab
+//   area is the whole left strip, including the space under the checkbox, plus the right edge.
 // - 'tile': a bucket tile's peek on the home page: date, no checkbox or preview, handle on hover (PRD F2)
 // - 'bucket': an opened bucket's list: date, checkbox, preview, always-visible handle
 // Clicking the text opens the email (PRD F1: only the handle starts a drag).
@@ -15,6 +18,22 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
     id: email.id,
     data: { email, label: `email from ${email.sender}` },
   })
+  // Drag and leave animations (BUILD-LOG, 2026-11-13)
+  const { ghostIds, leavingIds, arrivedIds } = useDragMotion()
+  const isLeaving = leavingIds.includes(email.id)
+  const rowRef = useRef(null)
+  // A leaving row closes up: its height is fixed at what it is now, then eased to nothing
+  useLayoutEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    if (!isLeaving) {
+      row.style.height = ''
+      return
+    }
+    row.style.height = `${row.offsetHeight}px`
+    row.getBoundingClientRect() // lets the browser register the starting height
+    row.style.height = '0px'
+  }, [isLeaving])
   const inTile = variant === 'tile'
   const threadSize = email.messages?.length ?? 1
   const received = variant === 'today' ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
@@ -24,10 +43,20 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
     inTile ? 'in-bucket' : '',
     selected ? 'is-selected' : '',
     isOpen ? 'is-open' : '',
+    ghostIds.includes(email.id) ? 'is-drag-ghost' : '',
+    isLeaving ? 'is-leaving' : '',
+    arrivedIds.includes(email.id) ? 'just-arrived' : '',
   ].join(' ')
 
   return (
-    <li className={rowClasses} ref={setNodeRef} data-email-id={email.id}>
+    <li
+      className={rowClasses}
+      ref={(node) => {
+        rowRef.current = node
+        setNodeRef(node)
+      }}
+      data-email-id={email.id}
+    >
       {/* Content comes first, so keyboard and screen reader users hear which email it is before
           its controls. The layout still shows the handle and checkbox on the left. */}
       <button
@@ -79,6 +108,11 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
       >
         <Icon name="drag_indicator" size={20} />
       </button>
+      {/* A second place to grab the email with the mouse: its right edge, the side nearest the
+          buckets (BUILD-LOG, 2026-11-16). Keyboard and screen reader users have the handle above. */}
+      {!inTile && (
+        <span className="drag-edge" {...listeners} aria-hidden="true" />
+      )}
     </li>
   )
 }

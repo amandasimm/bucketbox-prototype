@@ -63,6 +63,35 @@ function GmailHeader() {
   )
 }
 
+// Gmail's right side panel. Look-only. Plain icons in Google's colors stand in for the app logos.
+const sidePanelApps = [
+  { label: 'Calendar', icon: 'calendar_today', color: '#1a73e8' },
+  { label: 'Keep', icon: 'lightbulb', color: '#f9ab00' },
+  { label: 'Tasks', icon: 'task_alt', color: '#1a73e8' },
+  { label: 'Contacts', icon: 'person', color: '#1a73e8' },
+]
+
+function SidePanel() {
+  return (
+    <aside className="side-panel" aria-label="Side panel">
+      {sidePanelApps.map((app) => (
+        <InertButton key={app.label} label={app.label} className="icon-button" tooltipAlign="right">
+          <span style={{ color: app.color, display: 'flex' }}>
+            <Icon name={app.icon} filled size={20} />
+          </span>
+        </InertButton>
+      ))}
+      <span className="side-panel-divider" aria-hidden="true" />
+      <InertButton label="Get add-ons" className="icon-button" tooltipAlign="right">
+        <Icon name="add" size={20} />
+      </InertButton>
+      <InertButton label="Hide side panel" className="icon-button side-panel-hide" tooltipAlign="right">
+        <Icon name="chevron_right" size={20} />
+      </InertButton>
+    </aside>
+  )
+}
+
 function AppRail({ inboxUnread }) {
   return (
     <nav className="app-rail" aria-label="Google apps">
@@ -85,15 +114,21 @@ function AppRail({ inboxUnread }) {
   )
 }
 
-// While Bucketbox is on, the nav collapses to icons (names show on hover and to screen
-// readers) to give Bucketbox more room. Compose keeps its size and place (BUILD-LOG, 2026-10-30).
+// While Bucketbox is on, the nav collapses the way Gmail's own nav does: icons only, with
+// Compose as a square pencil button (names show on hover and to screen readers), to give
+// Bucketbox more room (BUILD-LOG, 2026-11-13).
 function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history, buckets }) {
   const collapsed = prototypeOn
   return (
     <nav className="gmail-nav" aria-label="Mail folders">
-      <button type="button" className="compose-button" onClick={onCompose}>
+      <button type="button" className={`compose-button ${collapsed ? 'has-tooltip' : ''}`} onClick={onCompose}>
         <Icon name="edit" />
         <span>Compose</span>
+        {collapsed && (
+          <span className="tooltip align-left" aria-hidden="true">
+            Compose
+          </span>
+        )}
       </button>
 
       <ul className="gmail-nav-list">
@@ -124,6 +159,27 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
         ))}
       </ul>
 
+      {/* The switch stays in the same spot in both views, just below Gmail's own items */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={prototypeOn}
+        className={`prototype-switch ${prototypeOn ? 'is-active' : ''} ${collapsed ? 'has-tooltip' : ''}`}
+        aria-label={PROTOTYPE_SWITCH_LABEL}
+        onClick={onTogglePrototype}
+      >
+        <BucketLogo size={20} filled={prototypeOn} />
+        <span className="gmail-nav-label">{PROTOTYPE_SWITCH_LABEL}</span>
+        {collapsed && (
+          <span className="tooltip align-left" aria-hidden="true">
+            Close {PROTOTYPE_SWITCH_LABEL}
+          </span>
+        )}
+        <span className="switch-track" aria-hidden="true">
+          <span className="switch-thumb">{prototypeOn && <Icon name="check" size={14} />}</span>
+        </span>
+      </button>
+
       {/* In the plain Gmail view, buckets appear as Gmail labels (look-only; BUILD-LOG, 2026-10-30) */}
       {!prototypeOn && (
         <div className="gmail-labels">
@@ -147,26 +203,6 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
           </ul>
         </div>
       )}
-
-      <button
-        type="button"
-        role="switch"
-        aria-checked={prototypeOn}
-        className={`prototype-switch ${prototypeOn ? 'is-active' : ''} ${collapsed ? 'has-tooltip' : ''}`}
-        aria-label={PROTOTYPE_SWITCH_LABEL}
-        onClick={onTogglePrototype}
-      >
-        <BucketLogo size={20} filled={prototypeOn} />
-        <span className="gmail-nav-label">{PROTOTYPE_SWITCH_LABEL}</span>
-        {collapsed && (
-          <span className="tooltip align-left" aria-hidden="true">
-            {PROTOTYPE_SWITCH_LABEL}
-          </span>
-        )}
-        <span className="switch-track" aria-hidden="true">
-          <span className="switch-thumb">{prototypeOn && <Icon name="check" size={14} />}</span>
-        </span>
-      </button>
 
       {/* Undo and redo sit at the bottom of the nav while Bucketbox is on */}
       {history && <PageHistory history={history} />}
@@ -202,6 +238,7 @@ export default function GmailShell({ composeActions, buckets, history, inboxUnre
         <h1 className="visually-hidden">{prototypeOn ? 'Bucketbox' : 'Inbox'}</h1>
         {children}
       </main>
+      <SidePanel />
       {composeActions.compose && <ComposeDrawer composeActions={composeActions} />}
     </div>
   )

@@ -43,13 +43,14 @@ Build **v1 only** unless Amanda says otherwise. Full detail: PRD §4 and §6.
 - Gmail chrome (left nav, header, search, compose drawer) kept and familiar
 - Optional bucket emoji, in place of the color dot (moved from v2, decided 2026-10-30)
 - Declutter (rapid sort): one card at a time through the viewed day's unsorted emails (PRD F13, Flow 7; added 2026-10-31)
+- Envelope drag animation (moved from v2, decided 2026-11-13; dragging only, no sounds)
 - "Open prototype" toggle at the bottom of the left nav, switching to a look-only Gmail-style inbox of the same mock emails (decided 2026-10-28)
 
 Build decisions already made (stacked rows, real "today" date, no reminder emails in the mock data, "Priority" starting with emails) are in `BUILD-LOG.md` → Decisions.
 
 **v2 / out of scope (don't build)**
 - Onboarding; hotkeys and type-to-move; filtering (including by tag); edit mode ("Customize"); settings menu
-- Envelope drag animation, sounds, mute, reduced-motion setting
+- Confirmation sounds and mute; a reduced-motion setting (the computer's own preference is already respected)
 - Returning a bucketed email to the Today list; Jump to Today; daily/weekly choice; late-arrivals indicator
 - Bucket-count setting, auto-archive, screen-reader support, hover-only fallbacks
 - Out entirely: notifications, mobile, compose redesign, AI replies, AI sorting, multiple inboxes

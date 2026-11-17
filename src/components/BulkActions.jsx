@@ -49,7 +49,18 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
   const moveButtonRef = useRef(null)
 
   // A list hidden behind an opened bucket doesn't show its own delete zone
-  const dragging = useDndContext().active !== null && !covered
+  const dragActive = useDndContext().active !== null && !covered
+  // The zone stays for a moment after the drop, so the envelope has somewhere to land
+  const [lingering, setLingering] = useState(false)
+  useEffect(() => {
+    if (dragActive) {
+      setLingering(true)
+      return undefined
+    }
+    const timer = setTimeout(() => setLingering(false), 420)
+    return () => clearTimeout(timer)
+  }, [dragActive])
+  const dragging = dragActive || lingering
   const nothingSelected = selectedCount === 0
   const showNote = pendingNote !== null && !nothingSelected
 

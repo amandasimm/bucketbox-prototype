@@ -1,19 +1,25 @@
 /* Layout: Today list | buckets */
-/* Column widths (BUILD-LOG, 2026-10-30):
-   - Today is always wider than a bucket tile, to show it's the main list, and never narrower
-     than 340px, so Move / Archive / Delete fit on one line.
-   - Tiles are up to 340px. With two columns, each tile gets 1/3.3 of the room, so Today ends
-     up about 30% wider than a tile (at 1366 wide: Today 424px, tiles 325px).
-   - When tiles would get narrower than 290px (screens under ~1250px), the buckets drop to
-     one column (see the container rule below).
+/* Column widths (BUILD-LOG, 2026-11-16):
+   - Starting shares: 60/40 (Today/buckets) with one column of buckets; 40/30/30 with two.
+   - Today is never narrower than 340px, so Move / Archive / Delete fit on one line.
+   - On narrower screens (under about 1250px wide) the buckets drop to one column (see the
+     container rule below).
+   - The dividers between them can be dragged (Resizer.jsx).
    All gaps are 16px: Compose to Today, Today to the buckets, and between tiles. */
+.home-page[data-bucket-cols='2'] { --today-share: 0.4; }
 .home-page {
   --today-min: 340px;
-  --bucket-min: min(340px, calc((100cqw - 48px) / 3.3));
+  --bucket-min: min(340px, calc((100cqw - 48px) / 3.4)); /* just under a bucket column's 30% share */
   --bucket-area-min: calc(var(--bucket-cols) * var(--bucket-min) + (var(--bucket-cols) - 1) * 16px + 32px);
   position: relative;
   display: grid;
-  grid-template-columns: minmax(var(--today-min), 3fr) minmax(var(--bucket-area-min), 2fr);
+  /* Starting shares (BUILD-LOG, 2026-11-16): with one column of buckets, Today takes 60% and the
+     buckets 40%; with two columns, Today takes 40% and each column 30%. Today
+     still never goes under its minimum. The dividers change it. */
+  --today-share: 0.6;
+  grid-template-columns:
+    max(var(--today-min), calc((100% - 16px * (var(--bucket-cols) + 1)) * var(--today-share)))
+    minmax(0, 1fr);
   grid-template-areas: 'today buckets';
   height: 100%;
 }
@@ -42,7 +48,7 @@
   justify-content: space-between;
   padding: 12px 20px;
   border-bottom: 1px solid var(--divider);
-  background: var(--search-bg); /* #e9eef6, the same calm gray-blue as Gmail's search bar */
+  background: var(--surface); /* white, trying it in place of the gray-blue (BUILD-LOG, 2026-11-13) */
 }
 .today-label {
   margin: 0;
@@ -90,10 +96,13 @@
 .bulk-actions {
   position: relative;
   display: flex;
+  flex-wrap: wrap; /* the first-use note takes its own line above the buttons */
   gap: 8px;
   min-height: 61px; /* same height whether it shows the buttons or the delete zone */
   padding: 12px 16px;
-  border-top: 1px solid var(--divider);
+  /* A clear thin divider (M3's outline-variant), so the list visibly ends at the bar
+     instead of looking cut off (BUILD-LOG, 2026-11-13) */
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 .bulk-button {
   flex-shrink: 0;
@@ -157,6 +166,27 @@
 }
 /* Bucket rows only show the handle on hover, as in Gmail (PRD F2).
    It still appears when reached with the keyboard. */
+/* In the Today list and an opened bucket, the grab area is the whole left strip: the handle's
+   column, the checkbox's column and the white space under the checkbox. The checkbox itself
+   sits on top and still ticks (BUILD-LOG, 2026-11-16). */
+.email-row:not(.in-bucket) .drag-handle {
+  grid-area: 1 / 1 / 2 / 3;
+  margin-left: -8px;
+  padding-left: 8px;
+}
+.email-row:not(.in-bucket) .email-checkbox-target { z-index: 1; align-self: start; }
+/* The right edge is a grab area too, on the side nearest the buckets. It has no icon: the
+   pointer turns into a hand over it (BUILD-LOG, 2026-11-16). */
+.drag-edge {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  width: 20px;
+  cursor: grab;
+  touch-action: none;
+}
+.drag-handle:active,
+.drag-edge:active { cursor: grabbing; }
 .email-row.in-bucket .drag-handle { opacity: 0; }
 .email-row.in-bucket:hover .drag-handle,
 .email-row.in-bucket .drag-handle:focus-visible { opacity: 1; }
@@ -310,13 +340,65 @@
   grid-template-columns: repeat(var(--bucket-cols, 2), minmax(var(--bucket-min), 1fr));
   gap: 16px;
 }
+/* Dividers you can drag (Resizer.jsx; BUILD-LOG, 2026-11-16) */
+.resizer {
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  width: 16px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.resizer-bar {
+  width: 4px;
+  height: 100%;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-outline);
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.resizer:hover .resizer-bar,
+.resizer:focus-visible .resizer-bar { opacity: 0.5; }
+.resizer.is-dragging .resizer-bar { opacity: 1; background: var(--focus-ring); }
+.resizer:focus-visible { outline: none; }
+.resizer:focus-visible .resizer-bar { opacity: 1; background: var(--focus-ring); }
+body.is-resizing { cursor: col-resize; user-select: none; }
+/* Between the Today card and the buckets: it fills the 16px gap, as tall as the Today card */
+.resizer.is-main {
+  grid-area: buckets;
+  justify-self: start;
+  margin: 8px 0 16px;
+}
+/* Once dragged, the Today card keeps the chosen width, within its limits: never narrower than
+   its buttons need, and always leaving the buckets their minimum room */
+.home-page.is-resized {
+  grid-template-columns: clamp(var(--today-min), var(--today-width), calc(100% - var(--bucket-area-min))) minmax(0, 1fr);
+}
+/* Between two columns of buckets: over the 16px gap, as tall as the grid */
+.bucket-grid { position: relative; }
+.resizer.is-columns {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((100% - 16px) * var(--column-split, 0.5));
+}
+.bucket-grid.is-resized {
+  grid-template-columns: minmax(0, var(--column-a)) minmax(0, var(--column-b)); /* each column's share, set by BucketGrid */
+}
+.home-page[data-bucket-cols='1'] .resizer.is-columns,
+.home-page.drawer-open .resizer { display: none; }
+@container (max-width: 1004px) {
+  .resizer.is-columns { display: none; }
+  .bucket-grid.is-resized { grid-template-columns: repeat(1, minmax(var(--bucket-min), 1fr)); }
+}
+
 /* While an email is open, Today goes back to its usual width so the drawer has room */
 .home-page.drawer-open { grid-template-columns: 420px 1fr; }
 /* In a single column, Add a Bucket sits right below the last bucket */
 .home-page[data-bucket-cols='1'] .add-bucket-slot { height: auto; padding: 4px 0; }
 /* Too narrow for two 290px tiles next to Today: one column of buckets */
 @container (max-width: 1004px) {
-  .home-page { --bucket-cols: 1 !important; --bucket-min: 280px; }
+  .home-page { --bucket-cols: 1 !important; --bucket-min: 280px; --today-share: 0.6 !important; }
   .home-page .add-bucket-slot { height: auto; padding: 4px 0; }
 }
 .bucket-slot { position: relative; }
@@ -324,7 +406,7 @@
   display: flex;
   flex-direction: column;
   height: 280px;
-  border: 2px solid var(--bucket-color);
+  border: 1px solid var(--bucket-color); /* 1px, like every Bucketbox card (BUILD-LOG, 2026-11-13) */
   border-radius: var(--card-radius);
   overflow: hidden;
   background: var(--surface);
@@ -439,8 +521,9 @@
 /* Add / Edit bucket form, shown in place of a tile (PRD F2, Flow 1) */
 .bucket-form {
   gap: 8px;
+  height: auto; /* hugs its contents, so there's no empty gap above Cancel / Save */
   padding: 16px;
-  border: 2px solid var(--bucket-color); /* previews the picked color */
+  border: 1px solid var(--bucket-color); /* previews the picked color */
 }
 .bucket-form-label {
   padding: 0;
@@ -628,7 +711,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: auto;
+  margin-top: 16px;
 }
 .filled-button:disabled {
   background: rgba(31, 31, 31, 0.12);
@@ -766,8 +849,10 @@
   background: color-mix(in srgb, color-mix(in srgb, var(--bucket-color) 12%, white) 94%, transparent);
 }
 .drop-target.is-over .drop-target-outline rect { stroke-dasharray: none; }
+.drop-target-name { transition: transform 180ms cubic-bezier(0.3, 1.6, 0.5, 1); }
 .drop-target.is-over .drop-target-name {
   background: color-mix(in srgb, var(--bucket-color) 12%, white);
+  transform: scale(1.12); /* the name grows slightly under the envelope (PRD F4 v2 animation) */
 }
 .drop-target.is-over .drop-target-plus {
   background: var(--bucket-color);
@@ -820,21 +905,122 @@
   color: #ffffff;
 }
 
-/* Gmail's drag chip */
-.drag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  padding: 0 20px 0 16px;
-  border-radius: 4px;
-  background: var(--md-sys-color-primary); /* white text on it: 7.6:1 */
-  color: #ffffff;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: var(--md-sys-elevation-level2);
-  cursor: grabbing;
+/* The envelope animation (PRD F4; BUILD-LOG, 2026-11-13). Playful timing with a little
+   overshoot, to start with. For people whose computer asks for less motion, none of this moves. */
+.envelope {
+  position: relative;
+  display: block;
+  color: var(--md-sys-color-on-surface-variant); /* neutral, like the Declutter icon; a bucket's color over that bucket */
+  transition: color 150ms ease;
+  filter: drop-shadow(0 2px 4px rgb(60 64 67 / 0.3));
 }
+.envelope svg { display: block; }
+/* The count sits on the envelope like a seal, only when several emails are dragged together */
+.envelope-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--md-sys-shape-corner-full);
+  transform: translate(-50%, -35%);
+  background: var(--md-sys-color-on-surface-variant);
+  color: #ffffff;
+  font: 500 12px / 22px var(--font);
+  text-align: center;
+}
+.drag-envelope {
+  width: 56px;
+  cursor: grabbing;
+  animation: envelope-pop 320ms cubic-bezier(0.3, 1.6, 0.5, 1) 120ms backwards;
+}
+@keyframes envelope-pop {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: none; }
+}
+/* Pickup: the row's outline shrinks down to the envelope beside the pointer */
+.pickup-shrink {
+  position: fixed;
+  z-index: 998;
+  border: 1px solid var(--card-stroke);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level2);
+  pointer-events: none;
+  animation: pickup-shrink 240ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes pickup-shrink {
+  from { opacity: 0.9; transform: none; }
+  70% { opacity: 0.9; }
+  to { opacity: 0; transform: translate(var(--move-x), var(--move-y)) scale(var(--shrink-x), var(--shrink-y)); }
+}
+/* The row left behind while its email is carried: a faded ghost */
+.email-row { transition: opacity 200ms ease; }
+.email-row.is-drag-ghost { opacity: 0.4; }
+/* A row closing up as its email leaves the list (EmailRow sets the height) */
+.email-row.is-leaving {
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: height 200ms ease, padding 200ms ease, opacity 150ms ease;
+}
+/* Let go: the envelope flies in an arc to where the email appears, shrinking and fading into it.
+   The arc comes from three layers moving at once: one across, one down, and one that hops up
+   and comes back (BUILD-LOG, 2026-11-13). */
+.envelope-flight {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  animation: flight-across 420ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+.envelope-flight-down { animation: flight-down 420ms cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.envelope-flight-hop { animation: flight-hop-drop 420ms linear forwards; }
+@keyframes flight-across { to { transform: translateX(var(--move-x)); } }
+@keyframes flight-down { to { transform: translateY(var(--move-y)); } }
+@keyframes flight-hop-drop {
+  from { opacity: 1; transform: none; animation-timing-function: cubic-bezier(0.2, 0.7, 0.5, 1); }
+  45% { opacity: 1; transform: translateY(-20px) scale(1.03); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4); }
+  70% { opacity: 1; }
+  to { opacity: 0; transform: translateY(0) scale(0.35); }
+}
+/* Nothing was hit: it arcs back to its row and opens out into it */
+.envelope-flight.is-return .envelope-flight-hop { animation-name: flight-hop-return; }
+@keyframes flight-hop-return {
+  from { opacity: 1; transform: none; animation-timing-function: cubic-bezier(0.2, 0.7, 0.5, 1); }
+  45% { opacity: 1; transform: translateY(-14px); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4); }
+  70% { opacity: 1; }
+  to { opacity: 0; transform: translateY(0) scale(2.4, 1.4); }
+}
+/* The email appearing at the top of its bucket, tinted in the bucket's color for a moment */
+.email-row.just-arrived { animation: row-arrive 600ms ease-out; }
+@keyframes row-arrive {
+  from { opacity: 0; transform: translateY(-8px); background: var(--bucket-header, var(--selected-row-bg)); }
+  40% { opacity: 1; transform: none; background: var(--bucket-header, var(--selected-row-bg)); }
+  to { background: transparent; }
+}
+/* Counts change like a wipe (RollingNumber): the old number slides out as the new one slides in */
+.rolling-number {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.rolling-number > span { display: inline-block; }
+.rolling-number .roll-out { position: absolute; inset: 0 auto auto 0; }
+.rolling-number .roll-in.is-up { animation: roll-in-up 320ms cubic-bezier(0.2, 0, 0, 1); }
+.rolling-number .roll-out.is-up { animation: roll-out-up 320ms cubic-bezier(0.2, 0, 0, 1) forwards; }
+.rolling-number .roll-in.is-down { animation: roll-in-down 320ms cubic-bezier(0.2, 0, 0, 1); }
+.rolling-number .roll-out.is-down { animation: roll-out-down 320ms cubic-bezier(0.2, 0, 0, 1) forwards; }
+@keyframes roll-in-up { from { transform: translateY(100%); } }
+@keyframes roll-out-up { to { transform: translateY(-100%); } }
+@keyframes roll-in-down { from { transform: translateY(-100%); } }
+@keyframes roll-out-down { to { transform: translateY(100%); } }
+
 
 /* Selected rows: Gmail's light blue */
 .email-row.is-selected { background: var(--selected-row-bg); }
@@ -880,17 +1066,11 @@
   text-align: left;
 }
 
-/* First-use note for Archive / Delete: sits above the buttons, not a pop-up */
+/* First-use note for Archive / Delete: part of the button bar, on its own line above the
+   buttons, so the list moves up to make room and nothing is covered (BUILD-LOG, 2026-11-13) */
 .first-use-note {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 16px;
-  right: 16px;
-  z-index: 10;
-  padding: 16px 16px 12px;
-  border-radius: 8px;
-  background: var(--surface);
-  box-shadow: var(--md-sys-elevation-level2);
+  flex: 0 0 100%;
+  padding: 4px 4px 8px;
 }
 .first-use-note p {
   margin: 0 0 8px;
@@ -919,8 +1099,8 @@
    Its left edge lines up with the nav (the Compose button), not the window (BUILD-LOG, 2026-10-30). */
 .toast-region {
   position: fixed;
-  left: calc(var(--rail-width) + 8px);
-  bottom: 64px; /* just above undo/redo at the bottom of the nav */
+  right: calc(var(--side-panel-width) + 16px); /* bottom right, beside Gmail's side panel (BUILD-LOG, 2026-11-13) */
+  bottom: 24px;
   z-index: 60;
   max-width: 420px;
 }
@@ -939,7 +1119,7 @@
   gap: 8px;
 }
 .toast-text { display: flex; flex-direction: column; gap: 4px; }
-.toast-tip { font: var(--md-sys-typescale-body-small) 'Roboto', Arial, sans-serif; } /* Declutter's one-time arrow-key tip */
+.toast-tip { font: var(--md-sys-typescale-body-small) var(--font); } /* Declutter's one-time arrow-key tip */
 /* Low-emphasis text button on the dark toast (Gmail's light blue, 7.6:1 on the toast) */
 .toast-action {
   height: 32px;
@@ -1168,16 +1348,23 @@
    buckets just show around it (helps people see where the bucket came from). */
 .bucket-view {
   position: absolute;
-  inset: 24px 32px 32px 16px; /* 16px inside the edges of the cards around it */
+  inset: 8px 16px 16px 0; /* the full area, lined up with the Today card behind it (BUILD-LOG, 2026-11-13) */
   z-index: 8;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border: 2px solid var(--bucket-color);
+  border: 1px solid var(--bucket-color);
   border-radius: var(--card-radius);
   overflow: hidden;
   background: var(--surface);
-  box-shadow: var(--md-sys-elevation-level3);
+  /* Hides the buckets scrolled behind it, around its edges */
+  box-shadow: 0 0 0 16px var(--page-bg);
+}
+/* Opening a bucket: it grows in slightly instead of popping (BUILD-LOG, 2026-11-13) */
+.bucket-view { animation: bucket-open 220ms cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+@keyframes bucket-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
 }
 /* Laid out like the tile's header: dot or emoji, name, count on the left; 3-dot menu and X on the right */
 .bucket-view-header {

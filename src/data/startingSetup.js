@@ -3,7 +3,7 @@
 // The prototype starts with one bucket. "Priority" is a placeholder name (PRD §12 #1).
 // Its id must match the spreadsheet's Location column ("Priority bucket" -> "priority").
 export const startingBuckets = [
-  { id: 'priority', name: 'Priority', color: '#0b57d0' }, // default blue (PRD F2)
+  { id: 'priority', name: 'Priority', color: '#8b5cf6' }, // Purple, so blue stays Gmail's color (BUILD-LOG, 2026-11-13)
 ]
 
 // The 12 bucket colors, 6 bold and 6 soft, chosen by Amanda (BUILD-LOG, 2026-10-30).
