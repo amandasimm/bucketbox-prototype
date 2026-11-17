@@ -10,4 +10,6 @@ const DragMotionContext = createContext(empty)
 export const DragMotionProvider = DragMotionContext.Provider
 export const useDragMotion = () => useContext(DragMotionContext)
 
-export const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+// True when the computer asks for less motion, or Animations is switched off in Bucketbox's settings
+export const prefersReducedMotion = () =>
+  document.body.classList.contains('no-motion') || window.matchMedia('(prefers-reduced-motion: reduce)').matches

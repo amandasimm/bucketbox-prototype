@@ -9,7 +9,7 @@ import { formatShortDate, formatTime } from '../utils/dates.js'
 // variant:
 // - 'today': time, checkbox, preview, always-visible drag handle (PRD F1). The handle's grab
 //   area is the whole left strip, including the space under the checkbox, plus the right edge.
-// - 'tile': a bucket tile's peek on the home page: date, no checkbox or preview, handle on hover (PRD F2)
+// - 'tile': a bucket tile's peek on the home page: date, preview, no checkbox, handle on hover (PRD F2)
 // - 'bucket': an opened bucket's list: date, checkbox, preview, always-visible handle
 // Clicking the text opens the email (PRD F1: only the handle starts a drag).
 // The handle starts a drag with the mouse, or with Space / Enter from the keyboard (PRD F4).
@@ -75,8 +75,9 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
           <span className="email-received">{received}</span>
         </span>
         <span className="email-subject">{email.subject}</span>
-        {!inTile && <span className="email-preview">{email.preview}</span>}
-        {!inTile && email.attachments.length > 0 && (
+        {/* Bucket tiles show the preview and attachments too, like the Today list (BUILD-LOG, 2026-11-16) */}
+        <span className="email-preview">{email.preview}</span>
+        {email.attachments.length > 0 && (
           <span className="email-attachments">
             {email.attachments.map((name) => (
               <span key={name} className="attachment-chip">

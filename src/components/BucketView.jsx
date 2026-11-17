@@ -135,7 +135,7 @@ export default function BucketView({
         />
       )}
 
-      <div className="bucket-view-body">
+      <div className={`bucket-view-body ${bucketEmails.length === 0 ? 'is-empty' : ''}`}>
         <section className="bucket-view-list" aria-label={`${bucket.name} emails`}>
           {bucketEmails.length > 0 ? (
             <>

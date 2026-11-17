@@ -12,6 +12,12 @@ function emptyMessage(dayOffset, receivedThatDay) {
   return 'Way to go! Your daily inbox is cleared right now.'
 }
 
+// The confetti's pieces: where each one flies to (across, up) and its color, from the bucket palette
+const CONFETTI = [
+  [-46, -30, '#8b5cf6'], [-30, -52, '#ff8d60'], [-10, -62, '#09aba0'], [12, -60, '#ff4f5e'],
+  [32, -50, '#ffe594'], [48, -28, '#a6d3ff'], [-54, -4, '#72e721'], [56, -2, '#cbbcff'],
+]
+
 // A day's unsorted emails, newest first (PRD F1)
 export function unsortedFor(emails, dayOffset) {
   return emails
@@ -91,7 +97,17 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onD
           </ul>
         </>
       ) : (
-        <div className="empty-state" role="status">
+        <div className={`empty-state ${dayEmails.length > 0 ? 'is-cleared' : ''}`} role="status">
+          {/* A cleared day gets a small celebration: a party emoji that pops, with a little burst
+              of confetti, when the pointer is over the message (BUILD-LOG, 2026-11-16) */}
+          {dayEmails.length > 0 && (
+            <span className="celebrate" aria-hidden="true">
+              <span className="celebrate-emoji">🎉</span>
+              {CONFETTI.map(([x, y, color], index) => (
+                <span key={index} className="confetti" style={{ '--x': `${x}px`, '--y': `${y}px`, '--color': color, '--delay': `${index * 15}ms` }} />
+              ))}
+            </span>
+          )}
           <p>{emptyMessage(dayOffset, dayEmails.length)}</p>
         </div>
       )}

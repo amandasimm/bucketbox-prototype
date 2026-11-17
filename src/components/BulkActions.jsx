@@ -172,7 +172,7 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
 
       <button
         type="button"
-        className="bulk-button"
+        className="bulk-button is-move has-tooltip"
         ref={moveButtonRef}
         disabled={nothingSelected}
         aria-haspopup="menu"
@@ -183,15 +183,18 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
         }}
       >
         <Icon name="drive_file_move" size={20} />
-        Move
+        <span className="bulk-label">Move</span>
+        <span className="tooltip bulk-tip" aria-hidden="true">Move</span>
       </button>
-      <button type="button" className="bulk-button" disabled={nothingSelected} onClick={() => startAction('archive')}>
+      <button type="button" className="bulk-button is-archive has-tooltip" disabled={nothingSelected} onClick={() => startAction('archive')}>
         <Icon name="archive" size={20} />
-        Archive
+        <span className="bulk-label">Archive</span>
+        <span className="tooltip bulk-tip" aria-hidden="true">Archive</span>
       </button>
-      <button type="button" className="bulk-button" disabled={nothingSelected} onClick={() => startAction('delete')}>
+      <button type="button" className="bulk-button is-delete has-tooltip" disabled={nothingSelected} onClick={() => startAction('delete')}>
         <Icon name="delete" size={20} />
-        Delete
+        <span className="bulk-label">Delete</span>
+        <span className="tooltip bulk-tip" aria-hidden="true">Delete</span>
       </button>
     </footer>
   )

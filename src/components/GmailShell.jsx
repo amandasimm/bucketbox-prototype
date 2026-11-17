@@ -117,7 +117,7 @@ function AppRail({ inboxUnread }) {
 // While Bucketbox is on, the nav collapses the way Gmail's own nav does: icons only, with
 // Compose as a square pencil button (names show on hover and to screen readers), to give
 // Bucketbox more room (BUILD-LOG, 2026-11-13).
-function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history, buckets }) {
+function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, history, onOpenSettings, buckets }) {
   const collapsed = prototypeOn
   return (
     <nav className="gmail-nav" aria-label="Mail folders">
@@ -205,12 +205,12 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
       )}
 
       {/* Undo and redo sit at the bottom of the nav while Bucketbox is on */}
-      {history && <PageHistory history={history} />}
+      {history && <PageHistory history={history} onOpenSettings={onOpenSettings} />}
     </nav>
   )
 }
 
-export default function GmailShell({ composeActions, buckets, history, inboxUnread, prototypeOn, onTogglePrototype, children }) {
+export default function GmailShell({ composeActions, buckets, history, onOpenSettings, inboxUnread, prototypeOn, onTogglePrototype, children }) {
   return (
     <div className={`gmail-shell ${prototypeOn ? 'nav-collapsed' : ''}`}>
       <a
@@ -231,6 +231,7 @@ export default function GmailShell({ composeActions, buckets, history, inboxUnre
         onTogglePrototype={onTogglePrototype}
         onCompose={composeActions.openNew}
         history={history}
+        onOpenSettings={onOpenSettings}
         buckets={buckets}
       />
       <main id="main-content" className="gmail-main" tabIndex={-1}>

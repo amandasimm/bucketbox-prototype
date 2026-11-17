@@ -75,8 +75,6 @@
   --text-disabled: var(--md-sys-color-on-surface-disabled);
   /* Bucketbox's cards and buttons (BUILD-LOG, 2026-10-31) */
   --card-stroke: #a6b8d4;
-  --card-gradient-start: #f8fafe;
-  --card-gradient-end: #dfe8f5;
   --card-shadow: 0 1px 2px rgba(31, 60, 110, 0.08), 0 4px 12px rgba(31, 60, 110, 0.08);
   --card-radius: var(--md-sys-shape-corner-large);
   --button-radius: var(--md-sys-shape-corner-small);
@@ -216,4 +214,12 @@ button {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+/* The same, when Animations is switched off in Bucketbox's settings (BUILD-LOG, 2026-11-16) */
+body.no-motion *,
+body.no-motion *::before,
+body.no-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

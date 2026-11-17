@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useDndContext, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, closestCenter, useDndContext, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import BucketForm from './BucketForm.jsx'
 import DashedOutline from './DashedOutline.jsx'
 import DeleteBucketDialog from './DeleteBucketDialog.jsx'
@@ -12,7 +12,7 @@ import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
 // The bucket's 3-dot menu: Edit bucket and Delete bucket (PRD F2)
-export function BucketMenu({ bucket, onEdit, onDelete }) {
+export function BucketMenu({ bucket, onEdit, onDelete, onReorder }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const menuRef = useRef(null)
@@ -61,6 +61,21 @@ export function BucketMenu({ bucket, onEdit, onDelete }) {
             <Icon name="edit" size={20} />
             Edit bucket
           </button>
+          {/* Only on the home page, and only when there's more than one bucket to put in order */}
+          {onReorder && (
+            <button
+              type="button"
+              role="menuitem"
+              className="move-menu-item"
+              onClick={() => {
+                setOpen(false)
+                onReorder()
+              }}
+            >
+              <Icon name="swap_vert" size={20} />
+              Reorganize buckets
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"
@@ -83,7 +98,7 @@ export function BucketMenu({ bucket, onEdit, onDelete }) {
 // While an email is being dragged, the tile shows Amanda's drop-target design: a dashed
 // outline and light see-through tint in the bucket's own color, a "+" and the bucket name.
 // The tile under the pointer switches to a stronger, solid version (BUILD-LOG, 2026-10-30).
-function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onOpenBucket, covered }) {
+function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onOpenBucket, covered }) {
   const { active } = useDndContext()
   // An email can't be dropped back into the bucket it came from
   const isSource = active?.data.current?.email.bucketId === bucket.id
@@ -139,7 +154,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
               ))}
             </ul>
           </article>
-          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} />
+          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} />
         </>
       )}
       {showTarget && (
@@ -157,7 +172,111 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, covered = false }) {
+// A bucket while buckets are being reorganized (BUILD-LOG, 2026-11-16): a drag handle in its
+// header, and arrows for moving it one place earlier or later without dragging. Its emails are
+// dimmed and can't be clicked until Done.
+function ReorderTile({ bucket, bucketEmails, index, total, onStep }) {
+  const { setNodeRef: setDragRef, listeners, isDragging } = useDraggable({ id: bucket.id })
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: bucket.id })
+  return (
+    <div ref={setDropRef} className="bucket-slot" style={bucketStyle(bucket.color)}>
+      <article
+        ref={setDragRef}
+        className={`bucket-tile is-reordering ${isDragging ? 'is-lifted' : ''} ${isOver && !isDragging ? 'is-reorder-target' : ''}`}
+        aria-label={`${bucket.name} bucket, position ${index + 1} of ${total}`}
+      >
+        <header className="bucket-header reorder-header">
+          <span className="reorder-handle" {...listeners} aria-hidden="true">
+            <Icon name="drag_indicator" size={20} />
+          </span>
+          {bucket.emoji ? (
+            <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
+          ) : (
+            <span className="bucket-swatch" aria-hidden="true" />
+          )}
+          <span className="bucket-name">{bucket.name}</span>
+          <IconButton label={`Move ${bucket.name} earlier`} tooltip="Move earlier" tooltipAlign="right" disabled={index === 0} onClick={() => onStep(-1)}>
+            <Icon name="arrow_upward" size={20} />
+          </IconButton>
+          <IconButton label={`Move ${bucket.name} later`} tooltip="Move later" tooltipAlign="right" disabled={index === total - 1} onClick={() => onStep(1)}>
+            <Icon name="arrow_downward" size={20} />
+          </IconButton>
+        </header>
+        <ul className="email-list bucket-peek" inert>
+          {bucketEmails.map((email) => (
+            <EmailRow key={email.id} email={email} variant="tile" />
+          ))}
+        </ul>
+      </article>
+    </div>
+  )
+}
+
+// Reorder mode: every bucket shows its handle and arrows until Done (or Escape). It has its own
+// drag area, separate from dragging emails.
+function ReorderGrid({ buckets, emailsIn, bucketActions, gridProps }) {
+  const [draggedId, setDraggedId] = useState(null)
+  const doneRef = useRef(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+  const dragged = buckets.find((bucket) => bucket.id === draggedId)
+
+  useEffect(() => {
+    doneRef.current?.focus()
+    function onKeyDown(event) {
+      if (event.key === 'Escape') bucketActions.endReorder()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={({ active }) => setDraggedId(active.id)}
+      onDragEnd={({ active, over }) => {
+        setDraggedId(null)
+        if (over) bucketActions.move(active.id, over.id)
+      }}
+      onDragCancel={() => setDraggedId(null)}
+    >
+      <div className="reorder-bar" role="group" aria-label="Reorganize buckets">
+        <Icon name="swap_vert" size={20} />
+        <p>Drag a bucket by its handle, or use its arrows, to change the order.</p>
+        <button type="button" className="filled-button" ref={doneRef} onClick={bucketActions.endReorder}>
+          Done
+        </button>
+      </div>
+      <div {...gridProps}>
+        {buckets.map((bucket, index) => (
+          <ReorderTile
+            key={bucket.id}
+            bucket={bucket}
+            bucketEmails={emailsIn(bucket)}
+            index={index}
+            total={buckets.length}
+            onStep={(by) => bucketActions.move(bucket.id, buckets[index + by].id)}
+          />
+        ))}
+      </div>
+      <DragOverlay dropAnimation={null}>
+        {dragged && (
+          <div className="reorder-chip" style={bucketStyle(dragged.color)}>
+            {dragged.emoji ? (
+              <span className="bucket-emoji" aria-hidden="true">{dragged.emoji}</span>
+            ) : (
+              <span className="bucket-swatch" aria-hidden="true" />
+            )}
+            {dragged.name}
+          </div>
+        )}
+      </DragOverlay>
+    </DndContext>
+  )
+}
+
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, covered = false, reordering = false }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleting, setDeleting] = useState(null) // the bucket whose confirmation is open
@@ -207,6 +326,23 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
     }
   }
 
+  if (reordering && buckets.length > 1) {
+    return (
+      <section className="buckets" aria-label="Buckets">
+        <ReorderGrid
+          buckets={buckets}
+          emailsIn={emailsIn}
+          bucketActions={bucketActions}
+          gridProps={{
+            className: `bucket-grid ${columnSplit === null ? '' : 'is-resized'}`,
+            style: columnSplit === null ? undefined : { '--column-split': columnSplit, '--column-a': `${columnSplit}fr`, '--column-b': `${1 - columnSplit}fr` },
+            ref: gridRef,
+          }}
+        />
+      </section>
+    )
+  }
+
   return (
     <section className="buckets" aria-label="Buckets">
       {buckets.length === 0 && !adding && (
@@ -238,6 +374,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             editing={editingId === bucket.id}
             onEdit={() => setEditingId(bucket.id)}
             onDelete={() => startDelete(bucket)}
+            onReorder={buckets.length > 1 ? bucketActions.startReorder : undefined}
             onOpenBucket={onOpenBucket}
             covered={covered}
           >

@@ -205,7 +205,14 @@
    A 72px column: Compose is a square with just the pencil, and each item is its icon in a
    small pill. Names show on hover and to screen readers. */
 .gmail-shell.nav-collapsed { --nav-width: 72px; }
-.nav-collapsed .gmail-nav { padding-right: 8px; }
+.nav-collapsed .gmail-nav {
+  padding-right: 8px;
+  /* Hover labels are wider than the narrow column, so they're allowed to run out over the
+     Today card instead of being cut off or covered by it (BUILD-LOG, 2026-11-16) */
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
 .nav-collapsed .gmail-nav-label,
 .nav-collapsed .gmail-nav-count,
 .nav-collapsed .compose-button > span:not(.tooltip, .icon) {
@@ -241,11 +248,6 @@
   container-type: inline-size; /* lets the home page size its columns from this area's width */
   /* No white panel: the Today list and buckets are their own cards on Gmail's page color */
   overflow: auto;
-}
-/* The switch sits at the bottom of the screen, so its hover label opens upward */
-.prototype-switch .tooltip {
-  top: auto;
-  bottom: calc(100% + 4px);
 }
 
 /* Gmail's compose drawer, floating at the bottom right with rounded corners (PRD §5;
@@ -347,7 +349,7 @@
   align-items: center;
 }
 
-/* At the bottom of the nav, stacked in the narrow column: undo, then redo
+/* At the bottom of the nav, stacked in the narrow column: Bucketbox's settings, then undo and redo
    (BUILD-LOG, 2026-10-30 and 2026-11-13).
    "Nothing to undo" uses M3's disabled color, the text color at 38% (BUILD-LOG, 2026-11-08). */
 .gmail-nav .page-history {
@@ -363,6 +365,12 @@
   height: 40px;
 }
 .page-history .icon-button[aria-disabled='true'] { color: var(--text-disabled); }
+.page-history-divider {
+  width: 20px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--md-sys-color-outline-variant);
+}
 /* Near the bottom of the screen, their hover labels open upward */
 .page-history .tooltip {
   top: auto;

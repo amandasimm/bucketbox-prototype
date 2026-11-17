@@ -101,6 +101,8 @@ export default function HomePage({
   selectedIds,
   onSelect,
   leavingIds,
+  settings,
+  reordering,
   actions,
   bucketActions,
   toast,
@@ -274,7 +276,15 @@ export default function HomePage({
           (BUILD-LOG, 2026-10-30). */}
       <div
         ref={pageRef}
-        className={`home-page ${(drawerEmail && !openBucket) || holdLayout ? 'drawer-open' : ''} ${todayWidth === null ? '' : 'is-resized'}`}
+        className={[
+          'home-page',
+          (drawerEmail && !openBucket) || holdLayout ? 'drawer-open' : '',
+          todayWidth === null ? '' : 'is-resized',
+          // Bucketbox's settings show up as classes the styles respond to (BUILD-LOG, 2026-11-16)
+          `labels-${settings.labels}`,
+          settings.bucketCounts ? '' : 'hide-bucket-counts',
+          ...Object.entries(settings.buttons).map(([name, shown]) => (shown ? '' : `hide-${name}`)),
+        ].join(' ')}
         data-bucket-cols={buckets.length <= 2 ? 1 : 2}
         style={{ '--bucket-cols': buckets.length <= 2 ? 1 : 2, '--today-width': todayWidth === null ? undefined : `${todayWidth}px` }}
       >
@@ -310,6 +320,7 @@ export default function HomePage({
               bucketActions={bucketActions}
               onOpenBucket={emailView.openBucket}
               covered={Boolean(openBucket || declutter)}
+              reordering={reordering}
             />
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (

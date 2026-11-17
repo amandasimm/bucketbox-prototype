@@ -44,17 +44,18 @@ Build **v1 only** unless Amanda says otherwise. Full detail: PRD §4 and §6.
 - Optional bucket emoji, in place of the color dot (moved from v2, decided 2026-10-30)
 - Declutter (rapid sort): one card at a time through the viewed day's unsorted emails (PRD F13, Flow 7; added 2026-10-31)
 - Envelope drag animation (moved from v2, decided 2026-11-13; dragging only, no sounds)
+- Bucketbox settings menu: a centered pop-up from the wrench at the bottom of the left nav, with only settings that work (moved from v2, decided 2026-11-16)
+- Reorganizing buckets: a reorder mode from a bucket's 3-dot menu or the settings menu (moved from v2, decided 2026-11-16)
 - "Open prototype" toggle at the bottom of the left nav, switching to a look-only Gmail-style inbox of the same mock emails (decided 2026-10-28)
 
 Build decisions already made (stacked rows, real "today" date, no reminder emails in the mock data, "Priority" starting with emails) are in `BUILD-LOG.md` → Decisions.
 
 **v2 / out of scope (don't build)**
-- Onboarding; hotkeys and type-to-move; filtering (including by tag); edit mode ("Customize"); settings menu
+- Onboarding; hotkeys and type-to-move; filtering (including by tag); edit mode ("Customize"); settings for features that aren't built (day boundary, hotkeys, emoji tagging, auto-archive)
 - Confirmation sounds and mute; a reduced-motion setting (the computer's own preference is already respected)
 - Returning a bucketed email to the Today list; Jump to Today; daily/weekly choice; late-arrivals indicator
 - Bucket-count setting, auto-archive, screen-reader support, hover-only fallbacks
 - Out entirely: notifications, mobile, compose redesign, AI replies, AI sorting, multiple inboxes
-- Open (v1 or v2?): bucket reordering by drag handle — ask first
 
 ## 5. Hard constraints
 - **Mock data only.** No real inboxes, no Gmail login, no backend, no APIs, no analytics. Nothing is stored or sent. The prototype resets when the page reloads.
@@ -82,7 +83,7 @@ Avoid:
 - **No action by default.** Emails wait in the Today list until the user acts.
 - **Chunk by day.** Counts are per day, never cumulative.
 - **Core actions stay visible.** Undo and redo are always shown (disabled when empty), never hidden in menus.
-- **Tooltips and popovers over modals.** Inline editing, dropdowns, and drawers instead of pop-ups. Only modals the PRD names: delete-bucket confirmation and first-use destructive confirmation (the latter is still open, see BUILD-LOG).
+- **Tooltips and popovers over modals.** Inline editing, dropdowns, and drawers instead of pop-ups. Only these modals: the delete-bucket confirmation, the Bucketbox settings menu (Amanda's choice, 2026-11-16), and the PRD's first-use destructive confirmation (built as an inline note instead, see BUILD-LOG).
 - **Nothing alarming, nothing color-only.** Indicators (missed day, reminder, bucket color) pair color with a shape, icon, or text. No red alerts or urgency language.
 - **Calm, low-pressure, rewarding.** Celebrate clearing a day, not reaching zero. Messages match the real inbox state.
 - **Preserve Gmail familiarity.** Keep Gmail's nav, header, icons, row information, and compose drawer.

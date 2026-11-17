@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { dayLabel } from './components/DayNav.jsx'
 import GmailInbox from './components/GmailInbox.jsx'
 import GmailShell from './components/GmailShell.jsx'
+import SettingsDialog from './components/SettingsDialog.jsx'
 import HomePage from './components/HomePage.jsx'
 import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
@@ -67,6 +68,31 @@ export default function App() {
   const [declutter, setDeclutter] = useState(null)
   // Whether Declutter's arrow-key tip has shown, or isn't needed because the keys were used
   const [keyTipShown, setKeyTipShown] = useState(false)
+  // Bucketbox's settings (PRD F10; BUILD-LOG, 2026-11-16). Kept in memory only, like everything
+  // else: a reload puts them back. The delete zone's choice lives in zoneMode above.
+  const [settings, setSettings] = useState({
+    bucketCounts: true,
+    labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
+    buttons: { move: true, archive: true, delete: true, declutter: true },
+    motion: true,
+  })
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  // Reorder mode: buckets show drag handles and arrows until Done (BUILD-LOG, 2026-11-16)
+  const [reordering, setReordering] = useState(false)
+  // With animations switched off, everything behaves as it does for people whose computer
+  // asks for less motion (see DragMotion.jsx and styles.css)
+  useEffect(() => {
+    document.body.classList.toggle('no-motion', !settings.motion)
+  }, [settings.motion])
+
+  function saveSettings({ zone, ...rest }) {
+    setSettings(rest)
+    setZoneMode(zone)
+    if (zone === 'archive') setZoneToastSeen(true) // the choice is made, so no "Archive instead?" toast
+    setSettingsOpen(false)
+    showToast('Settings saved')
+  }
+
   // Rows closing up just before their emails leave the list
   const [leavingIds, setLeavingIds] = useState([])
   const leaving = useRef(false)
@@ -265,6 +291,23 @@ export default function App() {
     },
     edit(id, { name, color, emoji }) {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
+    },
+    // Reordering (BUILD-LOG, 2026-11-16): the bucket goes to the place of the one it's dropped on
+    move(id, toId) {
+      const from = buckets.findIndex((bucket) => bucket.id === id)
+      const to = buckets.findIndex((bucket) => bucket.id === toId)
+      if (from < 0 || to < 0 || from === to) return
+      const next = [...buckets]
+      next.splice(to, 0, next.splice(from, 1)[0])
+      setBuckets(next)
+    },
+    startReorder() {
+      setView({ type: 'home' })
+      setOpenEmailId(null)
+      setReordering(true)
+    },
+    endReorder() {
+      setReordering(false)
     },
     // destination: { type: 'archive' | 'trash' | 'bucket', bucketId }
     remove(bucket, destination) {
@@ -501,10 +544,12 @@ export default function App() {
       composeActions={composeActions}
       buckets={buckets}
       history={prototypeOn ? history : null}
+      onOpenSettings={() => setSettingsOpen(true)}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
       onTogglePrototype={() => {
         if (declutter) exitDeclutter()
+        setReordering(false)
         setPrototypeOn((on) => !on)
       }}
     >
@@ -518,6 +563,8 @@ export default function App() {
           selectedIds={selectedIds}
           onSelect={setSelectedIds}
           leavingIds={leavingIds}
+          settings={settings}
+          reordering={reordering}
           actions={actions}
           bucketActions={bucketActions}
           toast={toast}
@@ -529,6 +576,19 @@ export default function App() {
         />
       ) : (
         <GmailInbox emails={emails} buckets={buckets} />
+      )}
+      {settingsOpen && (
+        <SettingsDialog
+          settings={{ ...settings, zone: zoneMode }}
+          canReorder={buckets.length > 1}
+          onSave={saveSettings}
+          onReorder={(draft) => {
+            saveSettings(draft)
+            if (declutter) exitDeclutter()
+            bucketActions.startReorder()
+          }}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
     </GmailShell>
   )
