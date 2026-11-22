@@ -29,8 +29,9 @@ function rulesLabel(bucket) {
 // The inline form for adding or editing a bucket, shown in place of a tile, not as a
 // pop-up (PRD F2). Adding shows Cancel and Save; editing shows Delete and Save, and
 // Escape or a click outside leaves without saving (BUILD-LOG, 2026-10-30).
-// onRules (editing only): leaves the form for the bucket's rules panel. Any name, color or emoji
-// changes are saved first, so nothing typed is lost (Amanda, 2026-11-21).
+// onRules: leaves the form for the bucket's rules panel. Editing: any name, color or emoji changes
+// are saved first. Adding: the bucket is created first, since rules belong to a bucket. Either way
+// nothing typed is lost (Amanda, 2026-11-21).
 export default function BucketForm({ mode, initial, otherNames, onSave, onCancel, onDelete, onRules }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? bucketColors[0].hex)
@@ -134,7 +135,7 @@ export default function BucketForm({ mode, initial, otherNames, onSave, onCancel
         ))}
       </fieldset>
 
-      {mode === 'edit' && onRules && (
+      {onRules && (
         <button
           type="button"
           className="bucket-form-rules"

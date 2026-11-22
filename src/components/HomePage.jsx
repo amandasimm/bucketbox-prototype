@@ -258,9 +258,20 @@ export default function HomePage({
   }
 
   // Opening rules from the Today drawer closes the drawer, since the panel takes its place
-  function openRules(bucketId, email = null) {
+  // fromForm: 'grid' or 'view' when opened from a bucket's edit or new-bucket form, so closing
+  // the panel without saving goes back to that bucket's edit form (Amanda, 2026-11-21)
+  function openRules(bucketId, email = null, fromForm = null) {
     if (emailView.view.type === 'home' && emailView.openEmailId) emailView.close()
-    setRulesFor({ bucketId, emailId: email?.id ?? null, key: Date.now() })
+    setRulesFor({ bucketId, emailId: email?.id ?? null, fromForm, key: Date.now() })
+  }
+  // Asks the bucket grid or the opened bucket to show a bucket's edit form again: { bucketId, where, key }
+  const [formRequest, setFormRequest] = useState(null)
+  // Saving or closing the rules goes back to wherever they were opened from: the bucket's form
+  // (edit or new) reopens; from the 3-dot menu, the tile footer or an email, it just closes
+  // (Amanda, 2026-11-21)
+  function closeRules() {
+    if (rulesFor?.fromForm) setFormRequest({ bucketId: rulesFor.bucketId, where: rulesFor.fromForm, key: Date.now() })
+    setRulesFor(null)
   }
 
   const count = draggedIds.length
@@ -344,6 +355,7 @@ export default function HomePage({
               covered={Boolean(openBucket || declutter)}
               reordering={reordering}
               onRules={openRules}
+              formRequest={formRequest?.where === 'grid' ? formRequest : null}
             />
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (
@@ -372,6 +384,7 @@ export default function HomePage({
             onSendReply={onSendReply}
             bucketActions={bucketActions}
             onRules={openRules}
+            formRequest={formRequest?.where === 'view' ? formRequest : null}
           />
           </div>
         )}
@@ -384,9 +397,9 @@ export default function HomePage({
             emails={emails}
             onSave={(values, moveIds) => {
               bucketActions.setRules(rulesBucket.id, values, moveIds)
-              setRulesFor(null)
+              closeRules()
             }}
-            onClose={() => setRulesFor(null)}
+            onClose={closeRules}
           />
         )}
         {declutter && (

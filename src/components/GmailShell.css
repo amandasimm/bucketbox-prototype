@@ -422,3 +422,30 @@
   top: auto;
   bottom: calc(100% + 4px);
 }
+
+/* Facilitator menu: opens below the account icon on Shift-click (brief item 6) */
+.facilitator-wrap { position: relative; }
+.facilitator-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 80;
+  min-width: 260px;
+  padding: 8px 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level2);
+}
+.facilitator-menu-title {
+  margin: 0;
+  padding: 4px 16px 8px;
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.facilitator-menu .move-menu-item { align-items: flex-start; }
+.facilitator-menu .move-menu-item .icon { margin-top: 2px; color: var(--text-muted); }
+.facilitator-menu-hint {
+  display: block;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}

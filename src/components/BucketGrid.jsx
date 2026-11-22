@@ -322,9 +322,13 @@ function ReorderGrid({ buckets, emailsIn, bucketActions, gridProps }) {
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, covered = false, reordering = false }) {
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, formRequest, covered = false, reordering = false }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  // Back from the rules panel without saving: the bucket's edit form opens again
+  useEffect(() => {
+    if (formRequest) setEditingId(formRequest.bucketId)
+  }, [formRequest])
   const [deleting, setDeleting] = useState(null) // the bucket whose confirmation is open
   const addButtonRef = useRef(null)
   const gridRef = useRef(null)
@@ -442,7 +446,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
                     ? (values) => {
                         bucketActions.edit(bucket.id, values)
                         setEditingId(null)
-                        onRules(bucket.id)
+                        onRules(bucket.id, null, 'grid')
                       }
                     : undefined
                 }
@@ -464,6 +468,15 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
                 setAdding(false)
                 focusAddButton()
               }}
+              onRules={
+                onRules
+                  ? (values) => {
+                      const id = bucketActions.add(values)
+                      setAdding(false)
+                      onRules(id, null, 'grid')
+                    }
+                  : undefined
+              }
             />
           </div>
         )}

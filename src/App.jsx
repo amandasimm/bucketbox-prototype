@@ -9,6 +9,8 @@ import { mockEmails } from './data/mockEmails.js'
 import { startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
+import { arrivingEmails } from './data/arrivingEmails.js'
+import { routeEmail } from './utils/rules.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
 // Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
@@ -133,6 +135,34 @@ export default function App() {
     leaving.current = true
     setLeavingIds(ids)
     setTimeout(commit, leaveMs)
+  }
+
+  // New mail arriving (brief 1f; the facilitator's Add emails, brief item 6). Each email goes
+  // through the auto-sort rules: one bucket's rules fit, it skips the Today list and lands there
+  // marked new; none fit, it lands in the Today list; more than one fit, it waits in the Today
+  // list for the person to choose (1g). Arriving mail isn't something the person did, so it's
+  // left out of undo/redo, and undoing something later never takes it away.
+  const arrivals = useRef(0)
+  function addArrivingEmails() {
+    arrivals.current += 1
+    const batch = arrivals.current
+    const now = new Date()
+    const sorted = {} // bucket name -> how many
+    const incoming = arrivingEmails.map((email, i) => {
+      // A few minutes apart, the last one arriving now
+      const at = new Date(now.getTime() - (arrivingEmails.length - 1 - i) * 3 * 60 * 1000)
+      const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
+      const arrived = { ...email, id: `ARR_${batch}_${i}`, dayOffset: 0, time, receivedAt: receivedAt(0, time), attachments: [], unread: true, bucketId: null, removedTo: null }
+      const route = routeEmail(arrived, buckets)
+      if (route.type !== 'bucket') return arrived
+      const bucket = buckets.find((b) => b.id === route.bucketId)
+      sorted[bucket.name] = (sorted[bucket.name] ?? 0) + 1
+      return { ...arrived, bucketId: bucket.id, isNew: true }
+    })
+    changeEverywhere((list) => [...list, ...incoming])
+    // "8 new emails. 3 went to Priority, 1 to Bills."
+    const where = Object.entries(sorted).map(([name, n], i) => (i === 0 ? `${n} went to ${name}` : `${n} to ${name}`))
+    showToast(`${incoming.length} new emails.${where.length ? ` ${where.join(', ')}.` : ''}`)
   }
 
   // A change that isn't an undoable action (reading an email, sending a reply). It's also
@@ -288,8 +318,11 @@ export default function App() {
   // Creating, editing and deleting buckets (PRD F2). These aren't covered by undo.
   const bucketActions = {
     // emoji is optional (null = show the color dot)
+    // Returns the new bucket's id, so "Auto-sort rules" in the new-bucket form can open its rules
     add({ name, color, emoji }) {
-      setBuckets([...buckets, { id: `bucket-${Date.now()}`, name, color, emoji }])
+      const id = `bucket-${Date.now()}`
+      setBuckets([...buckets, { id, name, color, emoji }])
+      return id
     },
     edit(id, { name, color, emoji }) {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
@@ -572,6 +605,7 @@ export default function App() {
       buckets={buckets}
       history={prototypeOn ? history : null}
       onOpenSettings={() => setSettingsOpen(true)}
+      facilitator={{ addEmails: addArrivingEmails }}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
       onTogglePrototype={() => {

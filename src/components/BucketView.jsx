@@ -29,6 +29,7 @@ export default function BucketView({
   onSendReply,
   bucketActions,
   onRules,
+  formRequest,
 }) {
   const bucketEmails = emails
     .filter((email) => email.bucketId === bucket.id && email.removedTo === null)
@@ -38,6 +39,10 @@ export default function BucketView({
   const shown = chosen ?? bucketEmails[0] ?? null
   const closeRef = useRef(null)
   const [editing, setEditing] = useState(false)
+  // Back from the rules panel without saving: the edit form opens again
+  useEffect(() => {
+    if (formRequest?.bucketId === bucket.id) setEditing(true)
+  }, [formRequest, bucket.id])
   const [deleting, setDeleting] = useState(false)
 
   // Same as on the home page: an empty bucket deletes straight away, otherwise ask where
@@ -125,7 +130,7 @@ export default function BucketView({
               onRules={(values) => {
                 bucketActions.edit(bucket.id, values)
                 setEditing(false)
-                onRules(bucket.id)
+                onRules(bucket.id, null, 'view')
               }}
             />
           </div>

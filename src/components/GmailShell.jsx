@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import BucketLogo from './BucketLogo.jsx'
 import ComposeDrawer from './ComposeDrawer.jsx'
 import PageHistory from './PageHistory.jsx'
@@ -20,7 +21,53 @@ const navItems = [
   { label: 'More', icon: 'expand_more' },
 ]
 
-function GmailHeader() {
+// The facilitator menu (brief item 6, started early for 1f on 2026-11-21): for whoever runs a
+// test session. Only "Add emails" so far; stage 6 adds switching and resetting scenarios.
+function FacilitatorMenu({ facilitator, onClose }) {
+  const menuRef = useRef(null)
+  useEffect(() => {
+    menuRef.current.querySelector('[role="menuitem"]')?.focus()
+    function onPointerDown(event) {
+      if (!menuRef.current.closest('.facilitator-wrap').contains(event.target)) onClose()
+    }
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      onClose()
+      menuRef.current?.closest('.facilitator-wrap')?.querySelector('button')?.focus()
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [onClose])
+  return (
+    <div className="facilitator-menu" role="menu" aria-label="Facilitator" ref={menuRef}>
+      <p className="facilitator-menu-title" aria-hidden="true">Facilitator</p>
+      <button
+        type="button"
+        role="menuitem"
+        className="move-menu-item"
+        onClick={() => {
+          onClose()
+          facilitator.addEmails()
+        }}
+      >
+        <Icon name="forward_to_inbox" size={20} />
+        <span>
+          Add emails
+          <span className="facilitator-menu-hint">8 arrive now and go through the auto-sort rules</span>
+        </span>
+      </button>
+    </div>
+  )
+}
+
+function GmailHeader({ facilitator }) {
+  const [facilitatorOpen, setFacilitatorOpen] = useState(false)
+  const onFacilitator = () => setFacilitatorOpen((open) => !open)
   return (
     <header className="gmail-header">
       <div className="gmail-header-start">
@@ -55,9 +102,14 @@ function GmailHeader() {
         <InertButton label="Google apps" className="icon-button">
           <Icon name="apps" />
         </InertButton>
-        <InertButton label="Google Account" className="icon-button" tooltipAlign="right">
-          <Icon name="account_circle" size={32} />
-        </InertButton>
+        {/* Shift-click (or Shift+Enter) opens the facilitator menu (brief item 6). Only the
+            facilitator knows about it; for everyone else the icon stays look-only. */}
+        <div className="facilitator-wrap">
+          <InertButton label="Google Account" className="icon-button" tooltipAlign="right" onShiftActivate={facilitator ? onFacilitator : undefined}>
+            <Icon name="account_circle" size={32} />
+          </InertButton>
+          {facilitatorOpen && <FacilitatorMenu facilitator={facilitator} onClose={() => setFacilitatorOpen(false)} />}
+        </div>
       </div>
     </header>
   )
@@ -210,7 +262,7 @@ function GmailNav({ inboxUnread, prototypeOn, onTogglePrototype, onCompose, hist
   )
 }
 
-export default function GmailShell({ composeActions, buckets, history, onOpenSettings, inboxUnread, prototypeOn, onTogglePrototype, children }) {
+export default function GmailShell({ composeActions, buckets, history, onOpenSettings, inboxUnread, prototypeOn, onTogglePrototype, facilitator, children }) {
   return (
     <div className={`gmail-shell ${prototypeOn ? 'nav-collapsed' : ''}`}>
       <a
@@ -223,7 +275,7 @@ export default function GmailShell({ composeActions, buckets, history, onOpenSet
       >
         Skip to main content
       </a>
-      <GmailHeader />
+      <GmailHeader facilitator={facilitator} />
       <AppRail inboxUnread={inboxUnread} />
       <GmailNav
         inboxUnread={inboxUnread}
