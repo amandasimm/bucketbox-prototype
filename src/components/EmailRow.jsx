@@ -40,6 +40,8 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
   const rowClasses = [
     'email-row',
     email.unread ? 'is-unread' : 'is-read',
+    // Sorted into a bucket and not opened yet (PRD F14): a light tint of the bucket's color
+    email.isNew && email.bucketId ? 'is-new' : '',
     inTile ? 'in-bucket' : '',
     selected ? 'is-selected' : '',
     isOpen ? 'is-open' : '',

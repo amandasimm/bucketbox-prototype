@@ -469,6 +469,50 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   font-size: 12px;
   color: var(--text-muted);
 }
+/* "3 new" (PRD F14; brief 1e): a stronger tint of the bucket's color with dark text, in place of
+   the tile's old total count */
+.bucket-new-pill {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: color-mix(in srgb, var(--bucket-color) 45%, white);
+  color: var(--text);
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+}
+/* An email that's new in its bucket: the bucket's color at 5% (PRD F14: 5% or less) */
+.email-row.is-new { background: color-mix(in srgb, var(--bucket-color) 5%, white); }
+/* The rules line at the bottom of a tile (PRD F14; brief 1e) */
+.bucket-rules-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-top: 1px solid var(--divider);
+  color: var(--text-muted);
+  font: var(--md-sys-typescale-body-small) var(--font);
+}
+.bucket-rules-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  margin-left: -6px;
+  padding: 0 8px 0 6px;
+  border-radius: var(--md-sys-shape-corner-small);
+  color: var(--text-muted);
+  font: inherit;
+}
+.bucket-rules-open:hover { background: var(--md-sys-state-hover); color: var(--text); }
+.bucket-rules-resume {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--md-sys-shape-corner-small);
+  color: var(--focus-ring);
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+}
+.bucket-rules-resume:hover { background: var(--md-sys-state-hover); }
 .bucket-peek .email-row {
   grid-template-columns: 16px 1fr; /* hover handle, then text (no checkbox on tiles) */
   column-gap: 8px;

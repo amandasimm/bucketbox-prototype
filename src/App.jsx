@@ -144,7 +144,9 @@ export default function App() {
     }
   }
 
-  const markRead = (id) => (list) => list.map((email) => (email.id === id ? { ...email, unread: false } : email))
+  // Opening an email reads it, and clears its "new" mark in a bucket (PRD F14: the new count
+  // clears email by email as each one is opened)
+  const markRead = (id) => (list) => list.map((email) => (email.id === id ? { ...email, unread: false, isNew: false } : email))
 
   // An action on the open email (PRD F5, Flow 6). Afterwards the pane moves on to the next
   // email in the list (or the one before, if this was the last), and that one is read.
@@ -304,10 +306,18 @@ export default function App() {
         showToast('Rules saved')
         return
       }
-      changeEverywhere((list) => list.map((email) => (moveIds.includes(email.id) ? { ...email, bucketId: id } : email)))
+      // They land marked new (Amanda, 2026-11-21: backlog-sorted emails count as new, so the
+      // "3 new" pill can be seen before rules sort arriving mail in 1f)
+      changeEverywhere((list) => list.map((email) => (moveIds.includes(email.id) ? { ...email, bucketId: id, isNew: true } : email)))
       setSelectedIds(selectedIds.filter((x) => !moveIds.includes(x)))
       const moved = `Moved ${moveIds.length} to ${bucket.name}`
       showToast(rulesChanged ? `Rules saved. ${moved}` : moved)
+    },
+    // "Rules paused · Resume" on a tile footer turns every paused rule back on (PRD F14; brief 1e)
+    resumeRules(id) {
+      const bucket = buckets.find((b) => b.id === id)
+      setBuckets(buckets.map((b) => (b.id === id ? { ...b, rules: (b.rules ?? []).map((rule) => ({ ...rule, paused: false })) } : b)))
+      showToast(`Rules resumed for ${bucket.name}`)
     },
     // Reordering (BUILD-LOG, 2026-11-16): the bucket goes to the place of the one it's dropped on
     move(id, toId) {

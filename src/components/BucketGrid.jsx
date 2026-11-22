@@ -7,7 +7,6 @@ import EmailRow from './EmailRow.jsx'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
 import Resizer from './Resizer.jsx'
-import RollingNumber from './RollingNumber.jsx'
 import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
@@ -113,7 +112,38 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules }) {
 // While an email is being dragged, the tile shows Amanda's drop-target design: a dashed
 // outline and light see-through tint in the bucket's own color, a "+" and the bucket name.
 // The tile under the pointer switches to a stronger, solid version (BUILD-LOG, 2026-10-30).
-function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onRules, onOpenBucket, covered }) {
+// The line at the bottom of a tile with rules (PRD F14; brief 1e): "2 rules on" opens the rules
+// panel; when every rule is paused, "Rules paused" with Resume. No rules, no footer.
+function RulesFooter({ bucket, onRules, onResume }) {
+  const rules = (bucket.rules ?? []).filter((rule) => rule.criteria.length > 0)
+  if (rules.length === 0) return null
+  const on = rules.filter((rule) => !rule.paused).length
+  if (on === 0) {
+    return (
+      <footer className="bucket-rules-footer is-paused">
+        <Icon name="automation" size={18} />
+        <span className="bucket-rules-text">Rules paused</span>
+        <button type="button" className="bucket-rules-resume" onClick={onResume} aria-label={`Resume rules for ${bucket.name}`}>
+          Resume
+        </button>
+      </footer>
+    )
+  }
+  return (
+    <footer className="bucket-rules-footer">
+      <button type="button" className="bucket-rules-open" onClick={onRules} aria-label={`${on} ${on === 1 ? 'rule' : 'rules'} on. Open rules for ${bucket.name}`}>
+        <Icon name="automation" size={18} />
+        <span className="bucket-rules-text">
+          {on} {on === 1 ? 'rule' : 'rules'} on
+        </span>
+      </button>
+    </footer>
+  )
+}
+
+function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onOpenBucket, covered }) {
+  // Tiles show no total, only how many emails are new (Amanda, 2026-11-21; PRD F2, F14)
+  const newCount = bucketEmails.filter((email) => email.isNew).length
   const { active } = useDndContext()
   // An email can't be dropped back into the bucket it came from
   const isSource = active?.data.current?.email.bucketId === bucket.id
@@ -144,7 +174,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
                 <button
                   type="button"
                   className="bucket-header-button"
-                  aria-label={`Open the ${bucket.name} bucket, ${bucketEmails.length} emails`}
+                  aria-label={`Open the ${bucket.name} bucket${newCount > 0 ? `, ${newCount} new` : ''}`}
                   onClick={() => onOpenBucket(bucket.id)}
                 >
                   {/* An emoji, if the bucket has one, takes the color dot's place */}
@@ -154,7 +184,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
                     <span className="bucket-swatch" aria-hidden="true" />
                   )}
                   <span className="bucket-name">{bucket.name}</span>
-                  <RollingNumber className="bucket-count" value={bucketEmails.length} />
+                  {newCount > 0 && <span className="bucket-new-pill">{newCount} new</span>}
                 </button>
               </h3>
             </header>
@@ -168,6 +198,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
                 />
               ))}
             </ul>
+            <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />
           </article>
           <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} />
         </>
@@ -391,6 +422,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             onDelete={() => startDelete(bucket)}
             onReorder={buckets.length > 1 ? bucketActions.startReorder : undefined}
             onRules={onRules ? () => onRules(bucket.id) : undefined}
+            onResume={() => bucketActions.resumeRules(bucket.id)}
             onOpenBucket={onOpenBucket}
             covered={covered}
           >
