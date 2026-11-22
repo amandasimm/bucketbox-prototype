@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import BucketForm from './BucketForm.jsx'
+import BucketEmpty from './BucketEmpty.jsx'
 import { BucketMenu } from './BucketGrid.jsx'
 import BucketStrip from './BucketStrip.jsx'
 import DeleteBucketDialog from './DeleteBucketDialog.jsx'
@@ -177,9 +178,7 @@ export default function BucketView({
               </ul>
             </>
           ) : (
-            <div className="empty-state" role="status">
-              <p>This bucket is empty.</p>
-            </div>
+            <BucketEmpty bucket={bucket} emails={emails} onSortBacklog={() => onRules(bucket.id, null, null, { preview: true })} />
           )}
           <BulkActions
             selectedCount={selectedHere.length}

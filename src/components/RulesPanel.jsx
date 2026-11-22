@@ -643,7 +643,7 @@ function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName }) 
   )
 }
 
-export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, onSave, onClose }) {
+export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, openAtPreview = false, onSave, onClose }) {
   const [draft, setDraft] = useState(() => {
     const rules = (bucket.rules ?? []).map((rule) => ({ ...rule }))
     return { rules: startEmail ? [...rules, ruleFromEmail(startEmail)] : rules, ruleJoin: bucket.ruleJoin ?? 'any' }
@@ -708,6 +708,14 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
   useEffect(() => {
     if (newCardId) panelRef.current.querySelector(`[data-rule-id="${newCardId}"]`)?.scrollIntoView({ block: 'nearest' })
   }, [newCardId])
+
+  // "Sort your backlog now?" (1i): open at "Already in your inbox", with focus on Select all
+  useEffect(() => {
+    if (!openAtPreview) return
+    const preview = panelRef.current.querySelector('.rules-preview')
+    preview?.scrollIntoView({ block: 'start' })
+    setTimeout(() => preview?.querySelector('.rules-preview-select-all input')?.focus({ preventScroll: true }), 0)
+  }, [openAtPreview])
 
   const updateRule = (next) => setDraft({ ...draft, rules: draft.rules.map((rule) => (rule.id === next.id ? next : rule)) })
   function addRule(rule, startEditing = false) {

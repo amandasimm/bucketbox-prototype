@@ -1116,6 +1116,19 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .email-row.is-selected { background: var(--selected-row-bg); }
 
 /* Empty Today list (PRD F6) */
+/* An empty bucket's message on its tile: smaller than in an opened bucket (brief 1i) */
+.bucket-empty.in-tile { padding: 16px 24px; font-size: 14px; line-height: 20px; }
+.bucket-empty { flex-direction: column; gap: 6px; }
+.bucket-empty p { margin: 0; max-width: 32em; }
+/* With rules: the main line a little darker, the second line one step smaller and lighter */
+.bucket-empty-main { color: var(--text); }
+.bucket-empty-secondary {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+.bucket-empty.in-tile .bucket-empty-secondary { font-size: 12px; line-height: 16px; }
+.bucket-empty .inline-link { font-size: inherit; }
 .empty-state {
   /* Flat white, like the rest of the card (the gradient is gone; BUILD-LOG, 2026-11-16) */
   flex: 1;

@@ -262,9 +262,10 @@ export default function HomePage({
   // Opening rules from the Today drawer closes the drawer, since the panel takes its place
   // fromForm: 'grid' or 'view' when opened from a bucket's edit or new-bucket form, so closing
   // the panel without saving goes back to that bucket's edit form (Amanda, 2026-11-21)
-  function openRules(bucketId, email = null, fromForm = null) {
+  // options.preview: open at "Already in your inbox" ("Sort your backlog now?" on an empty bucket, 1i)
+  function openRules(bucketId, email = null, fromForm = null, options = {}) {
     if (emailView.view.type === 'home' && emailView.openEmailId) emailView.close()
-    setRulesFor({ bucketId, emailId: email?.id ?? null, fromForm, key: Date.now() })
+    setRulesFor({ bucketId, emailId: email?.id ?? null, fromForm, preview: Boolean(options.preview), key: Date.now() })
   }
   // Asks the bucket grid or the opened bucket to show a bucket's edit form again: { bucketId, where, key }
   const [formRequest, setFormRequest] = useState(null)
@@ -397,6 +398,7 @@ export default function HomePage({
             key={rulesFor.key}
             bucket={rulesBucket}
             startEmail={emails.find((email) => email.id === rulesFor.emailId) ?? null}
+            openAtPreview={rulesFor.preview}
             pickableEmails={rulesEmails}
             emails={emails}
             onSave={(values, moveIds) => {

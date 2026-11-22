@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useDndContext, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import BucketForm from './BucketForm.jsx'
+import BucketEmpty from './BucketEmpty.jsx'
 import DashedOutline from './DashedOutline.jsx'
 import DeleteBucketDialog from './DeleteBucketDialog.jsx'
 import EmailRow from './EmailRow.jsx'
@@ -141,7 +142,7 @@ function RulesFooter({ bucket, onRules, onResume }) {
   )
 }
 
-function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onOpenBucket, covered }) {
+function BucketTile({ bucket, bucketEmails, allEmails, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, covered }) {
   // Tiles show no total, only how many emails are new (Amanda, 2026-11-21; PRD F2, F14)
   const newCount = bucketEmails.filter((email) => email.isNew).length
   const { active } = useDndContext()
@@ -188,16 +189,20 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
                 </button>
               </h3>
             </header>
-            <ul className="email-list bucket-peek">
-              {bucketEmails.map((email) => (
-                <EmailRow
-                  key={email.id}
-                  email={email}
-                  variant="tile"
-                  onOpen={() => onOpenBucket(bucket.id, email.id)}
-                />
-              ))}
-            </ul>
+            {bucketEmails.length === 0 ? (
+              <BucketEmpty bucket={bucket} emails={allEmails} onSortBacklog={onSortBacklog} className="in-tile" />
+            ) : (
+              <ul className="email-list bucket-peek">
+                {bucketEmails.map((email) => (
+                  <EmailRow
+                    key={email.id}
+                    email={email}
+                    variant="tile"
+                    onOpen={() => onOpenBucket(bucket.id, email.id)}
+                  />
+                ))}
+              </ul>
+            )}
             <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />
           </article>
           <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} />
@@ -427,6 +432,8 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             onReorder={buckets.length > 1 ? bucketActions.startReorder : undefined}
             onRules={onRules ? () => onRules(bucket.id) : undefined}
             onResume={() => bucketActions.resumeRules(bucket.id)}
+            allEmails={emails}
+            onSortBacklog={onRules ? () => onRules(bucket.id, null, null, { preview: true }) : undefined}
             onOpenBucket={onOpenBucket}
             covered={covered}
           >
