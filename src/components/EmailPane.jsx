@@ -5,8 +5,9 @@ import InertButton from './InertButton.jsx'
 import ReplyArea from './ReplyArea.jsx'
 import { formatMessageTime, receivedAt } from '../utils/dates.js'
 
-// Gmail's "Move to" list for the open email (PRD F4, F5)
-function MoveToButton({ buckets, onMove }) {
+// A button that opens a list of buckets: Gmail's "Move to" for the open email (PRD F4, F5), and
+// "Make a rule from this email", which asks which bucket the rule is for (brief 1b)
+function BucketListButton({ label, icon, title, emptyText, buckets, onPick }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const menuRef = useRef(null)
@@ -34,13 +35,13 @@ function MoveToButton({ buckets, onMove }) {
 
   return (
     <div className="pane-menu-wrap" ref={wrapRef}>
-      <IconButton label="Move to" onClick={() => setOpen(!open)}>
-        <Icon name="drive_file_move" size={20} />
+      <IconButton label={label} onClick={() => setOpen(!open)}>
+        <Icon name={icon} size={20} />
       </IconButton>
       {open && (
-        <div className="pane-menu" role="menu" aria-label="Move to" ref={menuRef}>
-          <p className="move-menu-title" aria-hidden="true">Move to</p>
-          {buckets.length === 0 && <p className="move-menu-empty">No other buckets</p>}
+        <div className="pane-menu" role="menu" aria-label={title} ref={menuRef}>
+          <p className="move-menu-title" aria-hidden="true">{title}</p>
+          {buckets.length === 0 && <p className="move-menu-empty">{emptyText}</p>}
           {buckets.map((bucket) => (
             <button
               key={bucket.id}
@@ -49,7 +50,7 @@ function MoveToButton({ buckets, onMove }) {
               className="move-menu-item"
               onClick={() => {
                 setOpen(false)
-                onMove(bucket)
+                onPick(bucket)
               }}
             >
               {bucket.emoji ? (
@@ -143,8 +144,10 @@ function Thread({ email }) {
 // opened bucket. listIds is the list the email sits in, so the pane can move to the next one.
 // Real: Archive, junk, Delete, Mark as unread, Move to, Reply. The other icons are visible
 // but inert (BUILD-LOG, 2026-10-30).
-export default function EmailPane({ email, listIds, buckets, emailView, onSendReply, onClose, onContentPointerDown, titleRef }) {
+export default function EmailPane({ email, listIds, buckets, emailView, onSendReply, onMakeRule, onClose, onContentPointerDown, titleRef }) {
   const otherBuckets = buckets.filter((bucket) => bucket.id !== email.bucketId)
+  // For a rule, the email's own bucket comes first
+  const ruleBuckets = [...buckets].sort((a, b) => (b.id === email.bucketId) - (a.id === email.bucketId))
 
   return (
     <article className="email-pane" aria-labelledby={`pane-subject-${email.id}`}>
@@ -169,7 +172,26 @@ export default function EmailPane({ email, listIds, buckets, emailView, onSendRe
           <Icon name="add_task" size={20} />
         </InertButton>
         <span className="pane-toolbar-divider" aria-hidden="true" />
-        <MoveToButton buckets={otherBuckets} onMove={(bucket) => emailView.move(email, listIds, bucket)} />
+        <BucketListButton
+          label="Move to"
+          icon="drive_file_move"
+          title="Move to"
+          emptyText="No other buckets"
+          buckets={otherBuckets}
+          onPick={(bucket) => emailView.move(email, listIds, bucket)}
+        />
+        {/* Auto-sort rules (PRD F14; brief 1b): pick a bucket, and its rules panel opens with a
+            new rule started from this email */}
+        {onMakeRule && (
+          <BucketListButton
+            label="Make a rule from this email"
+            icon="automation"
+            title="Make a rule for"
+            emptyText="Make a bucket first"
+            buckets={ruleBuckets}
+            onPick={(bucket) => onMakeRule(bucket, email)}
+          />
+        )}
         <InertButton label="Labels" className="icon-button">
           <Icon name="label" size={20} />
         </InertButton>

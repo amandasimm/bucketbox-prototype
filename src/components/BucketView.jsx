@@ -28,6 +28,7 @@ export default function BucketView({
   emailView,
   onSendReply,
   bucketActions,
+  onRules,
 }) {
   const bucketEmails = emails
     .filter((email) => email.bucketId === bucket.id && email.removedTo === null)
@@ -74,7 +75,7 @@ export default function BucketView({
     function onKeyDown(event) {
       if (event.key !== 'Escape' || event.defaultPrevented) return
       const busy =
-        document.querySelector('[role="menu"], dialog[open], .bucket-view-edit, .emoji-popover, .day-picker') ||
+        document.querySelector('[role="menu"], dialog[open], .bucket-view-edit, .emoji-popover, .day-picker, .rules-panel') ||
         event.target.closest?.('.reply-box, .compose-drawer, form')
       if (!busy) close()
     }
@@ -102,7 +103,7 @@ export default function BucketView({
         <span className="bucket-view-strip">
           <BucketStrip buckets={buckets} currentBucketId={bucket.id} />
         </span>
-        <BucketMenu bucket={bucket} onEdit={() => setEditing(true)} onDelete={startDelete} />
+        <BucketMenu bucket={bucket} onEdit={() => setEditing(true)} onDelete={startDelete} onRules={() => onRules(bucket.id)} />
         <span ref={closeRef}>
           <IconButton label="Close bucket" tooltipAlign="right" onClick={close}>
             <Icon name="close" size={20} />
@@ -121,6 +122,11 @@ export default function BucketView({
               }}
               onCancel={() => setEditing(false)}
               onDelete={startDelete}
+              onRules={(values) => {
+                bucketActions.edit(bucket.id, values)
+                setEditing(false)
+                onRules(bucket.id)
+              }}
             />
           </div>
         )}
@@ -186,6 +192,7 @@ export default function BucketView({
               buckets={buckets}
               emailView={emailView}
               onSendReply={onSendReply}
+              onMakeRule={(target, email) => onRules(target.id, email)}
               onContentPointerDown={() => shown.unread && emailView.markRead(shown.id)}
             />
           )}

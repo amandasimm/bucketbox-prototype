@@ -12,7 +12,7 @@ import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
 // The bucket's 3-dot menu: Edit bucket and Delete bucket (PRD F2)
-export function BucketMenu({ bucket, onEdit, onDelete, onReorder }) {
+export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const menuRef = useRef(null)
@@ -61,6 +61,21 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder }) {
             <Icon name="edit" size={20} />
             Edit bucket
           </button>
+          {/* Auto-sort rules (PRD F14; brief 1b): opens the bucket's rules panel */}
+          {onRules && (
+            <button
+              type="button"
+              role="menuitem"
+              className="move-menu-item"
+              onClick={() => {
+                setOpen(false)
+                onRules()
+              }}
+            >
+              <Icon name="automation" size={20} />
+              Rules
+            </button>
+          )}
           {/* Only on the home page, and only when there's more than one bucket to put in order */}
           {onReorder && (
             <button
@@ -98,7 +113,7 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder }) {
 // While an email is being dragged, the tile shows Amanda's drop-target design: a dashed
 // outline and light see-through tint in the bucket's own color, a "+" and the bucket name.
 // The tile under the pointer switches to a stronger, solid version (BUILD-LOG, 2026-10-30).
-function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onOpenBucket, covered }) {
+function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete, onReorder, onRules, onOpenBucket, covered }) {
   const { active } = useDndContext()
   // An email can't be dropped back into the bucket it came from
   const isSource = active?.data.current?.email.bucketId === bucket.id
@@ -154,7 +169,7 @@ function BucketTile({ bucket, bucketEmails, editing, children, onEdit, onDelete,
               ))}
             </ul>
           </article>
-          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} />
+          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} />
         </>
       )}
       {showTarget && (
@@ -276,7 +291,7 @@ function ReorderGrid({ buckets, emailsIn, bucketActions, gridProps }) {
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, covered = false, reordering = false }) {
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, covered = false, reordering = false }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleting, setDeleting] = useState(null) // the bucket whose confirmation is open
@@ -375,6 +390,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             onEdit={() => setEditingId(bucket.id)}
             onDelete={() => startDelete(bucket)}
             onReorder={buckets.length > 1 ? bucketActions.startReorder : undefined}
+            onRules={onRules ? () => onRules(bucket.id) : undefined}
             onOpenBucket={onOpenBucket}
             covered={covered}
           >
@@ -389,6 +405,15 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
                 }}
                 onCancel={() => setEditingId(null)}
                 onDelete={() => startDelete(bucket)}
+                onRules={
+                  onRules
+                    ? (values) => {
+                        bucketActions.edit(bucket.id, values)
+                        setEditingId(null)
+                        onRules(bucket.id)
+                      }
+                    : undefined
+                }
               />
             )}
           </BucketTile>

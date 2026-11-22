@@ -292,6 +292,11 @@ export default function App() {
     edit(id, { name, color, emoji }) {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
     },
+    // Auto-sort rules (PRD F14; brief 1b). Saving doesn't sort anything yet (1d and 1f).
+    setRules(id, { rules, ruleJoin }) {
+      setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, rules, ruleJoin } : bucket)))
+      showToast('Rules saved')
+    },
     // Reordering (BUILD-LOG, 2026-11-16): the bucket goes to the place of the one it's dropped on
     move(id, toId) {
       const from = buckets.findIndex((bucket) => bucket.id === id)

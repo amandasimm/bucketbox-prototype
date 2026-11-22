@@ -56,7 +56,7 @@ export default function BucketEmojiButton({ emoji, onChange }) {
         onClick={() => setOpen(!open)}
       >
         {emoji ? <span className="bucket-emoji-current">{emoji}</span> : <Icon name="add_reaction" size={22} />}
-        <span className="tooltip" aria-hidden="true">
+        <span className="tooltip align-left" aria-hidden="true">
           {emoji ? 'Change emoji' : 'Add an emoji'}
         </span>
       </button>

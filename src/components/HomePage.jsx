@@ -15,6 +15,8 @@ import BucketView from './BucketView.jsx'
 import Declutter from './Declutter.jsx'
 import { DragMotionProvider, prefersReducedMotion } from './DragMotion.jsx'
 import EmailDrawer from './EmailDrawer.jsx'
+import RulesPanel from './RulesPanel.jsx'
+import './RulesPanel.css'
 import Envelope from './Envelope.jsx'
 import Resizer from './Resizer.jsx'
 import Toast from './Toast.jsx'
@@ -139,6 +141,9 @@ export default function HomePage({
   // The Today card's width once someone drags the divider beside it (null = the usual layout).
   // Nothing is saved; a reload puts it back (BUILD-LOG, 2026-11-16).
   const [todayWidth, setTodayWidth] = useState(null)
+  // A bucket's rules panel (PRD F14; brief 1b): null, or { bucketId, emailId } where emailId is
+  // the email a rule is being started from ("Make a rule from this email")
+  const [rulesFor, setRulesFor] = useState(null)
   const pageRef = useRef(null)
   const todayCard = () => pageRef.current.querySelector('.today-list').getBoundingClientRect()
   const startRect = useRef(null)
@@ -252,10 +257,27 @@ export default function HomePage({
     arrivedIds,
   }
 
+  // Opening rules from the Today drawer closes the drawer, since the panel takes its place
+  function openRules(bucketId, email = null) {
+    if (emailView.view.type === 'home' && emailView.openEmailId) emailView.close()
+    setRulesFor({ bucketId, emailId: email?.id ?? null, key: Date.now() })
+  }
+
   const count = draggedIds.length
   const openBucket = emailView.view.type === 'bucket' && buckets.find((b) => b.id === emailView.view.bucketId)
   const todayEmails = unsortedFor(emails, dayOffset)
   const drawerEmail = todayEmails.find((email) => email.id === emailView.openEmailId)
+  const rulesBucket = rulesFor && buckets.find((b) => b.id === rulesFor.bucketId)
+  // "From an email" offers the viewed day's Today list and the bucket's own emails
+  const rulesEmails = rulesBucket
+    ? [
+        { label: 'Today list', emails: todayEmails },
+        {
+          label: `In ${rulesBucket.name}`,
+          emails: emails.filter((email) => email.bucketId === rulesBucket.id && email.removedTo === null).sort((a, b) => b.receivedAt - a.receivedAt),
+        },
+      ].filter((group) => group.emails.length > 0)
+    : []
 
   return (
     <DndContext
@@ -290,7 +312,7 @@ export default function HomePage({
       >
         {/* The home page stays underneath an opened bucket, just visible around its edges,
             but can't be clicked or tabbed into until the bucket closes */}
-        <div className="home-layer" inert={openBucket || declutter ? true : undefined}>
+        <div className="home-layer" inert={openBucket || declutter || rulesBucket ? true : undefined}>
           <TodayList
             emails={emails}
             buckets={buckets}
@@ -321,6 +343,7 @@ export default function HomePage({
               onOpenBucket={emailView.openBucket}
               covered={Boolean(openBucket || declutter)}
               reordering={reordering}
+              onRules={openRules}
             />
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (
@@ -330,11 +353,13 @@ export default function HomePage({
                 buckets={buckets}
                 emailView={emailView}
                 onSendReply={onSendReply}
+                onMakeRule={(bucket, email) => openRules(bucket.id, email)}
               />
             )}
           </div>
         </div>
         {openBucket && (
+          <div className="home-layer" inert={rulesBucket ? true : undefined}>
           <BucketView
             bucket={openBucket}
             emails={emails}
@@ -346,6 +371,21 @@ export default function HomePage({
             emailView={emailView}
             onSendReply={onSendReply}
             bucketActions={bucketActions}
+            onRules={openRules}
+          />
+          </div>
+        )}
+        {rulesBucket && (
+          <RulesPanel
+            key={rulesFor.key}
+            bucket={rulesBucket}
+            startEmail={emails.find((email) => email.id === rulesFor.emailId) ?? null}
+            pickableEmails={rulesEmails}
+            onSave={(values) => {
+              bucketActions.setRules(rulesBucket.id, values)
+              setRulesFor(null)
+            }}
+            onClose={() => setRulesFor(null)}
           />
         )}
         {declutter && (

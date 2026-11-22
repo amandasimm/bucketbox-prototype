@@ -537,11 +537,15 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   color: var(--text-muted);
 }
 /* Name row: optional emoji button, then the name field */
+/* The emoji (and the rules icon below) sit centered on the first column of color swatches, with
+   the original 8px gap to the name field (Amanda, 2026-11-21). The 40px emoji button hangs 6px
+   to the left of the 28px swatch column. */
 .bucket-form-name-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.bucket-form-name-row .bucket-emoji-button { margin-left: -6px; }
 .bucket-form-name-row .text-field { flex: 1; }
 /* Gray round button, same hover fill as the 3-dot button */
 .bucket-emoji-button {
@@ -671,7 +675,36 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 @media (prefers-reduced-motion: reduce) {
   .text-field-label { transition: none; }
 }
+/* Link from the edit form to the bucket's rules panel (Amanda, 2026-11-21) */
+.bucket-form-rules {
+  /* Its fill reaches 8px past the colors on each side. The 12px left padding puts the 20px icon's
+     center on the first swatch column's center; the original 12px gap to the text. */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% + 16px);
+  margin: 12px -8px 0; /* plus the form's 8px gap: 20px of space below the colors */
+  min-height: 48px;
+  padding: 4px 8px 4px 12px;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--text);
+  text-align: left;
+}
+.bucket-form-rules:hover { background: var(--md-sys-color-surface-container); }
+.bucket-form-rules:disabled { color: var(--text-disabled); cursor: default; }
+.bucket-form-rules-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.bucket-form-rules-count {
+  font: 400 var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
 .bucket-form-hint {
+  padding-left: 42px; /* starts under the name field: 40px emoji button - 6px + 8px gap */
   display: flex;
   justify-content: space-between;
   gap: 8px;

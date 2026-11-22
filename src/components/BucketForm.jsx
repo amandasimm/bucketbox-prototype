@@ -17,10 +17,21 @@ function nameProblem(name, otherNames) {
   return null
 }
 
+// "2 rules on", "Rules paused" or "None yet", for the link to the rules panel
+function rulesLabel(bucket) {
+  const rules = (bucket?.rules ?? []).filter((rule) => rule.criteria.length > 0)
+  if (rules.length === 0) return 'None yet'
+  const on = rules.filter((rule) => !rule.paused).length
+  if (on === 0) return 'Rules paused'
+  return `${on} ${on === 1 ? 'rule' : 'rules'} on`
+}
+
 // The inline form for adding or editing a bucket, shown in place of a tile, not as a
 // pop-up (PRD F2). Adding shows Cancel and Save; editing shows Delete and Save, and
 // Escape or a click outside leaves without saving (BUILD-LOG, 2026-10-30).
-export default function BucketForm({ mode, initial, otherNames, onSave, onCancel, onDelete }) {
+// onRules (editing only): leaves the form for the bucket's rules panel. Any name, color or emoji
+// changes are saved first, so nothing typed is lost (Amanda, 2026-11-21).
+export default function BucketForm({ mode, initial, otherNames, onSave, onCancel, onDelete, onRules }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? bucketColors[0].hex)
   const [emoji, setEmoji] = useState(initial?.emoji ?? null)
@@ -122,6 +133,22 @@ export default function BucketForm({ mode, initial, otherNames, onSave, onCancel
           </label>
         ))}
       </fieldset>
+
+      {mode === 'edit' && onRules && (
+        <button
+          type="button"
+          className="bucket-form-rules"
+          disabled={!canSave}
+          onClick={() => onRules({ name: name.trim(), color, emoji })}
+        >
+          <Icon name="automation" size={20} />
+          <span className="bucket-form-rules-text">
+            Auto-sort rules
+            <span className="bucket-form-rules-count">{rulesLabel(initial)}</span>
+          </span>
+          <Icon name="chevron_right" size={20} />
+        </button>
+      )}
 
       <div className="bucket-form-buttons">
         {mode === 'add' ? (

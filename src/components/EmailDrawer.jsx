@@ -8,7 +8,7 @@ const STAYS_OPEN = '.email-drawer, .today-list, .page-history, .toast-region, [r
 // An email opened from the Today list (PRD §5, F5; sketch-click-email-from-today.png).
 // It slides out over the buckets but stops short of the right edge, so the buckets still show.
 // The X, Escape, or a click outside it closes it.
-export default function EmailDrawer({ email, listIds, buckets, emailView, onSendReply }) {
+export default function EmailDrawer({ email, listIds, buckets, emailView, onSendReply, onMakeRule }) {
   const drawerRef = useRef(null)
   const titleRef = useRef(null)
 
@@ -48,6 +48,7 @@ export default function EmailDrawer({ email, listIds, buckets, emailView, onSend
         buckets={buckets}
         emailView={emailView}
         onSendReply={onSendReply}
+        onMakeRule={onMakeRule}
         titleRef={titleRef}
         onClose={() => {
           emailView.close()

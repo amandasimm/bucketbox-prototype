@@ -4,15 +4,18 @@ export default function IconButton({ label, tooltip = label, disabled = false, o
   return (
     <button
       type="button"
-      className="icon-button has-tooltip"
+      className={tooltip ? 'icon-button has-tooltip' : 'icon-button'}
       aria-label={label}
       aria-disabled={disabled}
       onClick={disabled ? undefined : onClick}
     >
       {children}
-      <span className={`tooltip ${tooltipAlign ? `align-${tooltipAlign}` : ''}`} aria-hidden="true">
-        {tooltip}
-      </span>
+      {/* tooltip={null} leaves the hover text off; the label is still read out */}
+      {tooltip && (
+        <span className={`tooltip ${tooltipAlign ? `align-${tooltipAlign}` : ''}`} aria-hidden="true">
+          {tooltip}
+        </span>
+      )}
     </button>
   )
 }

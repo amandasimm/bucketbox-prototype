@@ -1,0 +1,453 @@
+/* A bucket's auto-sort rules (PRD F14; brief 1b; BUILD-LOG 2026-11-21): a panel that slides in
+   from the right over the buckets (or over an opened bucket's email pane). Plain CSS on the
+   M3 tokens in styles.css. */
+.rules-panel {
+  position: absolute;
+  top: 8px;
+  bottom: 16px; /* same as the Today card */
+  right: 16px;
+  z-index: 9; /* above an opened bucket (8) */
+  display: flex;
+  flex-direction: column;
+  width: min(480px, calc(100% - 32px));
+  border: 1px solid var(--bucket-color);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level3);
+  overflow: hidden;
+  animation: rules-in 200ms ease-out;
+}
+@keyframes rules-in {
+  from { transform: translateX(40px); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rules-panel { animation: none; }
+}
+body.no-motion .rules-panel { animation: none; }
+
+.rules-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 20px;
+  background: var(--bucket-header);
+  border-bottom: 1px solid var(--divider);
+}
+.rules-panel-title {
+  flex: 1;
+  margin: 0;
+  font: 500 var(--md-sys-typescale-title-medium) var(--font);
+  color: var(--text);
+}
+.rules-panel-title:focus { outline: none; }
+.rules-panel-title:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.rules-panel-header .icon-button { width: 32px; height: 32px; }
+
+.rules-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+.rules-panel-explain {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text-muted);
+}
+.rules-panel-explain .icon { flex-shrink: 0; }
+
+.rules-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--divider);
+}
+.rules-panel-footnote {
+  flex: 1;
+  margin: 0;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+
+/* One rule card */
+.rule-card {
+  padding: 12px 16px 16px;
+  border: 1px solid var(--outline);
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--surface);
+}
+.rule-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin-bottom: 8px;
+}
+.rule-card-title {
+  margin: 0;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+}
+.rule-card-header .rules-menu-wrap { margin-left: auto; }
+.rule-card-header .icon-button { width: 32px; height: 32px; }
+.rule-match {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font: var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.rule-match + .rules-menu-wrap { margin-left: 0; }
+/* Paused: a text badge with an icon, and the chips in a quieter gray (still AA) */
+.rule-paused-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-surface-container-high);
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.rule-card.is-paused { background: var(--md-sys-color-surface-container-low); border-style: dashed; }
+/* Paused (Amanda, 2026-11-21): the chips' fills go lighter so the card reads as switched off,
+   but all text stays full contrast, since everything in it can still be changed */
+.rule-card.is-paused .rule-chip { background: var(--md-sys-color-surface-container); }
+.rule-card.is-paused .rule-chip-offer { border-color: var(--outline); }
+
+.rule-card-note {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 8px;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.rule-card-note.is-warning { color: var(--text); }
+.rule-card-note .icon { flex-shrink: 0; color: var(--text-muted); }
+.rule-card-empty {
+  margin: 0 0 8px;
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text-muted);
+}
+
+/* Chips: the condition (click to change) and an x to remove it */
+.rule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.rule-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-high); /* Gmail's soft gray-blue, calmer than the bright chip blue (Amanda, 2026-11-21) */
+  color: var(--text);
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.rule-chip-text {
+  padding: 6px 8px 6px 12px; /* 4px more on the text side, taken from the x (Amanda, 2026-11-21) */
+  border-radius: var(--md-sys-shape-corner-small) 0 0 var(--md-sys-shape-corner-small);
+  text-align: left;
+  word-break: break-word;
+}
+.rule-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; /* still a 24px click target */
+  min-height: 32px;
+  border-radius: 0 var(--md-sys-shape-corner-small) var(--md-sys-shape-corner-small) 0;
+}
+.rule-chip-text:hover,
+.rule-chip-remove:hover { background: var(--md-sys-state-hover); }
+.rule-chip-editing { flex-basis: 100%; }
+
+/* Chips offered from an email: outlined, with a + */
+.rule-offered { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--divider); }
+.rule-offered-label {
+  margin: 0 0 8px;
+  font: var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.rule-chip-offer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  color: var(--text);
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.rule-chip-offer:hover { background: var(--md-sys-state-hover); }
+
+/* Adding or changing one chip */
+.chip-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-low);
+}
+.chip-editor .rules-input { flex: 1 1 140px; }
+/* Cancel and Done stay together on the right, and wrap as a pair */
+.chip-editor-buttons { display: flex; gap: 8px; margin-left: auto; }
+.chip-editor .text-button,
+.chip-editor .filled-button { height: 36px; padding: 0 12px; } /* same height as the fields beside them */
+.rules-input,
+.rules-select {
+  height: 36px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--surface);
+  color: var(--text);
+  font: var(--md-sys-typescale-body-medium) var(--font);
+}
+/* Dropdowns drawn like the text fields (Amanda, 2026-11-21): the browser's own arrow is
+   replaced by a Material chevron with 12px of room on its right */
+.rules-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 36px 0 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 -960 960 960' fill='%23444746'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  cursor: pointer;
+}
+.rules-select:hover,
+.rules-input:hover { border-color: var(--text); }
+.rules-input:focus,
+.rules-select:focus { outline: 2px solid var(--focus-ring); outline-offset: -1px; border-color: var(--focus-ring); }
+.filled-button:disabled { cursor: default; }
+
+/* "+ Add condition" and "+ Add another rule" */
+.rules-add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--button-radius);
+  color: var(--focus-ring);
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.rules-add-button:hover { background: var(--md-sys-state-hover); }
+.rules-add-button.is-another { margin-top: 12px; height: 36px; }
+
+/* Menus inside the panel */
+.add-condition-menu { min-width: 200px; }
+.add-condition-item { gap: 8px; }
+.add-condition-label { flex: 1; }
+.add-condition-item .icon { color: var(--text-muted); }
+/* Back: its arrow sits near the menu's left edge, with a thin line under the row. The row starts
+   at the menu's top edge (over its 8px padding) with 12px above and below the word, so "Back" is
+   centered between the top and the line (Amanda, 2026-11-21) */
+.add-condition-item.is-back {
+  gap: 4px;
+  margin: -8px 0 4px;
+  padding: 12px 16px 12px 6px;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 8px 8px 0 0; /* the hover fill follows the menu's rounded top corners */
+}
+.rules-menu-wrap { position: relative; }
+.rules-menu.align-left { left: 0; right: auto; }
+
+/* Two-option toggle: Any | All, or | and */
+.rules-segmented {
+  display: inline-flex;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.rules-segmented button:first-child { border-radius: var(--md-sys-shape-corner-full) 0 0 var(--md-sys-shape-corner-full); }
+.rules-segmented button:last-child { border-radius: 0 var(--md-sys-shape-corner-full) var(--md-sys-shape-corner-full) 0; }
+.rules-segmented .tooltip.is-wide { width: 200px; white-space: normal; text-align: left; }
+.rules-segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 40px;
+  height: 24px; /* shorter, so it sits in line with the 12px "Match" label; still a 24px target */
+  padding: 0 10px; /* 10px at both outer ends: left of "Any", right of "All" */
+  justify-content: center;
+  color: var(--text);
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+}
+.rules-segmented button + button { border-left: 1px solid var(--md-sys-color-outline); }
+/* "All" when chosen (Amanda, 2026-11-21): the same space from the left edge to the check as from
+   the check to the word. The check glyph has ~2.5px of built-in space on each side, so 6px of
+   padding and a 6px gap look even (about 8.5px each). */
+.rules-segmented button:last-child.is-chosen { gap: 6px; padding-left: 6px; }
+.rules-segmented button:hover { background: var(--md-sys-state-hover); }
+.rules-segmented button.is-chosen { background: var(--md-sys-color-primary-container); }
+.rules-segmented button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* Rule cards stack with a small gap */
+.rules-panel-scroll [data-rule-id] + [data-rule-id] { margin-top: 12px; }
+
+/* How several rules combine: a radio choice below the rules */
+.rules-join {
+  margin: 16px 0 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+.rules-join-legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+}
+.rules-join-choice {
+  align-items: flex-start;
+  padding: 6px 0;
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text);
+}
+.rules-join-choice input { margin-top: 1px; }
+
+/* Starting a rule */
+/* Inside a card (adding to a rule): no dashed box of its own, just a divider above */
+.start-rule.is-in-card {
+  margin-top: 8px;
+  padding: 12px 0 0;
+  border: none;
+  border-top: 1px solid var(--divider);
+  border-radius: 0;
+}
+/* A phrase that wasn't fully understood: icon plus text (not color alone), calm, not red */
+.start-rule-problem {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 0;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text);
+}
+.start-rule-problem .icon { flex-shrink: 0; color: var(--text-muted); }
+.inline-link {
+  padding: 0;
+  color: var(--focus-ring);
+  font: inherit;
+  text-decoration: underline;
+}
+
+.start-rule {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px dashed var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-medium);
+}
+.start-rule-title {
+  display: block;
+  margin: 0 0 12px;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+}
+.start-rule-hint {
+  margin: 8px 0 0;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.start-rule .rules-input { width: 100%; }
+.start-rule-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.start-rule-ways,
+.start-rule-emails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.start-rule-way {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--md-sys-shape-corner-small);
+  text-align: left;
+  color: var(--text);
+}
+.start-rule-way:hover,
+.start-rule-email:hover { background: var(--md-sys-state-hover); }
+.start-rule-way .icon { color: var(--text-muted); margin-top: 2px; }
+.start-rule-way-label {
+  display: block;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.start-rule-way-hint {
+  display: block;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.start-rule-group + .start-rule-group { margin-top: 12px; }
+.start-rule-group-label {
+  margin: 0 0 4px;
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.start-rule-email {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--md-sys-shape-corner-small);
+  text-align: left;
+  color: var(--text);
+}
+.start-rule-email-sender { font: 500 var(--md-sys-typescale-label-large) var(--font); }
+.start-rule-email-subject {
+  overflow: hidden;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.start-rule-categories { display: flex; flex-wrap: wrap; gap: 8px; }
+.start-rule-categories .outlined-button { height: 32px; }
+
+/* The plain-English read-back */
+.rules-summary {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-surface-container);
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text);
+}
+.rules-summary-title {
+  margin: 0 0 4px;
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.rules-summary p { margin: 0; }
+.rules-summary-list { margin: 4px 0 0; padding-left: 20px; }
+/* The "or" / "and" between bullets: its own line, bold, no bullet, lined up with the bullet text */
+.rules-summary-joiner {
+  list-style: none;
+  margin: 2px 0;
+  font-weight: 700;
+}
+.rules-summary-note { margin-top: 4px !important; color: var(--text-muted); }
