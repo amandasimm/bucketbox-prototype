@@ -10,6 +10,7 @@ import { mockEmails } from './data/mockEmails.js'
 import { startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
+import { loadSettings, storeSettings } from './utils/savedSettings.js'
 import { arrivingEmails } from './data/arrivingEmails.js'
 import { activeRules, routeEmail, ruleMatches } from './utils/rules.js'
 
@@ -53,10 +54,12 @@ export default function App() {
   const [lastAction, setLastAction] = useState(null)
   // A new key restarts the toast's timer even when the message repeats
   const [toast, setToast] = useState(null)
-  // The delete zone deletes until someone picks "Archive instead" on its first-use toast.
-  // There is no visible setting in v1, and a reload resets it (BUILD-LOG, 2026-10-30).
-  const [zoneMode, setZoneMode] = useState('trash') // 'trash' | 'archive'
-  const [zoneToastSeen, setZoneToastSeen] = useState(false)
+  // Settings saved in this browser from an earlier visit (brief 1j), read once at the start
+  const [saved] = useState(loadSettings)
+  // The delete zone deletes until someone picks "Archive instead" on its first-use toast, or
+  // chooses archiving in settings. It's saved with the settings (brief 1j).
+  const [zoneMode, setZoneMode] = useState(saved.zone) // 'trash' | 'archive'
+  const [zoneToastSeen, setZoneToastSeen] = useState(saved.zone === 'archive')
   // Where the person is (PRD §5): the home page, or one bucket opened up
   const [view, setView] = useState({ type: 'home' }) // or { type: 'bucket', bucketId }
   // The email open in the Today drawer or the bucket's pane (null = none chosen)
@@ -71,14 +74,16 @@ export default function App() {
   const [declutter, setDeclutter] = useState(null)
   // Whether Declutter's arrow-key tip has shown, or isn't needed because the keys were used
   const [keyTipShown, setKeyTipShown] = useState(false)
-  // Bucketbox's settings (PRD F10; BUILD-LOG, 2026-11-16). Kept in memory only, like everything
-  // else: a reload puts them back. The delete zone's choice lives in zoneMode above.
-  const [settings, setSettings] = useState({
-    bucketCounts: true,
-    labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
-    buttons: { move: true, archive: true, delete: true, declutter: true },
-    motion: true,
+  // Bucketbox's settings (PRD F10; BUILD-LOG, 2026-11-16 and 2026-11-22). Saved in this browser,
+  // so they're kept after a reload (utils/savedSettings.js). The delete zone's choice lives in
+  // zoneMode above. "Show bucket counts" is gone: tiles have no counts (brief 1j).
+  const [settings, setSettings] = useState(() => {
+    const { zone, ...rest } = saved
+    return rest
   })
+  useEffect(() => {
+    storeSettings({ ...settings, zone: zoneMode })
+  }, [settings, zoneMode])
   const [settingsOpen, setSettingsOpen] = useState(false)
   // The conflicts pop-up (PRD F14; brief 1g): emails whose rules fit more than one bucket
   const [conflictsOpen, setConflictsOpen] = useState(false)
@@ -157,7 +162,8 @@ export default function App() {
       const at = new Date(now.getTime() - (arrivingEmails.length - 1 - i) * 3 * 60 * 1000)
       const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
       const arrived = { ...email, id: `ARR_${batch}_${i}`, dayOffset: 0, time, receivedAt: receivedAt(0, time), attachments: [], unread: true, bucketId: null, removedTo: null }
-      const route = routeEmail(arrived, buckets)
+      // With auto-sort switched off in settings, everything lands in the Today list (brief 1j)
+      const route = settings.autoSort ? routeEmail(arrived, buckets) : { type: 'none' }
       // More than one bucket fits: it waits in the Today list, remembering which buckets (1g)
       if (route.type === 'conflict') {
         conflicts += 1
@@ -323,6 +329,7 @@ export default function App() {
   // active rules (an email sorted by hand doesn't ask), and for every kind of move to a bucket
   // (drag, Move, Move to). Returns the toast for applyTo / paneAction, or null for a plain one.
   function pausePrompt(ids, target) {
+    if (!settings.autoSort) return null // nothing to pause while auto-sort is off (brief 1j)
     const moved = emails.filter((email) => ids.includes(email.id) && email.bucketId && email.bucketId !== target.id && !email.removedTo)
     for (const source of buckets) {
       const rules = activeRules(source).filter((rule) => moved.some((email) => email.bucketId === source.id && ruleMatches(rule, email)))

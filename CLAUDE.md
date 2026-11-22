@@ -58,7 +58,7 @@ Build decisions already made (stacked rows, real "today" date, no reminder email
 - Out entirely: notifications, mobile, compose redesign, AI replies, AI sorting, multiple inboxes
 
 ## 5. Hard constraints
-- **Mock data only.** No real inboxes, no Gmail login, no backend, no APIs, no analytics. Nothing is stored or sent. The prototype resets when the page reloads.
+- **Mock data only.** No real inboxes, no Gmail login, no backend, no APIs, no analytics. Nothing is sent anywhere. Bucketbox's settings are saved in the participant's own browser (localStorage) so they survive a reload (decided 2026-11-21); emails, buckets and rules still reset when the page reloads.
 - Mock emails are a **generic personal inbox** (personal notes, a marketing email, an interview request, etc.), not student-focused.
 - "Send," "Reply," junk, and similar actions must never send anything anywhere.
 - **Desktop only** (design for roughly 1280px wide and up).
@@ -115,7 +115,7 @@ Avoid:
 | **dnd-kit** (drag-and-drop library) | Handles drag and drop reliably, including the delete zone and bucket highlights, and has built-in keyboard support. |
 | **Plain CSS** (CSS variables for colors) | Easy to restyle later without learning a framework; the PRD says styling will be refined after v1. |
 | **Material Symbols icons** (Google) | The same icon family Gmail uses, so it keeps Gmail's look. |
-| **In-memory state** (React `useReducer`) | Keeps all data in the browser tab only (nothing saved), and makes undo/redo straightforward. |
+| **In-memory state** (React `useReducer`) | Keeps emails, buckets and rules in the browser tab only (reset on reload), and makes undo/redo straightforward. Settings alone are saved in the browser (`src/utils/savedSettings.js`). |
 | **Mock data in a JSON/JS file** | One editable file for the fake emails, days, and starting bucket. |
 | **Emoji picker: curated grid, built by hand** | No library. Amanda chooses 24–40 emojis, which is calmer than a full picker. |
 | **Frimousse** (bucket emoji only) | Full searchable emoji picker for a bucket's emoji. Approved 2026-10-30. Its emoji data is self-hosted in `public/emojibase/`, so nothing loads from the internet. |

@@ -50,6 +50,17 @@ body.no-motion .rules-panel { animation: none; }
   padding: 16px 20px;
   overflow-y: auto;
 }
+.rules-panel-off {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-surface-container-high);
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text);
+}
+.rules-panel-off .icon { flex-shrink: 0; color: var(--text-muted); }
 .rules-panel-explain {
   display: flex;
   gap: 8px;

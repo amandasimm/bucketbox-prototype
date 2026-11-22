@@ -1928,8 +1928,6 @@ label.setting-row { cursor: pointer; }
 .outlined-button:disabled { color: var(--text-disabled); border-color: var(--md-sys-color-outline-disabled); cursor: default; }
 
 /* What the settings change */
-.hide-bucket-counts .bucket-count,
-.hide-bucket-counts .bucket-view-count { display: none; }
 .hide-move .bulk-button.is-move,
 .hide-archive .bulk-button.is-archive,
 .hide-delete .bulk-button.is-delete,
@@ -2091,3 +2089,8 @@ label.setting-row { cursor: pointer; }
   background: color-mix(in srgb, var(--bucket-color) 30%, white);
 }
 .conflict-dialog-buttons { margin: 0; padding: 12px 24px 20px; border-top: 1px solid var(--divider); }
+
+/* A setting that's shown but can't be changed yet (Suggestions, brief 1j) */
+.setting-row.is-disabled { cursor: default; }
+.setting-row.is-disabled .setting-label { color: var(--text-disabled); }
+.setting-row.is-disabled .setting-switch { opacity: 0.38; }

@@ -142,7 +142,7 @@ function RulesFooter({ bucket, onRules, onResume }) {
   )
 }
 
-function BucketTile({ bucket, bucketEmails, allEmails, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, covered }) {
+function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, covered }) {
   // Tiles show no total, only how many emails are new (Amanda, 2026-11-21; PRD F2, F14)
   const newCount = bucketEmails.filter((email) => email.isNew).length
   const { active } = useDndContext()
@@ -190,7 +190,7 @@ function BucketTile({ bucket, bucketEmails, allEmails, editing, children, onEdit
               </h3>
             </header>
             {bucketEmails.length === 0 ? (
-              <BucketEmpty bucket={bucket} emails={allEmails} onSortBacklog={onSortBacklog} className="in-tile" />
+              <BucketEmpty bucket={bucket} emails={allEmails} autoSort={autoSort} onSortBacklog={onSortBacklog} className="in-tile" />
             ) : (
               <ul className="email-list bucket-peek">
                 {bucketEmails.map((email) => (
@@ -203,7 +203,8 @@ function BucketTile({ bucket, bucketEmails, allEmails, editing, children, onEdit
                 ))}
               </ul>
             )}
-            <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />
+            {/* No rules line while auto-sort is off in settings (Amanda, 2026-11-22) */}
+            {autoSort && <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />}
           </article>
           <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} />
         </>
@@ -327,7 +328,7 @@ function ReorderGrid({ buckets, emailsIn, bucketActions, gridProps }) {
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, formRequest, covered = false, reordering = false }) {
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, formRequest, autoSort = true, covered = false, reordering = false }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   // Back from the rules panel without saving: the bucket's edit form opens again
@@ -433,6 +434,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             onRules={onRules ? () => onRules(bucket.id) : undefined}
             onResume={() => bucketActions.resumeRules(bucket.id)}
             allEmails={emails}
+            autoSort={autoSort}
             onSortBacklog={onRules ? () => onRules(bucket.id, null, null, { preview: true }) : undefined}
             onOpenBucket={onOpenBucket}
             covered={covered}

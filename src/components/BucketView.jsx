@@ -31,6 +31,7 @@ export default function BucketView({
   bucketActions,
   onRules,
   formRequest,
+  autoSort = true,
 }) {
   const bucketEmails = emails
     .filter((email) => email.bucketId === bucket.id && email.removedTo === null)
@@ -178,7 +179,7 @@ export default function BucketView({
               </ul>
             </>
           ) : (
-            <BucketEmpty bucket={bucket} emails={emails} onSortBacklog={() => onRules(bucket.id, null, null, { preview: true })} />
+            <BucketEmpty bucket={bucket} emails={emails} autoSort={autoSort} onSortBacklog={() => onRules(bucket.id, null, null, { preview: true })} />
           )}
           <BulkActions
             selectedCount={selectedHere.length}

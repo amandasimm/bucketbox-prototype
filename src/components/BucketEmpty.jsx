@@ -2,10 +2,11 @@ import { activeRules, backlogFor } from '../utils/rules.js'
 
 // What an empty bucket says (PRD F2, F14; brief 1i; wording decided Nov 21, 2026), on its tile and
 // when it's opened. A bucket with rules on: "No new mail has matched your 2 rules yet." (Amanda,
-// 2026-11-22), and on its own line "Already in your inbox: 5 unsorted emails match" when unsorted emails
-// already fit; the link opens the rules panel at "Already in your inbox". No rules, or all of them paused: the regular message.
-export default function BucketEmpty({ bucket, emails, onSortBacklog, className = '' }) {
-  const ruleCount = activeRules(bucket).length
+// 2026-11-22), and on its own line "Already in your inbox: 5 unsorted emails match" when unsorted
+// emails already fit; the link opens the rules panel at "Already in your inbox". No rules, all of
+// them paused, or auto-sort off in settings (brief 1j): the regular message.
+export default function BucketEmpty({ bucket, emails, autoSort = true, onSortBacklog, className = '' }) {
+  const ruleCount = autoSort ? activeRules(bucket).length : 0
   const hasRules = ruleCount > 0
   const backlog = hasRules ? backlogFor(bucket, emails).length : 0
   return (

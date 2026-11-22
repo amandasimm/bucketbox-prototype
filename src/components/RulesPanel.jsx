@@ -643,7 +643,7 @@ function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName }) 
   )
 }
 
-export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, openAtPreview = false, onSave, onClose }) {
+export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, openAtPreview = false, autoSort = true, onSave, onClose }) {
   const [draft, setDraft] = useState(() => {
     const rules = (bucket.rules ?? []).map((rule) => ({ ...rule }))
     return { rules: startEmail ? [...rules, ruleFromEmail(startEmail)] : rules, ruleJoin: bucket.ruleJoin ?? 'any' }
@@ -738,6 +738,14 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
       </header>
 
       <div className="rules-panel-scroll">
+        {/* Auto-sort switched off in settings (brief 1j): the rules can still be set up, and the
+            "Already in your inbox" list still works, since that's a sort the person chooses */}
+        {!autoSort && (
+          <p className="rules-panel-off" role="status">
+            <Icon name="info" size={20} />
+            <span>Auto-sort is off in Bucketbox settings, so these rules aren't sorting new mail right now.</span>
+          </p>
+        )}
         <p className="rules-panel-explain">
           <Icon name="automation" size={20} />
           <span>Auto-sort rules allow you to decide what emails automatically land in each bucket, no manual sorting required.</span>

@@ -318,7 +318,6 @@ export default function HomePage({
           todayWidth === null ? '' : 'is-resized',
           // Bucketbox's settings show up as classes the styles respond to (BUILD-LOG, 2026-11-16)
           `labels-${settings.labels}`,
-          settings.bucketCounts ? '' : 'hide-bucket-counts',
           ...Object.entries(settings.buttons).map(([name, shown]) => (shown ? '' : `hide-${name}`)),
         ].join(' ')}
         data-bucket-cols={buckets.length <= 2 ? 1 : 2}
@@ -361,6 +360,7 @@ export default function HomePage({
               reordering={reordering}
               onRules={openRules}
               formRequest={formRequest?.where === 'grid' ? formRequest : null}
+              autoSort={settings.autoSort}
             />
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (
@@ -390,6 +390,7 @@ export default function HomePage({
             bucketActions={bucketActions}
             onRules={openRules}
             formRequest={formRequest?.where === 'view' ? formRequest : null}
+            autoSort={settings.autoSort}
           />
           </div>
         )}
@@ -399,6 +400,7 @@ export default function HomePage({
             bucket={rulesBucket}
             startEmail={emails.find((email) => email.id === rulesFor.emailId) ?? null}
             openAtPreview={rulesFor.preview}
+            autoSort={settings.autoSort}
             pickableEmails={rulesEmails}
             emails={emails}
             onSave={(values, moveIds) => {
