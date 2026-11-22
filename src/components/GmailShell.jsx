@@ -22,7 +22,8 @@ const navItems = [
 ]
 
 // The facilitator menu (brief item 6, started early for 1f on 2026-11-21): for whoever runs a
-// test session. Only "Add emails" so far; stage 6 adds switching and resetting scenarios.
+// test session. "Add emails" and "Add pattern emails" so far; stage 6 adds switching and
+// resetting scenarios and settings.
 function FacilitatorMenu({ facilitator, onClose }) {
   const menuRef = useRef(null)
   useEffect(() => {
@@ -59,6 +60,21 @@ function FacilitatorMenu({ facilitator, onClose }) {
         <span>
           Add emails
           <span className="facilitator-menu-hint">8 arrive now and go through the auto-sort rules</span>
+        </span>
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className="move-menu-item"
+        onClick={() => {
+          onClose()
+          facilitator.addPatternEmails()
+        }}
+      >
+        <Icon name="stacked_email" size={20} />
+        <span>
+          Add pattern emails
+          <span className="facilitator-menu-hint">35 from Chase (4 today), to trigger the auto-archive suggestion</span>
         </span>
       </button>
     </div>

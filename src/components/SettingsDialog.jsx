@@ -44,7 +44,7 @@ const BUTTONS = [
 
 // Bucketbox's own settings (PRD F10; moved into v1, BUILD-LOG 2026-11-16). A centered pop-up,
 // opened from the wrench at the bottom of the left nav. Only settings that really work are
-// listed, plus Suggestions, shown disabled until it's built (Amanda, 2026-11-22). Nothing changes
+// listed. Nothing changes
 // until Save; Cancel or Escape closes it unchanged. Saved settings are kept in this browser, so a
 // reload keeps them (brief 1j).
 // It uses the browser's own dialog, which keeps keyboard focus inside and closes on Escape.
@@ -79,11 +79,31 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
             />
             <SwitchRow
               label="Suggestions"
-              hint="Coming soon: ideas for rules and tidying up, based on how you sort"
+              hint="Ideas for tidying up, based on how you sort (shown while you Declutter)"
               checked={draft.suggestions}
               onChange={(suggestions) => set({ suggestions })}
-              disabled
             />
+            {/* Senders turned off with "Don't suggest this for Chase" (PRD F15) */}
+            {draft.hiddenSuggestions.length > 0 && (
+              <div className="setting-hidden">
+                <span className="setting-label">Hidden suggestions</span>
+                <ul className="setting-hidden-list">
+                  {draft.hiddenSuggestions.map((hidden) => (
+                    <li key={hidden.senderEmail}>
+                      <span>{hidden.name}</span>
+                      <button
+                        type="button"
+                        className="text-button"
+                        aria-label={`Show suggestions for ${hidden.name} again`}
+                        onClick={() => set({ hiddenSuggestions: draft.hiddenSuggestions.filter((h) => h.senderEmail !== hidden.senderEmail) })}
+                      >
+                        Show again
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="setting-row">
               <span className="setting-text">
                 <span className="setting-label">Bucket order</span>

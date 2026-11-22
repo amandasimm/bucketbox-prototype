@@ -6,18 +6,33 @@ const KEY = 'bucketbox-settings'
 
 export const defaultSettings = {
   autoSort: true, // auto-sort rules sort arriving mail (PRD F14)
-  suggestions: false, // F15/F16; not built yet, so its switch is disabled ("Coming soon")
+  // Suggestions (PRD F15, F16): on by default for testing (Amanda, 2026-11-22), though the PRD
+  // calls it opt-in
+  suggestions: true,
+  // Senders whose auto-archive suggestion was turned off: [{ senderEmail, name }]
+  hiddenSuggestions: [],
   labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
   buttons: { move: true, archive: true, delete: true, declutter: true },
   motion: true,
   zone: 'trash', // the delete zone: 'trash' | 'archive'
 }
 
+// Version 2 (2026-11-22): Suggestions became a real setting. Version 1 saved it as off only
+// because it was a disabled placeholder, so that old value is dropped.
+const VERSION = 2
+
 export function loadSettings() {
   try {
     const saved = JSON.parse(window.localStorage.getItem(KEY) ?? 'null')
     if (!saved || typeof saved !== 'object') return defaultSettings
-    return { ...defaultSettings, ...saved, buttons: { ...defaultSettings.buttons, ...saved.buttons } }
+    if (saved.version !== VERSION) delete saved.suggestions
+    delete saved.version
+    return {
+      ...defaultSettings,
+      ...saved,
+      buttons: { ...defaultSettings.buttons, ...saved.buttons },
+      hiddenSuggestions: Array.isArray(saved.hiddenSuggestions) ? saved.hiddenSuggestions : [],
+    }
   } catch {
     return defaultSettings
   }
@@ -25,7 +40,7 @@ export function loadSettings() {
 
 export function storeSettings(settings) {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(settings))
+    window.localStorage.setItem(KEY, JSON.stringify({ ...settings, version: VERSION }))
   } catch {
     // Storage isn't available: the settings simply last until the page reloads
   }

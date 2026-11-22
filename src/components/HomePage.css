@@ -2094,3 +2094,10 @@ label.setting-row { cursor: pointer; }
 .setting-row.is-disabled { cursor: default; }
 .setting-row.is-disabled .setting-label { color: var(--text-disabled); }
 .setting-row.is-disabled .setting-switch { opacity: 0.38; }
+
+/* Hidden suggestions in settings (PRD F15): each sender with Show again */
+.setting-hidden { display: flex; flex-direction: column; gap: 4px; margin-top: -8px; }
+.setting-hidden .setting-label { font-size: 14px; }
+.setting-hidden-list { margin: 0; padding: 0; list-style: none; }
+.setting-hidden-list li { display: flex; align-items: center; justify-content: space-between; min-height: 36px; font: var(--md-sys-typescale-body-medium) var(--font); }
+.setting-hidden-list .text-button { height: 32px; padding: 0 8px; }

@@ -574,7 +574,9 @@ const PAGE_SIZE = 10 // Amanda, 2026-11-21 (was 5)
 // "Priority's", "Bills'"
 const possessive = (name) => (name.endsWith('s') ? `${name}’` : `${name}’s`)
 
-function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName }) {
+// Also used by the auto-archive suggestion's review panel (PRD F15), with its own title and
+// helper line (title, hint).
+export function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName, title = 'Already in your inbox', hint = null }) {
   const ids = useId()
   const allSelected = matches.length > 0 && selected.length === matches.length
   // Some but not all: the Select all box shows a dash, like Gmail's
@@ -590,13 +592,13 @@ function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName }) 
   const shown = matches.slice(first, first + PAGE_SIZE)
   return (
     <section className="rules-preview" aria-labelledby={`${ids}-title`} aria-describedby={`${ids}-hint`}>
-      <h3 id={`${ids}-title`} className="rules-preview-title">Already in your inbox</h3>
+      <h3 id={`${ids}-title`} className="rules-preview-title">{title}</h3>
       {count === 0 ? (
         <p id={`${ids}-hint`} className="rules-preview-hint">No unsorted emails match {possessive(bucketName)} rules yet.</p>
       ) : (
         <>
           <p id={`${ids}-hint`} className="rules-preview-hint">
-            {count} unsorted {count === 1 ? 'email matches' : 'emails match'} {possessive(bucketName)} rules. Select an email to move it to {bucketName}.
+            {hint ?? `${count} unsorted ${count === 1 ? 'email matches' : 'emails match'} ${possessive(bucketName)} rules. Select an email to move it to ${bucketName}.`}
           </p>
           {/* Selects every matching email, on all pages */}
           <label className="rules-preview-select-all">

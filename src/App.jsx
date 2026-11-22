@@ -7,12 +7,14 @@ import ConflictDialog from './components/ConflictDialog.jsx'
 import HomePage from './components/HomePage.jsx'
 import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
-import { startingBuckets } from './data/startingSetup.js'
+import { bucketColors, startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
 import { loadSettings, storeSettings } from './utils/savedSettings.js'
 import { arrivingEmails } from './data/arrivingEmails.js'
+import { patternSender, patternTemplates, patternTodayCount, patternTotal } from './data/patternEmails.js'
 import { activeRules, routeEmail, ruleMatches } from './utils/rules.js'
+import { chipsFromEmail } from './utils/ruleText.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
 // Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
@@ -27,6 +29,12 @@ const LEAVE_MS = 200
 
 const isUnsorted = (email) => email?.bucketId === null && email?.removedTo === null
 const patchEmail = (list, id, fields) => list.map((email) => (email.id === id ? { ...email, ...fields } : email))
+// A Declutter step changes one email, or several at once (the auto-archive suggestion, F15).
+// side 'change' applies it, 'previous' takes it back.
+function applyStep(list, step, side) {
+  if (!step.ids) return patchEmail(list, step.id, step[side])
+  return list.map((email) => (step.ids.includes(email.id) ? { ...email, ...(side === 'change' ? step.change : step.previousById[email.id]) } : email))
+}
 
 // The next card after this one that's still unsorted, or the deck's length (the end screen)
 function nextCard(list, deck, from) {
@@ -151,17 +159,13 @@ export default function App() {
   // list for the person to choose (1g). Arriving mail isn't something the person did, so it's
   // left out of undo/redo, and undoing something later never takes it away.
   const arrivals = useRef(0)
-  function addArrivingEmails() {
-    arrivals.current += 1
-    const batch = arrivals.current
-    const now = new Date()
+  // Delivers new emails (each with an id, dayOffset and time) through the rules, as above.
+  // Returns the toast's ending: " 3 went to Priority, 1 to Bills." or ""
+  function deliver(newEmails) {
     const sorted = {} // bucket name -> how many
     let conflicts = 0
-    const incoming = arrivingEmails.map((email, i) => {
-      // A few minutes apart, the last one arriving now
-      const at = new Date(now.getTime() - (arrivingEmails.length - 1 - i) * 3 * 60 * 1000)
-      const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
-      const arrived = { ...email, id: `ARR_${batch}_${i}`, dayOffset: 0, time, receivedAt: receivedAt(0, time), attachments: [], unread: true, bucketId: null, removedTo: null }
+    const incoming = newEmails.map((email) => {
+      const arrived = { attachments: [], ...email, receivedAt: receivedAt(email.dayOffset, email.time), unread: true, bucketId: null, removedTo: null }
       // With auto-sort switched off in settings, everything lands in the Today list (brief 1j)
       const route = settings.autoSort ? routeEmail(arrived, buckets) : { type: 'none' }
       // More than one bucket fits: it waits in the Today list, remembering which buckets (1g)
@@ -175,11 +179,51 @@ export default function App() {
       return { ...arrived, bucketId: bucket.id, isNew: true }
     })
     changeEverywhere((list) => [...list, ...incoming])
-    // "8 new emails. 3 went to Priority, 1 to Bills."
-    const where = Object.entries(sorted).map(([name, n], i) => (i === 0 ? `${n} went to ${name}` : `${n} to ${name}`))
-    showToast(`${incoming.length} new emails.${where.length ? ` ${where.join(', ')}.` : ''}`)
     // One pop-up for all of them, not one per email (PRD F14)
     if (conflicts > 0) setConflictsOpen(true)
+    const where = Object.entries(sorted).map(([name, n], i) => (i === 0 ? `${n} went to ${name}` : `${n} to ${name}`))
+    return where.length ? ` ${where.join(', ')}.` : ''
+  }
+  const clock = (date) => `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+
+  // Add emails: the 8 arriving emails, a few minutes apart, the last one arriving now
+  function addArrivingEmails() {
+    arrivals.current += 1
+    const batch = arrivals.current
+    const now = Date.now()
+    const ending = deliver(
+      arrivingEmails.map((email, i) => ({
+        ...email,
+        id: `ARR_${batch}_${i}`,
+        dayOffset: 0,
+        time: clock(new Date(now - (arrivingEmails.length - 1 - i) * 3 * 60 * 1000)),
+      })),
+    )
+    // "8 new emails. 3 went to Priority, 1 to Bills."
+    showToast(`${arrivingEmails.length} new emails.${ending}`)
+  }
+
+  // Add pattern emails (brief items 2 and 6; Amanda, 2026-11-22): 35 from Chase, 4 today (the
+  // last one now) and 31 spread over the past weeks, so the auto-archive suggestion can be
+  // triggered on demand. They go through the rules like any new mail.
+  function addPatternEmails() {
+    arrivals.current += 1
+    const batch = arrivals.current
+    const now = Date.now()
+    const ending = deliver(
+      Array.from({ length: patternTotal }, (_, i) => {
+        const today = i < patternTodayCount
+        const older = i - patternTodayCount
+        return {
+          ...patternSender,
+          ...patternTemplates[i % patternTemplates.length],
+          id: `PAT_${batch}_${i}`,
+          dayOffset: today ? 0 : -(1 + Math.floor(older * 1.5)),
+          time: today ? clock(new Date(now - (patternTodayCount - 1 - i) * 7 * 60 * 1000)) : `${String(8 + (older % 10)).padStart(2, '0')}:${String((older * 17) % 60).padStart(2, '0')}`,
+        }
+      }),
+    )
+    showToast(`${patternTotal} emails from ${patternSender.sender} added: ${patternTodayCount} today, ${patternTotal - patternTodayCount} earlier.${ending}`)
   }
 
   // Emails still waiting for the person to choose a bucket (PRD F14; brief 1g), each with the
@@ -499,8 +543,8 @@ export default function App() {
     if (!step) return
     setLastAction({
       label: step.label,
-      before: patchEmail(emails, step.id, step.previous),
-      after: patchEmail(emails, step.id, step.change),
+      before: applyStep(emails, step, 'previous'),
+      after: applyStep(emails, step, 'change'),
       undone: !applied,
     })
   }
@@ -535,6 +579,90 @@ export default function App() {
     if (how !== 'pointer' || keyTipShown) return {}
     setKeyTipShown(true)
     return { tip: `You can also use the ${key} key` }
+  }
+
+  // Auto-archive suggestions (PRD F15; brief item 2; BUILD-LOG 2026-11-22). Simple counting, no ML:
+  // a sender qualifies when 4 or more of their emails have been archived, none of their emails
+  // are in a bucket, and some are still unsorted. Counted from the emails themselves, so an undo
+  // takes it back too. Shown only during Declutter, when Suggestions is on in settings, and not
+  // for senders hidden with "Don't suggest this for Chase" or put off with "Not now" this run.
+  function findArchiveSuggestion() {
+    if (!settings.suggestions || !declutter) return null
+    const bySender = new Map()
+    for (const email of emails) {
+      if (!email.senderEmail) continue
+      const entry = bySender.get(email.senderEmail) ?? { senderEmail: email.senderEmail, name: email.sender, archived: 0, inBucket: 0, unsorted: [] }
+      if (email.removedTo === 'archive') entry.archived += 1
+      else if (email.bucketId && !email.removedTo) entry.inBucket += 1
+      else if (isUnsorted(email)) entry.unsorted.push(email)
+      bySender.set(email.senderEmail, entry)
+    }
+    const skipped = [...settings.hiddenSuggestions.map((hidden) => hidden.senderEmail), ...(declutter.notNow ?? [])]
+    const found = [...bySender.values()]
+      .filter((entry) => entry.archived >= 4 && entry.inBucket === 0 && !skipped.includes(entry.senderEmail))
+      .sort((a, b) => b.archived - a.archived)
+    // After "Review & Archive", the offer to collect future emails takes the banner's place, but
+    // only while that archive is in place: undoing it brings the suggestion back, redoing it the offer
+    const offer = declutter.offer
+    const offerStands = offer && !skipped.includes(offer.senderEmail) && declutter.steps.some((step) => step.ids?.[0] === offer.firstId)
+    if (offerStands) return { type: 'collect', senderEmail: offer.senderEmail, name: offer.name }
+    const suggestion = found.find((entry) => entry.unsorted.length > 0)
+    if (suggestion) return { type: 'archive', ...suggestion, unsorted: suggestion.unsorted.sort((a, b) => b.receivedAt - a.receivedAt) }
+    return null
+  }
+
+  const suggestionActions = {
+    // The banner's X (in place of "Not now" and "No thanks"): not again during this Declutter run
+    notNow(senderEmail) {
+      setDeclutter({ ...declutter, notNow: [...(declutter.notNow ?? []), senderEmail], offer: null })
+    },
+    // "Don't suggest this for Chase": saved with the settings; listed there to bring it back
+    hide(senderEmail, name) {
+      if (!settings.hiddenSuggestions.some((hidden) => hidden.senderEmail === senderEmail)) {
+        setSettings({ ...settings, hiddenSuggestions: [...settings.hiddenSuggestions, { senderEmail, name }] })
+      }
+      setDeclutter({ ...declutter, offer: null })
+      showToast(`You won't see suggestions for ${name}. You can change this in Bucketbox settings.`)
+    },
+    // "Archive 31": one Declutter step for all of them, so Undo brings them all back (PRD F15)
+    archive(ids, senderEmail, name) {
+      if (ids.length === 0) return
+      const chosen = emails.filter((email) => ids.includes(email.id))
+      const step = {
+        ids,
+        label: `Archived ${ids.length} from ${name}`,
+        kind: 'archive-many',
+        change: { removedTo: 'archive' },
+        previousById: Object.fromEntries(chosen.map((email) => [email.id, { removedTo: email.removedTo }])),
+        advance: false,
+        position: declutter.position,
+      }
+      const after = applyStep(emails, step, 'change')
+      setEmails(after)
+      setDeclutter({
+        ...declutter,
+        steps: [...declutter.steps, step],
+        undoneSteps: [],
+        offer: { senderEmail, name, firstId: ids[0] },
+        // The card on screen may have been one of them
+        position: isUnsorted(after.find((email) => email.id === declutter.deck[declutter.position])) ? declutter.position : nextCard(after, declutter.deck, declutter.position),
+      })
+      showToast(step.label)
+    },
+    // "Create a Chase bucket": a new bucket named after the sender, with a rule for their domain
+    // (or their address, for personal ones), so future emails go there (PRD F15 links to F14)
+    createBucket(senderEmail, name) {
+      const { first } = chipsFromEmail({ sender: name, senderEmail, subject: '' })
+      const taken = buckets.map((b) => b.name.toLowerCase())
+      let bucketName = name
+      for (let n = 2; taken.includes(bucketName.toLowerCase()); n += 1) bucketName = `${name} ${n}`
+      const used = buckets.map((b) => b.color)
+      const color = (bucketColors.find((c) => !used.includes(c.hex)) ?? bucketColors[0]).hex
+      const id = `bucket-${Date.now()}`
+      setBuckets([...buckets, { id, name: bucketName, color, emoji: null, rules: [{ id: `rule-${Date.now()}`, match: 'any', paused: false, criteria: [first] }], ruleJoin: 'any' }])
+      setDeclutter({ ...declutter, offer: null, notNow: [...(declutter.notNow ?? []), senderEmail] })
+      showToast(`Made the ${bucketName} bucket. New emails from ${name} will go there.`, { action: { type: 'removeBucket', label: 'Undo', bucketId: id, name: bucketName } })
+    },
   }
 
   const declutterActions = {
@@ -616,7 +744,7 @@ export default function App() {
             lastActionHistory.undo()
             return
           }
-          setEmails(patchEmail(emails, step.id, step.previous))
+          setEmails(applyStep(emails, step, 'previous'))
           setDeclutter({
             ...declutter,
             steps: steps.slice(0, -1),
@@ -632,7 +760,7 @@ export default function App() {
             return
           }
           const step = undoneSteps.at(-1)
-          const after = patchEmail(emails, step.id, step.change)
+          const after = applyStep(emails, step, 'change')
           setEmails(after)
           setDeclutter({
             ...declutter,
@@ -674,6 +802,9 @@ export default function App() {
       },
       actions: declutterActions,
       emailView: declutterEmailView,
+      // Auto-archive suggestion or the offer that follows it (PRD F15), or null
+      suggestion: findArchiveSuggestion(),
+      suggestionActions,
     }
   }
 
@@ -688,7 +819,7 @@ export default function App() {
       buckets={buckets}
       history={prototypeOn ? history : null}
       onOpenSettings={() => setSettingsOpen(true)}
-      facilitator={{ addEmails: addArrivingEmails }}
+      facilitator={{ addEmails: addArrivingEmails, addPatternEmails }}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
       onTogglePrototype={() => {
@@ -713,7 +844,16 @@ export default function App() {
           actions={actions}
           bucketActions={bucketActions}
           toast={toast}
-          onToastAction={(action) => (action.type === 'pause' ? pauseRules(action) : archiveInstead(action.ids))}
+          onToastAction={(action) => {
+            if (action.type === 'pause') pauseRules(action)
+            else if (action.type === 'removeBucket') {
+              // Undo for "Create a Chase bucket": the bucket goes, if nothing has gone into it yet
+              if (!emails.some((email) => email.bucketId === action.bucketId && !email.removedTo)) {
+                setBuckets(buckets.filter((b) => b.id !== action.bucketId))
+                showToast(`Removed the ${action.name} bucket`)
+              }
+            } else archiveInstead(action.ids)
+          }}
           zoneMode={zoneMode}
           emailView={emailView}
           onSendReply={sendReply}

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { prefersReducedMotion } from './DragMotion.jsx'
 import EmailPane, { Avatar, threadMessages } from './EmailPane.jsx'
 import Icon from './Icon.jsx'
+import { ArchiveReviewPanel, SuggestionBanner } from './ArchiveSuggestion.jsx'
 import IconButton from './IconButton.jsx'
 import InertButton from './InertButton.jsx'
 import { bucketStyle } from '../utils/bucketColors.js'
@@ -228,8 +229,11 @@ function EndMessage({ declutter, headingRef }) {
 // Up and Down move through them, Left archives, Right marks read. Escape or the X leaves at any
 // time; what's done stays done and the rest stays in the Today list.
 export default function Declutter({ declutter, buckets, onSendReply }) {
-  const { dayName, total, position, email, openEmail, hasPrevious, hasNext, previousDay, actions, emailView } = declutter
+  const { dayName, total, position, email, openEmail, hasPrevious, hasNext, previousDay, actions, emailView, suggestion, suggestionActions } = declutter
   const atEnd = !email
+  // The auto-archive suggestion's review panel (PRD F15), from the end screen
+  const [reviewing, setReviewing] = useState(false)
+  const reviewOpen = reviewing && atEnd && suggestion?.type === 'archive'
   const screenRef = useRef(null)
   const cardRef = useRef(null)
   const endHeadingRef = useRef(null)
@@ -287,12 +291,13 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
 
       if (event.key === 'Escape') {
         // Escape closes an open menu or a reply first, then the open email, then Declutter
-        if (document.querySelector('[role="menu"]') || event.target.closest?.('.reply-box')) return
+        if (document.querySelector('[role="menu"]') || reviewOpen || event.target.closest?.('.reply-box')) return
         if (openEmail) actions.close()
         else actions.exit()
         return
       }
-      if (openEmail || document.querySelector('[role="menu"]')) return // the flow is paused
+      // The flow is paused while an email, a menu or the review panel is open
+      if (openEmail || reviewOpen || document.querySelector('[role="menu"]')) return
 
       if (event.key === 'ArrowUp') go('down', actions.previous)()
       else if (event.key === 'ArrowDown' && !atEnd) go('up', actions.next)()
@@ -372,6 +377,9 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
             <div className={`declutter-controls ${atEnd ? 'is-end' : ''}`}>
               {/* Buckets at the top, level with the start of the email; the arrow buttons at the
                   bottom, level with the end of the card (BUILD-LOG, 2026-11-13) */}
+              {/* The auto-archive suggestion waits for the end screen, at the top of the right column
+                  beside the end message, so it doesn't distract while sorting (Amanda, 2026-11-22) */}
+              {suggestion && atEnd && <SuggestionBanner suggestion={suggestion} actions={suggestionActions} onReview={() => setReviewing(true)} />}
               {!atEnd && <BucketBar email={email} buckets={buckets} onMove={go('away', actions.move)} />}
               <div className="declutter-keys">
                 <ArrowButton
@@ -403,6 +411,16 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
               </div>
             </div>
           </div>
+      {reviewOpen && (
+        <ArchiveReviewPanel
+          suggestion={suggestion}
+          onClose={() => setReviewing(false)}
+          onArchive={(ids) => {
+            setReviewing(false)
+            suggestionActions.archive(ids, suggestion.senderEmail, suggestion.name)
+          }}
+        />
+      )}
       {/* An opened email pauses the flow. It opens in place: the header stays, and the email takes
           the room below it, with the card and controls put away until it's closed (BUILD-LOG, 2026-11-13) */}
       {openEmail && (
