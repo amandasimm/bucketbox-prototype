@@ -11,10 +11,16 @@ The running memory of the build. Each Claude Code session starts fresh, so read 
 ---
 
 ## Current status
-_Last updated: 2026-11-16_
+_Last updated: 2026-11-22_
 
-- **Built:** Stages 0–7 and 9–16, the full approved plan plus Declutter, the Stage 15 polish, and the settings menu and bucket reordering (Stage 16) (Stage 8, emoji tags, skipped for now). **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
-- **Next:** update the PRD from the SYNC TO PRD items (the 2026-11-13 and 2026-11-16 decisions are not yet folded into the summary below); placeholder wording decisions (see Open questions).
+- **Built:** v1 (Stages 0–7 and 9–16; Stage 8, emoji tags, skipped for now) and **v2 item 1, smart buckets** ("a bucket with auto-sort rules", PRD F14), as Stages 17a–17j: rule matching, the rules panel and rule cards, the "Already in your inbox" preview, the backlog sort, the tile footer and "N new" pill, rule-sorted arrivals with the facilitator's Add emails, conflicts, the Pause rule prompt, empty bucket messages, and the auto-sort settings with settings saved in the browser. All pushed. **Live:** https://bucketbox-prototype-3s9t.vercel.app (updates automatically on every push to `main`). **Code:** https://github.com/amandasimm/bucketbox-prototype
+- **v2 source:** `brief.md` (build order; kept out of Git) and `updated-prd-neuroinclusive-inbox Prototype.md` (the PRD; there is no `PRD.md`).
+- **Next:** v2 item 2, auto-archive suggestions (PRD F15). Before building, ask Amanda: whether suggestions appear in the Today list, and how the banner looks during a Declutter run. Then the Suggestions switch in settings stops being "Coming soon".
+- **Still to do outside the build:** fold the SYNC TO PRD items into the PRD (the 2026-11-13 and 2026-11-16 decisions are not in the summary below; smart buckets are); placeholder wording (see Open questions); CLAUDE.md §7's modal list doesn't name the conflicts pop-up yet.
+
+**v2 build order (brief.md, 2026-11-21)**
+1. Smart buckets (F14) ✅ 17a–17j · 2. Auto-archive suggestions (F15) · 3. Suggested rules (F16) · 4. Collapsed buckets (F17)
+5. Today list range and pages (F6, F10) · 6. Scenarios and facilitator menu (Add emails ✅ early, in 17f) · 7. Onboarding (F12) · 8. Wording pass
 
 **Approved build plan (2026-10-28)**
 0. Setup and data ✅ · 1. Gmail frame ✅ · 2. Home page layout ✅ · 3. First deploy ✅ (GitHub + Vercel + Qualtrics)
@@ -25,8 +31,30 @@ Each stage: preview → Amanda approves → commit → log update.
 
 ---
 
-## SYNC TO PRD summary (current as of 2026-11-08)
-<!-- The decisions below change or add to the PRD. Full wording and reasons are in Decisions; superseded ones are left out here. -->
+## SYNC TO PRD summary (v1 current as of 2026-11-08; smart buckets as of 2026-11-22)
+<!-- The decisions below change or add to the PRD. Full wording and reasons are in Decisions; superseded ones are left out here. The 2026-11-13 and 2026-11-16 decisions (Stages 15–16) are not summarized yet: see Decisions. -->
+
+**Smart buckets, "a bucket with auto-sort rules" (F14, §12; Stages 17a–17j, 2026-11-21 and 22)**
+- *Matching:* sender = each typed word starts a word of the name or address (an address with @ must match exactly); domain = that domain or a subdomain; subject = whole words, any case, simple plurals, phrases in order; all five Gmail categories. Paused rules and rules with no conditions never match. Only unsorted emails are sorted by rules.
+- *Where rules live:* not in the inline bucket form but in a **rules panel** that slides in from the right over the buckets (or an opened bucket's email pane), in the bucket's colors. Opened from the 3-dot menu's **Rules**, the tile footer, an **Auto-sort rules** row in the edit and new-bucket forms (the new-bucket one creates the bucket first), or **Make a rule from this email** (automation icon beside Move to; asks which bucket). Save and Cancel; it returns to wherever it was opened from (the form reopens). Explanation line: "Auto-sort rules allow you to decide what emails automatically land in each bucket, no manual sorting required." Saved Gmail filters are not offered.
+- *Starting a rule:* Type a phrase / Manually / Select an email / Use a Gmail category. Phrases: "from …" (sender or domain), "subject …" or "about …", "in Promotions" or a category alone; "," and "and" join as all, "or" as any. Hint: "Try “from chase.com”, “subject receipt”, “about ATM” or “in Promotions”." A part that isn't understood doesn't create anything: "“pizza” wasn't understood. Try typing it another way, or add it manually." Title "Which emails should land in [bucket]?", button **Create rule** ("Add to rule" inside a card). A rule from an email starts with its domain (or the exact address for personal addresses) and offers its sender, category and subject words as extra chips.
+- *Rule cards:* chips "Sender: …", "Domain: …", "Subject has: …", "Category: …" in Gmail's gray-blue; click to change (styled dropdowns), x to remove. **+ Add condition** opens a compact menu: Type a phrase, Select an email, Gmail category ›, Manually › (second lists with a Back row). Each card has Match **Any / All** (only with 2+ chips; hover text explains each) and a ⋮ with Pause / Resume and Delete (no hover text). A paused card: "Paused" badge, dashed outline, lighter chip fills, full-contrast text.
+- *Several rules:* a radio choice below the rules, "When there's more than one rule": **Any rule:** All emails that match at least one rule will be sorted. / **Every rule:** Only emails that match all rules will be sorted. (Replaces the or/and connector between cards.) Both all-or-any levels kept for now; Amanda is watching the complexity.
+- *Summary:* "Summary" box, e.g. "Emails land in Priority when they are from uber.com **and** have “receipt” in the subject." With several rules, a bulleted list with a bold "or"/"and" on its own line between bullets.
+- *Preview:* "**Already in your inbox**", "14 unsorted emails match Priority’s rules. Select an email to move it to Priority.", Select all, then unsorted emails from any day (no time window), 10 per page with "1–10 of 14 ‹ ›" under the list, all **unchecked** to start, "3 of 14 selected". Replaces the PRD's "up to 8, each can be unchecked".
+- *Backlog sort:* with emails selected, Save reads "Save and move 3" (or "Move 3"); an inline note asks first: "Move 3 emails to Priority? This can't be undone, but you can still move them one at a time later." Toast "Rules saved. Moved 3 to Priority". Not covered by undo, and undoing an earlier action never pulls the moved emails back out.
+- *Tiles:* **no total count** on tiles (an opened bucket keeps its count). "**3 new**" pill (the bucket color at 45%, dark text). New rows tinted 5%, tint only; opening an email clears its mark. Footer "**2 rules on**" (opens the panel) or "**Rules paused**" with Resume; none without rules, or while auto-sort is off.
+- *Arrivals:* an email that fits one bucket's rules skips the Today list and lands there unread and new; fits none, the Today list; fits several, it waits in the Today list (conflict). Toast "8 new emails. 3 went to Priority." Mail arrives through the facilitator menu's **Add emails** (Shift-click or Shift+Enter on the account icon), pulled forward from §4/brief item 6, with 8 placeholder emails.
+- *Conflicts:* one pop-up for all of them (added to the allowed pop-ups): "Some emails fit more than one bucket" / "Choose where each one goes. Anything you skip stays in your Today list.", bucket pills per email, "Sort 2" sorts only the chosen (undoable, marked new). A calm full-width banner across the top of the page: "3 emails could not be automatically sorted because they match more than one bucket." with **Review**. No second banner above an open email; instead a neutral tag "**Auto-sort: 2 matches**" before the subject on the row and after it on the open email (screen readers: "Not auto-sorted: matches 2 buckets.").
+- *Pause prompt:* any move (drag, Move, Move to) of an email that fits its bucket's active rules into another bucket: "Moved to Deals. Pause sending Promotions emails to Priority?" with **Pause rule** (pauses every rule that caught it; "Pause 2 rules"). Confirmation "Paused the Promotions rule in Priority". Hand-sorted emails just move.
+- *Empty buckets:* no rules (or all paused, or auto-sort off): "This bucket is empty. Drop emails here to keep them together." Rules on: "**No new mail has matched your 1 rule yet.**" and, smaller and lighter, "Already in your inbox: 5 unsorted emails match" (the count is the link to the preview).
+- *Settings:* **Auto-sort rules** switch (on by default; off: new mail goes to the Today list, no conflicts or pause prompts, no footers, a note in the panel); **Suggestions** shown disabled, "Coming soon"; **"Show bucket counts" removed** (returns for All Emails, stage 5). **Settings are saved in the browser** (emails, buckets and rules still reset); Reset settings comes with stage 6.
+
+**Made during the smart-buckets build, outside F14**
+- Today list: 40% of the page, between 420px and 560px, the same with or without an open email (§5). Bucket columns: one column below about a 1200px window, unchanged.
+- The whole email row drags (Today list, tiles, opened bucket); a plain click still opens it; row text can't be highlighted (F4).
+- Toasts with a button ("Archive instead", "Pause rule") stay 15 seconds, then fade; the button stays on one line (F8).
+- Bucket forms: the emoji and rules icon centered on the first column of color swatches, with the original gaps.
 
 **Product and scope**
 - Name: **Bucketbox**. Gmail's left nav switch turns it on and off; it sits just below the Gmail items and shows a bucket logo (outline; filled when on).
