@@ -451,3 +451,80 @@ body.no-motion .rules-panel { animation: none; }
   font-weight: 700;
 }
 .rules-summary-note { margin-top: 4px !important; color: var(--text-muted); }
+
+/* Emails that fit the rules (brief 1c): a heading like the "more than one rule" legend, a
+   helper line, then pages of 5 */
+.rules-preview { margin-top: 20px; }
+.rules-preview-title {
+  margin: 0 0 4px;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+}
+.rules-preview-pager {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.rules-preview-pager > span { margin-right: 4px; }
+.rules-preview-pager .icon-button { width: 32px; height: 32px; }
+.rules-preview-hint {
+  margin: 0 0 8px;
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text-muted);
+}
+/* Select all: lined up with the row checkboxes below it (13px = the list's 1px border + 12px) */
+.rules-preview-select-all {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  padding: 6px 13px;
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+  cursor: pointer;
+}
+.rules-preview-select-all input { width: 18px; height: 18px; margin: 0; accent-color: var(--focus-ring); }
+.rules-preview-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--divider);
+  border-radius: var(--md-sys-shape-corner-medium);
+  overflow: hidden;
+}
+.rules-preview-list li + li { border-top: 1px solid var(--divider); }
+.rules-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.rules-preview-row:hover { background: var(--md-sys-state-hover); }
+.rules-preview-row input { flex-shrink: 0; width: 18px; height: 18px; margin: 0; accent-color: var(--focus-ring); }
+.rules-preview-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rules-preview-sender {
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+  color: var(--text);
+}
+.rules-preview-subject {
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.rules-preview-sender,
+.rules-preview-subject { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rules-preview-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin-top: 4px;
+}
+.rules-preview-more {
+  flex: 1;
+  margin: 0;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}

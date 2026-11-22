@@ -2,7 +2,7 @@ import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
 import { bucketStyle } from '../utils/bucketColors.js'
-import { gmailCategories } from '../utils/rules.js'
+import { backlogFor, gmailCategories } from '../utils/rules.js'
 import { chipText, chipsFromEmail, criterionTypes, parsePhrase, rulesSummary } from '../utils/ruleText.js'
 
 // A bucket's auto-sort rules (PRD F14; brief item 1b). Amanda's choice (2026-11-21): its own
@@ -564,7 +564,86 @@ function StartRule({ target = 'rule', initialWay = null, ruleNumber, pickableEma
   )
 }
 
-export default function RulesPanel({ bucket, startEmail, pickableEmails, onSave, onClose }) {
+// The emails these rules would collect from the backlog (PRD F14; brief 1c; Amanda 2026-11-21):
+// unsorted emails from any day (no time window), newest first, one per row, 10 to a page with
+// Gmail-style "1–5 of 14" and arrows. Each starts unchecked, with Select all above the list
+// (Amanda, 2026-11-21); only selected emails move, and the rules don't change. Updates live as the rules are edited. Nothing moves until
+// the backlog sort (1d).
+const PAGE_SIZE = 10 // Amanda, 2026-11-21 (was 5)
+
+// "Priority's", "Bills'"
+const possessive = (name) => (name.endsWith('s') ? `${name}’` : `${name}’s`)
+
+function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketName }) {
+  const ids = useId()
+  const allSelected = matches.length > 0 && selected.length === matches.length
+  // Some but not all: the Select all box shows a dash, like Gmail's
+  const selectAllRef = useRef(null)
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = selected.length > 0 && !allSelected
+  })
+  const [page, setPage] = useState(0)
+  const count = matches.length
+  const pages = Math.max(1, Math.ceil(count / PAGE_SIZE))
+  const current = Math.min(page, pages - 1) // the rules changed and there are fewer pages now
+  const first = current * PAGE_SIZE
+  const shown = matches.slice(first, first + PAGE_SIZE)
+  return (
+    <section className="rules-preview" aria-labelledby={`${ids}-title`} aria-describedby={`${ids}-hint`}>
+      <h3 id={`${ids}-title`} className="rules-preview-title">Already in your inbox</h3>
+      {count === 0 ? (
+        <p id={`${ids}-hint`} className="rules-preview-hint">No unsorted emails match {possessive(bucketName)} rules yet.</p>
+      ) : (
+        <>
+          <p id={`${ids}-hint`} className="rules-preview-hint">
+            {count} unsorted {count === 1 ? 'email matches' : 'emails match'} {possessive(bucketName)} rules. Select an email to move it to {bucketName}.
+          </p>
+          {/* Selects every matching email, on all pages */}
+          <label className="rules-preview-select-all">
+            <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={() => onSelectAll(!allSelected)} />
+            Select all
+          </label>
+          <ul className="rules-preview-list">
+            {shown.map((email) => (
+              <li key={email.id}>
+                <label className="rules-preview-row">
+                  <input type="checkbox" checked={selected.includes(email.id)} onChange={() => onToggle(email.id)} />
+                  <span className="rules-preview-text">
+                    <span className="rules-preview-sender">{email.sender}</span>
+                    <span className="rules-preview-subject">{email.subject}</span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          {/* Under the list, close to the emails: the unchecked note on the left, the pager on the right */}
+          {(selected.length > 0 || count > PAGE_SIZE) && (
+            <div className="rules-preview-footer">
+              <p className="rules-preview-more" aria-live="polite">
+                {selected.length > 0 && `${selected.length} of ${count} selected`}
+              </p>
+              {count > PAGE_SIZE && (
+                <div className="rules-preview-pager">
+                  <span aria-live="polite">
+                    {first + 1}–{first + shown.length} of {count}
+                  </span>
+                  <IconButton label="Previous emails" tooltip="Newer" disabled={current === 0} onClick={() => setPage(current - 1)}>
+                    <Icon name="chevron_left" size={20} />
+                  </IconButton>
+                  <IconButton label="Next emails" tooltip="Older" tooltipAlign="right" disabled={current === pages - 1} onClick={() => setPage(current + 1)}>
+                    <Icon name="chevron_right" size={20} />
+                  </IconButton>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, onSave, onClose }) {
   const [draft, setDraft] = useState(() => {
     const rules = (bucket.rules ?? []).map((rule) => ({ ...rule }))
     return { rules: startEmail ? [...rules, ruleFromEmail(startEmail)] : rules, ruleJoin: bucket.ruleJoin ?? 'any' }
@@ -582,6 +661,11 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, onSave,
   const cleaned = { rules: draft.rules.filter((rule) => rule.criteria.length > 0).map(cleanRule), ruleJoin: draft.ruleJoin }
   const changed = JSON.stringify(cleaned) !== saved
   const summary = rulesSummary(draft.rules, draft.ruleJoin, bucket.name)
+  // The preview follows the draft, not the saved rules, so it changes as rules are edited
+  const matches = backlogFor({ rules: draft.rules, ruleJoin: draft.ruleJoin }, emails)
+  // Emails selected to move, kept for the backlog sort (1d); only ones still matching count
+  const [selectedIds, setSelectedIds] = useState([])
+  const selected = selectedIds.filter((id) => matches.some((email) => email.id === id))
 
   // Open: the heading takes focus. Close: focus goes back to whatever opened the panel.
   useEffect(() => {
@@ -717,6 +801,14 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, onSave,
           )}
           {summary.note && <p className="rules-summary-note">{summary.note}</p>}
         </section>
+
+        <RulesPreview
+          bucketName={bucket.name}
+          matches={matches}
+          selected={selected}
+          onToggle={(id) => setSelectedIds(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])}
+          onSelectAll={(all) => setSelectedIds(all ? matches.map((email) => email.id) : [])}
+        />
       </div>
 
       <footer className="rules-panel-footer">
