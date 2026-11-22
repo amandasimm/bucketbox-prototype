@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 
 const VISIBLE_FOR_MS = 5000
+// A toast with a button ("Archive instead", "Pause rule") stays longer, so there's time to read
+// it and decide (Amanda, 2026-11-22; it used to stay until the next toast)
+const WITH_BUTTON_MS = 15000
 
-// A short confirmation after each action (PRD F8). It fades after a few seconds,
-// pauses while the pointer is over it, and is read out by screen readers.
-// A toast with a button (the delete zone's "Archive instead") stays until the next toast,
-// so nobody has to rush to read it (BUILD-LOG, 2026-10-30).
+// A short confirmation after each action (PRD F8). It fades after a few seconds (15 with a
+// button), pauses while the pointer is over it or keyboard focus is in it, and is read out by
+// screen readers.
 export default function Toast({ toast, onAction }) {
   const [visible, setVisible] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -15,8 +17,8 @@ export default function Toast({ toast, onAction }) {
   }, [toast])
 
   useEffect(() => {
-    if (!visible || paused || toast?.sticky) return
-    const timer = setTimeout(() => setVisible(false), VISIBLE_FOR_MS)
+    if (!visible || paused) return
+    const timer = setTimeout(() => setVisible(false), toast?.action ? WITH_BUTTON_MS : VISIBLE_FOR_MS)
     return () => clearTimeout(timer)
   }, [visible, paused, toast])
 
@@ -28,6 +30,8 @@ export default function Toast({ toast, onAction }) {
           className="toast"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
+          onFocus={() => setPaused(true)}
+          onBlur={() => setPaused(false)}
         >
           <span className="toast-text">
             {toast.message}

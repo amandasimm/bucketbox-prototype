@@ -23,6 +23,8 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
   const { ghostIds, leavingIds, arrivedIds } = useDragMotion()
   const isLeaving = leavingIds.includes(email.id)
   const rowRef = useRef(null)
+  // Where the pointer went down on the row, so letting go after a drag isn't taken as a click
+  const pressedAt = useRef(null)
   // A leaving row closes up: its height is fixed at what it is now, then eased to nothing
   useLayoutEffect(() => {
     const row = rowRef.current
@@ -62,11 +64,24 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
     >
       {/* Content comes first, so keyboard and screen reader users hear which email it is before
           its controls. The layout still shows the handle and checkbox on the left. */}
+      {/* The whole row picks the email up with the mouse (Amanda, 2026-11-22): press and move a
+          few pixels to drag; a plain click still opens it. The keyboard keeps using the handle,
+          so Enter on the row still opens the email. */}
       <button
         type="button"
         className="email-row-body"
         aria-current={isOpen ? 'true' : undefined}
-        onClick={onOpen}
+        onPointerDown={(event) => {
+          pressedAt.current = { x: event.clientX, y: event.clientY }
+          listeners?.onPointerDown?.(event)
+        }}
+        onClick={(event) => {
+          // A drag that ended back on its own row isn't a click
+          const from = pressedAt.current
+          pressedAt.current = null
+          if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > 4) return
+          onOpen?.(event)
+        }}
       >
         <span className="email-row-top">
           <span className="email-sender">

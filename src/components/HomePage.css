@@ -224,6 +224,7 @@
 /* The row's text is a button: clicking it opens the email (PRD F1, F5) */
 .email-row-body {
   grid-area: 1 / -2; /* the last column, in rows with or without a checkbox */
+  user-select: none; /* the whole row drags (2026-11-22), so dragging doesn't highlight text; like Gmail's list */
   display: block;
   width: 100%;
   min-width: 0; /* lets long text shorten with "…" */
@@ -1241,6 +1242,8 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .toast-tip { font: var(--md-sys-typescale-body-small) var(--font); } /* Declutter's one-time arrow-key tip */
 /* Low-emphasis text button on the dark toast (Gmail's light blue, 7.6:1 on the toast) */
 .toast-action {
+  flex-shrink: 0;
+  white-space: nowrap; /* "Pause rule" stays on one line; the message wraps instead (Amanda, 2026-11-22) */
   height: 32px;
   margin: -8px -8px -8px 0;
   padding: 0 8px;

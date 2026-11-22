@@ -11,7 +11,7 @@ import { startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
 import { arrivingEmails } from './data/arrivingEmails.js'
-import { routeEmail } from './utils/rules.js'
+import { activeRules, routeEmail, ruleMatches } from './utils/rules.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
 // Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
@@ -111,7 +111,7 @@ export default function App() {
     setSelectedIds([])
   }
 
-  // extras: { action: { label, ids }, sticky } for a toast with a button that stays until the next toast
+  // extras: { action: { label, ids } } for a toast with a button (it stays 15 seconds; Toast.jsx)
   function showToast(message, extras = {}) {
     setToast({ message, key: Date.now(), ...extras })
   }
@@ -219,7 +219,7 @@ export default function App() {
 
   // An action on the open email (PRD F5, Flow 6). Afterwards the pane moves on to the next
   // email in the list (or the one before, if this was the last), and that one is read.
-  function paneAction(email, listIds, label, change) {
+  function paneAction(email, listIds, label, change, toastExtras = null) {
     const index = listIds.indexOf(email.id)
     const nextId = listIds[index + 1] ?? listIds[index - 1] ?? null
     const after = emails.map((e) => {
@@ -231,7 +231,8 @@ export default function App() {
     setEmails(after)
     setSelectedIds([])
     setOpenEmailId(nextId)
-    showToast(label)
+    if (toastExtras) showToast(toastExtras.message, toastExtras)
+    else showToast(label)
   }
 
   // Opening and acting on single emails (PRD F5)
@@ -264,7 +265,7 @@ export default function App() {
     archive: (email, listIds) => paneAction(email, listIds, 'Archived 1', { removedTo: 'archive' }),
     delete: (email, listIds) => paneAction(email, listIds, 'Deleted 1', { removedTo: 'trash' }),
     junk: (email, listIds) => paneAction(email, listIds, 'Marked as junk', { removedTo: 'junk' }),
-    move: (email, listIds, bucket) => paneAction(email, listIds, `Moved 1 to ${bucket.name}`, { bucketId: bucket.id }),
+    move: (email, listIds, bucket) => paneAction(email, listIds, `Moved 1 to ${bucket.name}`, { bucketId: bucket.id }, pausePrompt([email.id], bucket)),
     // In the Today drawer this closes the email, like Gmail going back to the inbox.
     // In a bucket the email stays in the pane, unread until it's clicked into again.
     markUnread(email) {
@@ -316,11 +317,48 @@ export default function App() {
     applyTo(selectedIds, label, change)
   }
 
+  // "Pause sending uber.com emails to Priority?" (PRD F14; brief 1h; BUILD-LOG 2026-11-22).
+  // Moving emails out of a bucket into another bucket asks, in the move's toast, whether to pause
+  // the source bucket's rules that caught them. Only when a moved email fits one of that bucket's
+  // active rules (an email sorted by hand doesn't ask), and for every kind of move to a bucket
+  // (drag, Move, Move to). Returns the toast for applyTo / paneAction, or null for a plain one.
+  function pausePrompt(ids, target) {
+    const moved = emails.filter((email) => ids.includes(email.id) && email.bucketId && email.bucketId !== target.id && !email.removedTo)
+    for (const source of buckets) {
+      const rules = activeRules(source).filter((rule) => moved.some((email) => email.bucketId === source.id && ruleMatches(rule, email)))
+      if (rules.length === 0) continue
+      // What the rule is about, from its first condition: "uber.com", "“receipt”", "Promotions"
+      const about = rules.map(({ criteria: [first] }) => (first.type === 'subject' ? `“${first.value}”` : first.value))
+      const what = about.length === 1 ? about[0] : `${about.slice(0, -1).join(', ')} and ${about.at(-1)}`
+      const count = ids.length
+      return {
+        message: `Moved ${count === 1 ? '' : `${count} `}to ${target.name}. Pause sending ${what} emails to ${source.name}?`,
+        action: {
+          type: 'pause',
+          label: rules.length === 1 ? 'Pause rule' : `Pause ${rules.length} rules`,
+          bucketId: source.id,
+          ruleIds: rules.map((rule) => rule.id),
+          what,
+        },
+      }
+    }
+    return null
+  }
+
+  // "Pause rule" on that toast: those rules pause (not deleted; Resume is on the tile and in the
+  // rules panel). The email that was moved stays where it was moved.
+  function pauseRules({ bucketId, ruleIds, what }) {
+    const bucket = buckets.find((b) => b.id === bucketId)
+    if (!bucket) return
+    setBuckets(buckets.map((b) => (b.id === bucketId ? { ...b, rules: (b.rules ?? []).map((rule) => (ruleIds.includes(rule.id) ? { ...rule, paused: true } : rule)) } : b)))
+    showToast(ruleIds.length === 1 ? `Paused the ${what} rule in ${bucket.name}` : `Paused ${ruleIds.length} rules in ${bucket.name}`)
+  }
+
   // A drop from drag and drop (PRD F4): onto a bucket, or onto the delete zone
   function drop(ids, target) {
     const count = ids.length
     if (target.type === 'bucket') {
-      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id }, null, 0)
+      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id }, pausePrompt(ids, target.bucket), 0)
     } else if (zoneMode === 'archive') {
       applyTo(ids, `Archived ${count}`, { removedTo: 'archive' }, null, 0)
     } else if (!zoneToastSeen) {
@@ -328,7 +366,6 @@ export default function App() {
       applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' }, {
         message: `${count} ${count === 1 ? 'email' : 'emails'} deleted.`,
         action: { label: 'Archive instead', ids },
-        sticky: true,
       }, 0)
     } else {
       applyTo(ids, `Deleted ${count}`, { removedTo: 'trash' }, null, 0)
@@ -350,7 +387,7 @@ export default function App() {
   const actions = {
     archive: () => applyToSelected(`Archived ${selectedIds.length}`, { removedTo: 'archive' }),
     delete: () => applyToSelected(`Deleted ${selectedIds.length}`, { removedTo: 'trash' }),
-    move: (bucket) => applyToSelected(`Moved ${selectedIds.length} to ${bucket.name}`, { bucketId: bucket.id }),
+    move: (bucket) => applyTo(selectedIds, `Moved ${selectedIds.length} to ${bucket.name}`, { bucketId: bucket.id }, pausePrompt(selectedIds, bucket)),
     drop,
   }
 
@@ -669,7 +706,7 @@ export default function App() {
           actions={actions}
           bucketActions={bucketActions}
           toast={toast}
-          onToastAction={(action) => archiveInstead(action.ids)}
+          onToastAction={(action) => (action.type === 'pause' ? pauseRules(action) : archiveInstead(action.ids))}
           zoneMode={zoneMode}
           emailView={emailView}
           onSendReply={sendReply}
