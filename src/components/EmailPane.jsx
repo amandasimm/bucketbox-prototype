@@ -4,6 +4,7 @@ import IconButton from './IconButton.jsx'
 import InertButton from './InertButton.jsx'
 import ReplyArea from './ReplyArea.jsx'
 import { formatMessageTime, receivedAt } from '../utils/dates.js'
+import { MatchesTag, isNotSorted } from './ConflictBanner.jsx'
 
 // A button that opens a list of buckets: Gmail's "Move to" for the open email (PRD F4, F5), and
 // "Make a rule from this email", which asks which bucket the rule is for (brief 1b)
@@ -211,6 +212,8 @@ export default function EmailPane({ email, listIds, buckets, emailView, onSendRe
       <div className="pane-content" onPointerDown={onContentPointerDown}>
         <h2 id={`pane-subject-${email.id}`} className="pane-subject" tabIndex={-1} ref={titleRef}>
           {email.subject}
+          {/* After the subject, like Gmail's label chips (brief 1g) */}
+          {isNotSorted(email) && <MatchesTag email={email} />}
         </h2>
         <Thread key={`thread-${email.id}`} email={email} />
         <hr className="pane-divider" />

@@ -15,6 +15,7 @@ import BucketView from './BucketView.jsx'
 import Declutter from './Declutter.jsx'
 import { DragMotionProvider, prefersReducedMotion } from './DragMotion.jsx'
 import EmailDrawer from './EmailDrawer.jsx'
+import ConflictBanner from './ConflictBanner.jsx'
 import RulesPanel from './RulesPanel.jsx'
 import './RulesPanel.css'
 import Envelope from './Envelope.jsx'
@@ -114,6 +115,7 @@ export default function HomePage({
   onSendReply,
   onDeclutter,
   declutter,
+  conflicts,
 }) {
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
@@ -324,6 +326,8 @@ export default function HomePage({
         {/* The home page stays underneath an opened bucket, just visible around its edges,
             but can't be clicked or tabbed into until the bucket closes */}
         <div className="home-layer" inert={openBucket || declutter || rulesBucket ? true : undefined}>
+          {/* Across both the Today list and the buckets (Amanda, 2026-11-21) */}
+          <ConflictBanner count={conflicts.ids.length} onOpen={conflicts.open} />
           <TodayList
             emails={emails}
             buckets={buckets}

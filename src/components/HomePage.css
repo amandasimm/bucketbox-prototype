@@ -1,12 +1,13 @@
 /* Layout: Today list | buckets */
-/* Column widths (BUILD-LOG, 2026-11-16):
-   - Starting shares: 60/40 (Today/buckets) with one column of buckets; 40/30/30 with two.
+/* Column widths (BUILD-LOG, 2026-11-16 and 2026-11-21):
+   - Today takes 40% of the page, between 420px and 560px, and keeps that width when an email
+     opens or closes (Amanda, 2026-11-21). The buckets take the rest. On a narrow window Today
+     gives up some width so the buckets keep their minimum.
    - Today is never narrower than 340px, so Move / Archive / Delete fit on one line.
    - On narrower screens (under about 1250px wide) the buckets drop to one column (see the
      container rule below).
    - The dividers between them can be dragged (Resizer.jsx).
    All gaps are 16px: Compose to Today, Today to the buckets, and between tiles. */
-.home-page[data-bucket-cols='2'] { --today-share: 0.4; }
 .home-page {
   /* A bucket is a little under half the Today card's height, so two rows of buckets fit in view
      and the top 48px of a third row (its header) shows below them, hinting there's more to
@@ -18,14 +19,19 @@
   --bucket-area-min: calc(var(--bucket-cols) * var(--bucket-min) + (var(--bucket-cols) - 1) * 16px + 32px);
   position: relative;
   display: grid;
-  /* Starting shares (BUILD-LOG, 2026-11-16): with one column of buckets, Today takes 60% and the
-     buckets 40%; with two columns, Today takes 40% and each column 30%. Today
-     still never goes under its minimum. The dividers change it. */
-  --today-share: 0.6;
-  grid-template-columns:
-    max(var(--today-min), calc((100% - 16px * (var(--bucket-cols) + 1)) * var(--today-share)))
-    minmax(0, 1fr);
-  grid-template-areas: 'today buckets';
+  /* Today: 40% of the page, between 420px and 560px (Amanda, 2026-11-21), the same with or
+     without an open email. Wide enough that one column of buckets isn't stretched, narrow
+     enough that the reading drawer stays comfortable (email lines of about 440–520px at
+     1280–1440 wide). Never under its minimum, and never so wide the buckets lose theirs.
+     The dividers change it. */
+  --today-default: max(var(--today-min), min(clamp(420px, 40%, 560px), calc(100% - var(--bucket-area-min))));
+  grid-template-columns: var(--today-default) minmax(0, 1fr);
+  /* A full-width row on top for the conflicts banner (brief 1g; Amanda 2026-11-21); it takes
+     no room when there's no banner */
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'banner banner'
+    'today buckets';
   height: 100%;
 }
 
@@ -397,13 +403,14 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   .bucket-grid.is-resized { grid-template-columns: repeat(1, minmax(var(--bucket-min), 1fr)); }
 }
 
-/* While an email is open, Today goes back to its usual width so the drawer has room */
-.home-page.drawer-open { grid-template-columns: 420px 1fr; }
+/* While an email is open, Today goes to its starting width (even if it was dragged wider), so
+   the drawer has room */
+.home-page.drawer-open { grid-template-columns: var(--today-default) minmax(0, 1fr); }
 /* In a single column, Add a Bucket sits right below the last bucket */
 .home-page[data-bucket-cols='1'] .add-bucket-slot { height: auto; padding: 4px 0; }
 /* Too narrow for two 290px tiles next to Today: one column of buckets */
 @container (max-width: 1004px) {
-  .home-page { --bucket-cols: 1 !important; --bucket-min: 280px; --today-share: 0.6 !important; }
+  .home-page { --bucket-cols: 1 !important; --bucket-min: 280px; }
   .home-page .add-bucket-slot { height: auto; padding: 4px 0; }
 }
 .bucket-slot { position: relative; }
@@ -1977,3 +1984,94 @@ label.setting-row { cursor: pointer; }
   box-shadow: var(--md-sys-elevation-level3);
   cursor: grabbing;
 }
+
+/* Emails that fit more than one bucket (PRD F14; brief 1g; Amanda 2026-11-21) */
+/* The banner: calm, neutral blue-gray with an info icon, not a red warning. On the home page it
+   runs across both the Today list and the buckets. */
+.conflict-banner {
+  grid-area: banner;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 16px 0 0; /* left edge with the Today card, right edge with the buckets */
+  padding: 8px 12px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--text);
+  font: var(--md-sys-typescale-body-medium) var(--font);
+}
+.conflict-banner > .icon { color: var(--text-muted); }
+.conflict-banner-text { flex: 1; }
+.conflict-banner .text-button { flex-shrink: 0; height: 32px; padding: 0 12px; }
+.conflict-banner .text-button:hover { background: var(--md-sys-state-hover); }
+/* "Auto-sort: 2 matches": a neutral tag like Gmail's label chips (gray fill, dark text), before the subject on
+   a row and after it on an open email */
+.matches-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--text);
+  font: 500 12px / 18px var(--font);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.pane-subject .matches-tag { margin: 0 0 0 10px; vertical-align: 4px; }
+
+/* The pop-up */
+.conflict-dialog {
+  width: min(560px, calc(100vw - 64px));
+  max-height: calc(100vh - 64px);
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level3);
+}
+.conflict-dialog[open] { display: flex; flex-direction: column; }
+.conflict-dialog::backdrop { background: rgb(0 0 0 / 0.32); } /* M3 scrim, like settings */
+.conflict-dialog-body { min-height: 0; overflow-y: auto; padding: 24px 24px 8px; }
+.conflict-dialog-hint {
+  margin: 0 0 16px;
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text-muted);
+}
+.conflict-list { margin: 0; padding: 0; list-style: none; }
+.conflict-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--divider);
+}
+.conflict-email { display: flex; flex-direction: column; min-width: 0; }
+.conflict-sender { font: 500 var(--md-sys-typescale-label-large) var(--font); }
+.conflict-subject {
+  overflow: hidden;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.conflict-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.conflict-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--text);
+  font: 500 var(--md-sys-typescale-label-large) var(--font);
+}
+.conflict-pill:hover { background: var(--md-sys-state-hover); }
+/* Picked: the bucket's color, a check mark and a darker outline */
+.conflict-pill.is-picked {
+  border-color: var(--bucket-color);
+  background: color-mix(in srgb, var(--bucket-color) 30%, white);
+}
+.conflict-dialog-buttons { margin: 0; padding: 12px 24px 20px; border-top: 1px solid var(--divider); }

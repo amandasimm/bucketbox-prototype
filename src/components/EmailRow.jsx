@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { useDragMotion } from './DragMotion.jsx'
 import Icon from './Icon.jsx'
 import { formatShortDate, formatTime } from '../utils/dates.js'
+import { MatchesTag, isNotSorted } from './ConflictBanner.jsx'
 
 // One email in a list, stacked like Gmail's mobile rows (BUILD-LOG, 2026-10-28):
 // sender and time on top, then subject, preview and attachments.
@@ -76,7 +77,11 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
           </span>
           <span className="email-received">{received}</span>
         </span>
-        <span className="email-subject">{email.subject}</span>
+        {/* Before the subject, where Gmail shows its labels (brief 1g; Amanda, 2026-11-21) */}
+        <span className="email-subject">
+          {isNotSorted(email) && <MatchesTag email={email} />}
+          {email.subject}
+        </span>
         {/* Bucket tiles show the preview and attachments too, like the Today list (BUILD-LOG, 2026-11-16) */}
         <span className="email-preview">{email.preview}</span>
         {email.attachments.length > 0 && (

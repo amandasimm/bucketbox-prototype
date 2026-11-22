@@ -3,6 +3,7 @@ import { dayLabel } from './components/DayNav.jsx'
 import GmailInbox from './components/GmailInbox.jsx'
 import GmailShell from './components/GmailShell.jsx'
 import SettingsDialog from './components/SettingsDialog.jsx'
+import ConflictDialog from './components/ConflictDialog.jsx'
 import HomePage from './components/HomePage.jsx'
 import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
@@ -79,6 +80,8 @@ export default function App() {
     motion: true,
   })
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // The conflicts pop-up (PRD F14; brief 1g): emails whose rules fit more than one bucket
+  const [conflictsOpen, setConflictsOpen] = useState(false)
   // Reorder mode: buckets show drag handles and arrows until Done (BUILD-LOG, 2026-11-16)
   const [reordering, setReordering] = useState(false)
   // With animations switched off, everything behaves as it does for people whose computer
@@ -148,12 +151,18 @@ export default function App() {
     const batch = arrivals.current
     const now = new Date()
     const sorted = {} // bucket name -> how many
+    let conflicts = 0
     const incoming = arrivingEmails.map((email, i) => {
       // A few minutes apart, the last one arriving now
       const at = new Date(now.getTime() - (arrivingEmails.length - 1 - i) * 3 * 60 * 1000)
       const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
       const arrived = { ...email, id: `ARR_${batch}_${i}`, dayOffset: 0, time, receivedAt: receivedAt(0, time), attachments: [], unread: true, bucketId: null, removedTo: null }
       const route = routeEmail(arrived, buckets)
+      // More than one bucket fits: it waits in the Today list, remembering which buckets (1g)
+      if (route.type === 'conflict') {
+        conflicts += 1
+        return { ...arrived, conflictBucketIds: route.bucketIds }
+      }
       if (route.type !== 'bucket') return arrived
       const bucket = buckets.find((b) => b.id === route.bucketId)
       sorted[bucket.name] = (sorted[bucket.name] ?? 0) + 1
@@ -163,6 +172,36 @@ export default function App() {
     // "8 new emails. 3 went to Priority, 1 to Bills."
     const where = Object.entries(sorted).map(([name, n], i) => (i === 0 ? `${n} went to ${name}` : `${n} to ${name}`))
     showToast(`${incoming.length} new emails.${where.length ? ` ${where.join(', ')}.` : ''}`)
+    // One pop-up for all of them, not one per email (PRD F14)
+    if (conflicts > 0) setConflictsOpen(true)
+  }
+
+  // Emails still waiting for the person to choose a bucket (PRD F14; brief 1g), each with the
+  // buckets it fits. Once an email is sorted, archived or deleted any other way, it drops out.
+  const conflictEmails = emails
+    .filter((email) => email.conflictBucketIds && email.bucketId === null && email.removedTo === null)
+    .map((email) => ({ email, options: buckets.filter((bucket) => email.conflictBucketIds.includes(bucket.id)) }))
+    .filter(({ options }) => options.length > 0)
+    .sort((a, b) => b.email.receivedAt - a.email.receivedAt)
+  if (conflictsOpen && conflictEmails.length === 0) setConflictsOpen(false)
+
+  // Sorting the chosen ones: { emailId: bucketId }. Like Move, it can be undone. They land marked
+  // new, like other rule-sorted mail. "Moved 1 to Priority, 1 to Updates box"
+  function sortConflicts(choices) {
+    const ids = Object.keys(choices)
+    if (ids.length === 0) return
+    const after = emails.map((email) => (choices[email.id] ? { ...email, bucketId: choices[email.id], isNew: true } : email))
+    const counts = {}
+    for (const bucketId of Object.values(choices)) {
+      const name = buckets.find((b) => b.id === bucketId).name
+      counts[name] = (counts[name] ?? 0) + 1
+    }
+    const label = `Moved ${Object.entries(counts).map(([name, n]) => `${n} to ${name}`).join(', ')}`
+    setLastAction({ label, before: emails, after, undone: false })
+    setEmails(after)
+    setSelectedIds(selectedIds.filter((id) => !ids.includes(id)))
+    setConflictsOpen(false)
+    showToast(label)
   }
 
   // A change that isn't an undoable action (reading an email, sending a reply). It's also
@@ -616,6 +655,7 @@ export default function App() {
     >
       {prototypeOn ? (
         <HomePage
+          conflicts={{ ids: conflictEmails.map(({ email }) => email.id), open: () => setConflictsOpen(true) }}
           emails={emails}
           buckets={buckets}
           dayOffset={dayOffset}
@@ -637,6 +677,9 @@ export default function App() {
         />
       ) : (
         <GmailInbox emails={emails} buckets={buckets} />
+      )}
+      {conflictsOpen && (
+        <ConflictDialog conflicts={conflictEmails} onSort={sortConflicts} onClose={() => setConflictsOpen(false)} />
       )}
       {settingsOpen && (
         <SettingsDialog

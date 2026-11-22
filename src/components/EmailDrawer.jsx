@@ -3,7 +3,7 @@ import EmailPane from './EmailPane.jsx'
 
 // Places a click doesn't count as "outside the drawer": the Today list (so another email can be
 // opened), undo/redo, toasts, menus, and Gmail's compose drawer
-const STAYS_OPEN = '.email-drawer, .today-list, .page-history, .toast-region, [role="menu"], .compose-drawer, .emoji-popover'
+const STAYS_OPEN = '.email-drawer, .today-list, .page-history, .toast-region, [role="menu"], .compose-drawer, .emoji-popover, dialog[open]'
 
 // An email opened from the Today list (PRD §5, F5; sketch-click-email-from-today.png).
 // It slides out over the buckets but stops short of the right edge, so the buckets still show.
@@ -29,7 +29,8 @@ export default function EmailDrawer({ email, listIds, buckets, emailView, onSend
     function onKeyDown(event) {
       if (event.key !== 'Escape') return
       // Escape closes an open menu or the compose drawer first
-      if (document.querySelector('[role="menu"]') || event.target.closest?.('.compose-drawer, .reply-box')) return
+      // A pop-up (such as the conflicts one) takes Escape first
+      if (document.querySelector('[role="menu"], dialog[open]') || event.target.closest?.('.compose-drawer, .reply-box')) return
       close()
     }
     document.addEventListener('pointerdown', onPointerDown)
