@@ -666,6 +666,16 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
   // Emails selected to move, kept for the backlog sort (1d); only ones still matching count
   const [selectedIds, setSelectedIds] = useState([])
   const selected = selectedIds.filter((id) => matches.some((email) => email.id === id))
+  const moveCount = selected.length
+  // "Save", "Save and move 3", or "Move 3" when the rules themselves haven't changed
+  const saveLabel = moveCount === 0 ? 'Save' : changed ? `Save and move ${moveCount}` : `Move ${moveCount}`
+  // The "can't be undone" note is showing; Escape or Cancel steps back out of it
+  const [confirming, setConfirming] = useState(false)
+  const confirmRef = useRef(null)
+  useEffect(() => {
+    if (confirming) confirmRef.current?.focus()
+  }, [confirming])
+  if (confirming && moveCount === 0) setConfirming(false)
 
   // Open: the heading takes focus. Close: focus goes back to whatever opened the panel.
   useEffect(() => {
@@ -675,16 +685,17 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
   }, [])
 
   // Escape is Cancel (unless a menu or a chip being changed takes it first). A click outside
-  // the panel closes it only when nothing has changed, so no work is lost.
+  // the panel closes it only when nothing has changed or been selected, so no work is lost.
   useEffect(() => {
     function onKeyDown(event) {
       if (event.key !== 'Escape' || event.defaultPrevented) return
       if (document.querySelector('.rules-panel [role="menu"]')) return
       event.preventDefault()
-      onClose()
+      if (confirming) setConfirming(false)
+      else onClose()
     }
     function onPointerDown(event) {
-      if (!changed && !panelRef.current.contains(event.target) && !event.target.closest('[role="menu"], .toast-region')) onClose()
+      if (!changed && moveCount === 0 && !panelRef.current.contains(event.target) && !event.target.closest('[role="menu"], .toast-region')) onClose()
     }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('pointerdown', onPointerDown)
@@ -692,7 +703,7 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
       document.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('pointerdown', onPointerDown)
     }
-  }, [changed, onClose])
+  }, [changed, moveCount, confirming, onClose])
 
   useEffect(() => {
     if (newCardId) panelRef.current.querySelector(`[data-rule-id="${newCardId}"]`)?.scrollIntoView({ block: 'nearest' })
@@ -811,13 +822,36 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
         />
       </div>
 
-      <footer className="rules-panel-footer">
-        {draft.rules.some((rule) => rule.criteria.length === 0) && (
-          <p className="rules-panel-footnote">Rules with no conditions aren't saved.</p>
-        )}
-        <button type="button" className="text-button" onClick={onClose}>Cancel</button>
-        <button type="button" className="filled-button" disabled={!changed} onClick={() => onSave(cleaned)}>Save</button>
-      </footer>
+      {/* Backlog sort (brief 1d; Amanda, 2026-11-21): with emails selected, Save becomes "Save and
+          move 3", and asks first in an inline note (no pop-up), since the move can't be undone */}
+      {confirming ? (
+        <footer className="rules-panel-footer is-confirming" role="group" aria-labelledby={`${ids}-confirm`}>
+          <p id={`${ids}-confirm`} className="rules-panel-confirm">
+            Move {moveCount} {moveCount === 1 ? 'email' : 'emails'} to {bucket.name}? This can't be undone, but you can still move {moveCount === 1 ? 'it' : 'them one at a time'} later.
+          </p>
+          <div className="rules-panel-confirm-buttons">
+            <button type="button" className="text-button" onClick={() => setConfirming(false)}>Cancel</button>
+            <button type="button" className="filled-button" ref={confirmRef} onClick={() => onSave(cleaned, selected)}>
+              {saveLabel}
+            </button>
+          </div>
+        </footer>
+      ) : (
+        <footer className="rules-panel-footer">
+          {draft.rules.some((rule) => rule.criteria.length === 0) && (
+            <p className="rules-panel-footnote">Rules with no conditions aren't saved.</p>
+          )}
+          <button type="button" className="text-button" onClick={onClose}>Cancel</button>
+          <button
+            type="button"
+            className="filled-button"
+            disabled={!changed && moveCount === 0}
+            onClick={() => (moveCount > 0 ? setConfirming(true) : onSave(cleaned, []))}
+          >
+            {saveLabel}
+          </button>
+        </footer>
+      )}
     </aside>
   )
 }

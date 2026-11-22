@@ -382,8 +382,8 @@ export default function HomePage({
             startEmail={emails.find((email) => email.id === rulesFor.emailId) ?? null}
             pickableEmails={rulesEmails}
             emails={emails}
-            onSave={(values) => {
-              bucketActions.setRules(rulesBucket.id, values)
+            onSave={(values, moveIds) => {
+              bucketActions.setRules(rulesBucket.id, values, moveIds)
               setRulesFor(null)
             }}
             onClose={() => setRulesFor(null)}

@@ -293,9 +293,21 @@ export default function App() {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
     },
     // Auto-sort rules (PRD F14; brief 1b). Saving doesn't sort anything yet (1d and 1f).
-    setRules(id, { rules, ruleJoin }) {
-      setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, rules, ruleJoin } : bucket)))
-      showToast('Rules saved')
+    // moveIds: the backlog emails picked in the preview (brief 1d). Moving them can't be undone
+    // (PRD F14), so it goes through changeEverywhere: Undo still reverses the last action before
+    // it, without pulling these emails back out of the bucket.
+    setRules(id, { rules, ruleJoin }, moveIds = []) {
+      const bucket = buckets.find((b) => b.id === id)
+      const rulesChanged = JSON.stringify({ rules: bucket.rules ?? [], ruleJoin: bucket.ruleJoin ?? 'any' }) !== JSON.stringify({ rules, ruleJoin })
+      setBuckets(buckets.map((b) => (b.id === id ? { ...b, rules, ruleJoin } : b)))
+      if (moveIds.length === 0) {
+        showToast('Rules saved')
+        return
+      }
+      changeEverywhere((list) => list.map((email) => (moveIds.includes(email.id) ? { ...email, bucketId: id } : email)))
+      setSelectedIds(selectedIds.filter((x) => !moveIds.includes(x)))
+      const moved = `Moved ${moveIds.length} to ${bucket.name}`
+      showToast(rulesChanged ? `Rules saved. ${moved}` : moved)
     },
     // Reordering (BUILD-LOG, 2026-11-16): the bucket goes to the place of the one it's dropped on
     move(id, toId) {
