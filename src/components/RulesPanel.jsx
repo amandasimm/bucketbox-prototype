@@ -24,6 +24,11 @@ function ruleFromEmail(email) {
   return blankRule([first], { offered: more, fromEmail: email.sender })
 }
 
+// A rule card from a suggestion (PRD F16), saying why
+function suggestedRule(suggestion, bucketName) {
+  return blankRule([suggestion.criterion], { suggestedNote: `Suggested: based on ${suggestion.count} emails in ${bucketName}.` })
+}
+
 // A small menu that opens from a button (the card's 3-dot menu, "+ Add condition")
 function MenuButton({ label, icon, text, className = '', items, align = 'right' }) {
   const [open, setOpen] = useState(false)
@@ -317,6 +322,7 @@ function RuleCard({ rule, number, editing, onEditChip, onChange, onDelete, picka
       </header>
 
       {rule.fromEmail && <p className="rule-card-note">Started from an email from {rule.fromEmail}.</p>}
+      {rule.suggestedNote && <p className="rule-card-note">{rule.suggestedNote}</p>}
       {rule.note && <p className="rule-card-note">{rule.note}</p>}
 
       {rule.criteria.length === 0 && !addingNew && <p className="rule-card-empty">No conditions yet. Add one to start this rule.</p>}
@@ -571,8 +577,6 @@ function StartRule({ target = 'rule', initialWay = null, ruleNumber, pickableEma
 // the backlog sort (1d).
 const PAGE_SIZE = 10 // Amanda, 2026-11-21 (was 5)
 
-// "Priority's", "Bills'"
-const possessive = (name) => (name.endsWith('s') ? `${name}’` : `${name}’s`)
 
 // Also used by the auto-archive suggestion's review panel (PRD F15), with its own title and
 // helper line (title, hint).
@@ -594,11 +598,11 @@ export function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketN
     <section className="rules-preview" aria-labelledby={`${ids}-title`} aria-describedby={`${ids}-hint`}>
       <h3 id={`${ids}-title`} className="rules-preview-title">{title}</h3>
       {count === 0 ? (
-        <p id={`${ids}-hint`} className="rules-preview-hint">No unsorted emails match {possessive(bucketName)} rules yet.</p>
+        <p id={`${ids}-hint`} className="rules-preview-hint">No unsorted emails match these rules yet.</p>
       ) : (
         <>
           <p id={`${ids}-hint`} className="rules-preview-hint">
-            {hint ?? `${count} unsorted ${count === 1 ? 'email matches' : 'emails match'} ${possessive(bucketName)} rules. Select an email to move it to ${bucketName}.`}
+            {hint ?? `${count} unsorted ${count === 1 ? 'email matches' : 'emails match'} these rules. Select an email to move it to ${bucketName}.`}
           </p>
           {/* Selects every matching email, on all pages */}
           <label className="rules-preview-select-all">
@@ -645,13 +649,21 @@ export function RulesPreview({ matches, selected, onToggle, onSelectAll, bucketN
   )
 }
 
-export default function RulesPanel({ bucket, startEmail, pickableEmails, emails, openAtPreview = false, autoSort = true, onSave, onClose }) {
+// suggestion: a suggested rule for this bucket (PRD F16), shown as a card at the top; startSuggestion:
+// the one "Create rule" on the toast opened the panel with, which starts as a rule card
+export default function RulesPanel({ bucket, startEmail, startSuggestion = null, suggestion = null, onHideSuggestion, pickableEmails, emails, openAtPreview = false, autoSort = true, onSave, onClose }) {
   const [draft, setDraft] = useState(() => {
     const rules = (bucket.rules ?? []).map((rule) => ({ ...rule }))
-    return { rules: startEmail ? [...rules, ruleFromEmail(startEmail)] : rules, ruleJoin: bucket.ruleJoin ?? 'any' }
+    if (startEmail) rules.push(ruleFromEmail(startEmail))
+    if (startSuggestion) rules.push(suggestedRule(startSuggestion, bucket.name))
+    return { rules, ruleJoin: bucket.ruleJoin ?? 'any' }
   })
-  // A newly added card scrolls fully into view (including one started from an email)
-  const [newCardId, setNewCardId] = useState(() => (startEmail ? draft.rules.at(-1)?.id : null))
+  // A newly added card scrolls fully into view (including one started from an email or a suggestion)
+  const [newCardId, setNewCardId] = useState(() => (startEmail || startSuggestion ? draft.rules.at(-1)?.id : null))
+  // The suggestion card's X: not again while this panel is open
+  const [suggestionClosed, setSuggestionClosed] = useState(false)
+  const showSuggestion =
+    suggestion && !suggestionClosed && !draft.rules.some((rule) => rule.criteria.some((c) => c.type === suggestion.criterion.type && c.value.toLowerCase() === suggestion.criterion.value.toLowerCase()))
   // Which chip is being changed: { ruleId, index, type } (index = criteria.length for a new one)
   const [editing, setEditing] = useState(null)
   const [adding, setAdding] = useState(false)
@@ -752,6 +764,40 @@ export default function RulesPanel({ bucket, startEmail, pickableEmails, emails,
           <Icon name="automation" size={20} />
           <span>Auto-sort rules allow you to decide what emails automatically land in each bucket, no manual sorting required.</span>
         </p>
+
+        {/* A suggested rule (PRD F16; Amanda, 2026-11-22): the same pattern as the auto-archive
+            banner, with the reason, Add this rule, a text "Don't suggest this again" and an X */}
+        {showSuggestion && (
+          <section className="suggestion-banner rules-suggestion" aria-label="Suggested rule">
+            <div className="suggestion-top">
+              <div className="suggestion-text">
+                <Icon name="lightbulb" size={20} />
+                <span className="rules-suggestion-body">
+                  <span className="rules-suggestion-title">Suggested rule</span>
+                  <span className="rule-chip rules-suggestion-chip">
+                    <span className="rule-chip-text">{suggestion.chip}</span>
+                  </span>
+                  <span className="rules-suggestion-reason">
+                    Based on {suggestion.count} emails in {bucket.name}
+                  </span>
+                </span>
+              </div>
+              <span className="suggestion-close">
+                <IconButton label="Dismiss" tooltip={null} onClick={() => setSuggestionClosed(true)}>
+                  <Icon name="close" size={20} />
+                </IconButton>
+              </span>
+            </div>
+            <div className="suggestion-buttons">
+              <button type="button" className="filled-button" onClick={() => addRule(suggestedRule(suggestion, bucket.name))}>
+                Add this rule
+              </button>
+              <button type="button" className="text-button" onClick={() => onHideSuggestion?.(suggestion)}>
+                Don't suggest this again
+              </button>
+            </div>
+          </section>
+        )}
 
         {draft.rules.map((rule, i) => (
           <div key={rule.id} data-rule-id={rule.id}>

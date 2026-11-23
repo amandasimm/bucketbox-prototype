@@ -9,7 +9,8 @@ export const defaultSettings = {
   // Suggestions (PRD F15, F16): on by default for testing (Amanda, 2026-11-22), though the PRD
   // calls it opt-in
   suggestions: true,
-  // Senders whose auto-archive suggestion was turned off: [{ senderEmail, name }]
+  // Suggestions turned off: [{ senderEmail, name }] for auto-archive (F15), [{ key, name }] for
+  // suggested rules (F16)
   hiddenSuggestions: [],
   labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
   buttons: { move: true, archive: true, delete: true, declutter: true },

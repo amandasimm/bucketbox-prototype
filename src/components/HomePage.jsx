@@ -17,6 +17,7 @@ import { DragMotionProvider, prefersReducedMotion } from './DragMotion.jsx'
 import EmailDrawer from './EmailDrawer.jsx'
 import ConflictBanner from './ConflictBanner.jsx'
 import RulesPanel from './RulesPanel.jsx'
+import { findRuleSuggestion } from '../utils/suggestRules.js'
 import './RulesPanel.css'
 import Envelope from './Envelope.jsx'
 import Resizer from './Resizer.jsx'
@@ -116,7 +117,10 @@ export default function HomePage({
   onDeclutter,
   declutter,
   conflicts,
+  onHideRuleSuggestion,
 }) {
+  // Suggested rules hidden in settings (PRD F16)
+  const ruleSuggestionSkips = settings.hiddenSuggestions.map((hidden) => hidden.key).filter(Boolean)
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
   const [draggedIds, setDraggedIds] = useState([])
@@ -265,7 +269,7 @@ export default function HomePage({
   // options.preview: open at "Already in your inbox" ("Sort your backlog now?" on an empty bucket, 1i)
   function openRules(bucketId, email = null, fromForm = null, options = {}) {
     if (emailView.view.type === 'home' && emailView.openEmailId) emailView.close()
-    setRulesFor({ bucketId, emailId: email?.id ?? null, fromForm, preview: Boolean(options.preview), key: Date.now() })
+    setRulesFor({ bucketId, emailId: email?.id ?? null, fromForm, preview: Boolean(options.preview), suggestion: options.suggestion ?? null, key: Date.now() })
   }
   // Asks the bucket grid or the opened bucket to show a bucket's edit form again: { bucketId, where, key }
   const [formRequest, setFormRequest] = useState(null)
@@ -400,6 +404,9 @@ export default function HomePage({
             bucket={rulesBucket}
             startEmail={emails.find((email) => email.id === rulesFor.emailId) ?? null}
             openAtPreview={rulesFor.preview}
+            startSuggestion={rulesFor.suggestion}
+            suggestion={settings.suggestions ? findRuleSuggestion(rulesBucket, emails, ruleSuggestionSkips) : null}
+            onHideSuggestion={onHideRuleSuggestion}
             autoSort={settings.autoSort}
             pickableEmails={rulesEmails}
             emails={emails}
@@ -413,7 +420,11 @@ export default function HomePage({
         {declutter && (
           <Declutter key={declutter.dayOffset} declutter={declutter} buckets={buckets} onSendReply={onSendReply} />
         )}
-        <Toast toast={toast} onAction={onToastAction} />
+        {/* "Create rule" on a suggested-rule toast opens that bucket's rules with the rule ready (F16) */}
+        <Toast
+          toast={toast}
+          onAction={(action) => (action.type === 'suggestRule' ? openRules(action.bucketId, null, null, { suggestion: action }) : onToastAction(action))}
+        />
       </div>
 
       </DragMotionProvider>

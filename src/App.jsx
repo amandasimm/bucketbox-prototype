@@ -15,6 +15,7 @@ import { arrivingEmails } from './data/arrivingEmails.js'
 import { patternSender, patternTemplates, patternTodayCount, patternTotal } from './data/patternEmails.js'
 import { activeRules, routeEmail, ruleMatches } from './utils/rules.js'
 import { chipsFromEmail } from './utils/ruleText.js'
+import { findRuleSuggestion } from './utils/suggestRules.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
 // Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
@@ -315,7 +316,7 @@ export default function App() {
     archive: (email, listIds) => paneAction(email, listIds, 'Archived 1', { removedTo: 'archive' }),
     delete: (email, listIds) => paneAction(email, listIds, 'Deleted 1', { removedTo: 'trash' }),
     junk: (email, listIds) => paneAction(email, listIds, 'Marked as junk', { removedTo: 'junk' }),
-    move: (email, listIds, bucket) => paneAction(email, listIds, `Moved 1 to ${bucket.name}`, { bucketId: bucket.id }, pausePrompt([email.id], bucket)),
+    move: (email, listIds, bucket) => paneAction(email, listIds, `Moved 1 to ${bucket.name}`, { bucketId: bucket.id }, moveToast([email.id], bucket)),
     // In the Today drawer this closes the email, like Gmail going back to the inbox.
     // In a bucket the email stays in the pane, unread until it's clicked into again.
     markUnread(email) {
@@ -396,6 +397,32 @@ export default function App() {
     return null
   }
 
+  // Suggested rules (PRD F16; brief item 3): when a move brings a bucket to 5 similar emails, the
+  // move's toast asks "Always send Chase emails to Bills?" with Create rule (the PRD's wording;
+  // Amanda). Once per suggestion per visit; letting it fade is "Not now". Not while Declutter runs.
+  const suggestedAlready = useRef([])
+  function suggestPrompt(ids, target) {
+    if (!settings.suggestions || declutter) return null
+    const after = emails.map((email) => (ids.includes(email.id) ? { ...email, bucketId: target.id } : email))
+    const skip = [...settings.hiddenSuggestions.map((hidden) => hidden.key).filter(Boolean), ...suggestedAlready.current]
+    const suggestion = findRuleSuggestion(target, after, skip)
+    if (!suggestion) return null
+    suggestedAlready.current = [...suggestedAlready.current, suggestion.key]
+    return {
+      message: `Always send ${suggestion.label} to ${target.name}?`,
+      action: { type: 'suggestRule', label: 'Create rule', bucketId: target.id, criterion: suggestion.criterion, count: suggestion.count },
+    }
+  }
+  // A move's toast: the pause question first (1h), otherwise a suggested rule, otherwise plain
+  const moveToast = (ids, target) => pausePrompt(ids, target) ?? suggestPrompt(ids, target)
+
+  // "Don't suggest this again" for a suggested rule: saved with the settings, listed there
+  function hideRuleSuggestion(suggestion) {
+    if (settings.hiddenSuggestions.some((hidden) => hidden.key === suggestion.key)) return
+    setSettings({ ...settings, hiddenSuggestions: [...settings.hiddenSuggestions, { key: suggestion.key, name: `${suggestion.label} → ${suggestion.bucketName}` }] })
+    showToast('You won\'t see that suggestion again. You can change this in Bucketbox settings.')
+  }
+
   // "Pause rule" on that toast: those rules pause (not deleted; Resume is on the tile and in the
   // rules panel). The email that was moved stays where it was moved.
   function pauseRules({ bucketId, ruleIds, what }) {
@@ -409,7 +436,7 @@ export default function App() {
   function drop(ids, target) {
     const count = ids.length
     if (target.type === 'bucket') {
-      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id }, pausePrompt(ids, target.bucket), 0)
+      applyTo(ids, `Moved ${count} to ${target.bucket.name}`, { bucketId: target.bucket.id }, moveToast(ids, target.bucket), 0)
     } else if (zoneMode === 'archive') {
       applyTo(ids, `Archived ${count}`, { removedTo: 'archive' }, null, 0)
     } else if (!zoneToastSeen) {
@@ -438,7 +465,7 @@ export default function App() {
   const actions = {
     archive: () => applyToSelected(`Archived ${selectedIds.length}`, { removedTo: 'archive' }),
     delete: () => applyToSelected(`Deleted ${selectedIds.length}`, { removedTo: 'trash' }),
-    move: (bucket) => applyTo(selectedIds, `Moved ${selectedIds.length} to ${bucket.name}`, { bucketId: bucket.id }, pausePrompt(selectedIds, bucket)),
+    move: (bucket) => applyTo(selectedIds, `Moved ${selectedIds.length} to ${bucket.name}`, { bucketId: bucket.id }, moveToast(selectedIds, bucket)),
     drop,
   }
 
@@ -831,6 +858,7 @@ export default function App() {
       {prototypeOn ? (
         <HomePage
           conflicts={{ ids: conflictEmails.map(({ email }) => email.id), open: () => setConflictsOpen(true) }}
+          onHideRuleSuggestion={hideRuleSuggestion}
           emails={emails}
           buckets={buckets}
           dayOffset={dayOffset}

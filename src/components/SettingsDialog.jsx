@@ -83,19 +83,20 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
               checked={draft.suggestions}
               onChange={(suggestions) => set({ suggestions })}
             />
-            {/* Senders turned off with "Don't suggest this for Chase" (PRD F15) */}
+            {/* Senders turned off with "Don't suggest this for Chase" (PRD F15) and suggested rules
+                turned off with "Don't suggest this again" (F16), e.g. "Chase emails → Bills" */}
             {draft.hiddenSuggestions.length > 0 && (
               <div className="setting-hidden">
                 <span className="setting-label">Hidden suggestions</span>
                 <ul className="setting-hidden-list">
                   {draft.hiddenSuggestions.map((hidden) => (
-                    <li key={hidden.senderEmail}>
+                    <li key={hidden.key ?? hidden.senderEmail}>
                       <span>{hidden.name}</span>
                       <button
                         type="button"
                         className="text-button"
                         aria-label={`Show suggestions for ${hidden.name} again`}
-                        onClick={() => set({ hiddenSuggestions: draft.hiddenSuggestions.filter((h) => h.senderEmail !== hidden.senderEmail) })}
+                        onClick={() => set({ hiddenSuggestions: draft.hiddenSuggestions.filter((h) => h !== hidden) })}
                       >
                         Show again
                       </button>

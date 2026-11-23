@@ -478,6 +478,13 @@ body.no-motion .rules-panel { animation: none; }
 /* Emails that fit the rules (brief 1c): a heading like the "more than one rule" legend, a
    helper line, then pages of 5 */
 .rules-preview { margin-top: 20px; }
+/* In the rules panel, a divider between the Summary and "Already in your inbox" (Amanda, 2026-11-22).
+   Not in the auto-archive review panel, where the list comes first. */
+.rules-summary + .rules-preview {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--divider);
+}
 .rules-preview-title {
   margin: 0 0 4px;
   font: 500 var(--md-sys-typescale-label-large) var(--font);
@@ -551,3 +558,12 @@ body.no-motion .rules-panel { animation: none; }
   font: var(--md-sys-typescale-body-small) var(--font);
   color: var(--text-muted);
 }
+
+/* A suggested rule at the top of the rules panel (PRD F16): the auto-archive banner's pattern */
+.rules-suggestion { margin-bottom: 16px; }
+.rules-suggestion-body { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.rules-suggestion-title { font: 500 var(--md-sys-typescale-label-large) var(--font); }
+.rules-suggestion-chip { background: var(--surface); }
+.rules-suggestion-chip .rule-chip-text { padding-right: 12px; cursor: default; }
+.rules-suggestion-chip .rule-chip-text:hover { background: none; }
+.rules-suggestion-reason { font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
