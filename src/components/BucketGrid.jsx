@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useDndContext, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import BucketForm from './BucketForm.jsx'
 import BucketEmpty from './BucketEmpty.jsx'
@@ -12,7 +12,7 @@ import { bucketStyle } from '../utils/bucketColors.js'
 import { newestFirst } from '../utils/dates.js'
 
 // The bucket's 3-dot menu: Edit bucket and Delete bucket (PRD F2)
-export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules }) {
+export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules, onToggleCollapse }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const menuRef = useRef(null)
@@ -74,6 +74,21 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules }) {
             >
               <Icon name="automation" size={20} />
               Rules
+            </button>
+          )}
+          {/* Collapsed buckets (PRD F17): the only control, on the home page only */}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              role="menuitem"
+              className="move-menu-item"
+              onClick={() => {
+                setOpen(false)
+                onToggleCollapse()
+              }}
+            >
+              <Icon name={bucket.collapsed ? 'unfold_more' : 'unfold_less'} size={20} />
+              {bucket.collapsed ? 'Expand bucket' : 'Collapse bucket'}
             </button>
           )}
           {/* Only on the home page, and only when there's more than one bucket to put in order */}
@@ -142,7 +157,10 @@ function RulesFooter({ bucket, onRules, onResume }) {
   )
 }
 
-function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, covered }) {
+function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, onToggleCollapse, column, covered }) {
+  // Collapsed (PRD F17; BUILD-LOG 2026-11-22): a header-only pill with the name and new count.
+  // Clicking it expands it; the 3-dot menu has Collapse / Expand. It stays closed while dragging.
+  const collapsed = Boolean(bucket.collapsed) && !editing
   // Tiles show no total, only how many emails are new (Amanda, 2026-11-21; PRD F2, F14)
   const newCount = bucketEmails.filter((email) => email.isNew).length
   const { active } = useDndContext()
@@ -153,19 +171,19 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
   const { setNodeRef, isOver } = useDroppable({
     id: `bucket:${bucket.id}`,
     disabled: isSource || covered,
-    data: { target: { type: 'bucket', bucket }, label: `${bucket.name} bucket` },
+    data: { target: { type: 'bucket', bucket }, label: `${bucket.name} bucket${collapsed ? ', collapsed' : ''}` },
   })
 
   // The target sits on a wrapper around the tile (not inside it), so it can cover the tile's
   // border and rounded corners exactly instead of being clipped inside them
   return (
-    <div ref={setNodeRef} className="bucket-slot" style={bucketStyle(bucket.color)}>
+    <div ref={setNodeRef} className={`bucket-slot ${collapsed ? 'is-collapsed' : ''}`} style={{ ...bucketStyle(bucket.color), '--col': column }}>
       {editing ? (
         children
       ) : (
         <>
           <article
-            className={`bucket-tile ${showTarget ? 'is-drop-target' : ''}`}
+            className={`bucket-tile ${showTarget ? 'is-drop-target' : ''} ${collapsed ? 'is-collapsed' : ''}`}
             aria-labelledby={`bucket-${bucket.id}`}
           >
             {/* The whole colored header (dot or emoji, name, count) opens the bucket, but not
@@ -175,8 +193,13 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
                 <button
                   type="button"
                   className="bucket-header-button"
-                  aria-label={`Open the ${bucket.name} bucket${newCount > 0 ? `, ${newCount} new` : ''}`}
-                  onClick={() => onOpenBucket(bucket.id)}
+                  aria-label={
+                    collapsed
+                      ? `Expand ${bucket.name}${newCount > 0 ? `, ${newCount} new` : ''}`
+                      : `Open the ${bucket.name} bucket${newCount > 0 ? `, ${newCount} new` : ''}`
+                  }
+                  aria-expanded={collapsed ? false : undefined}
+                  onClick={() => (collapsed ? onToggleCollapse() : onOpenBucket(bucket.id))}
                 >
                   {/* An emoji, if the bucket has one, takes the color dot's place */}
                   {bucket.emoji ? (
@@ -189,7 +212,7 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
                 </button>
               </h3>
             </header>
-            {bucketEmails.length === 0 ? (
+            {collapsed ? null : bucketEmails.length === 0 ? (
               <BucketEmpty bucket={bucket} emails={allEmails} autoSort={autoSort} onSortBacklog={onSortBacklog} className="in-tile" />
             ) : (
               <ul className="email-list bucket-peek">
@@ -204,14 +227,14 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
               </ul>
             )}
             {/* No rules line while auto-sort is off in settings (Amanda, 2026-11-22) */}
-            {autoSort && <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />}
+            {autoSort && !collapsed && <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />}
           </article>
-          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} />
+          <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} onToggleCollapse={onToggleCollapse} />
         </>
       )}
       {showTarget && (
         <div className={`drop-target ${isOver ? 'is-over' : ''}`} aria-hidden="true">
-          <DashedOutline className="drop-target-outline" inset={1.5} radius={14.5} />
+          <DashedOutline className="drop-target-outline" inset={1.5} radius={collapsed ? 20.5 : 14.5} />
           <span className="drop-target-plus">
             <svg width="28" height="28" viewBox="0 0 28 28">
               <path d="M14 2v24M2 14h24" />
@@ -354,6 +377,28 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
     return grid.left + 8 + (grid.width - 16) * (columnSplit ?? 0.5)
   }
 
+  // Collapse / Expand (PRD F17). Focus stays on the bucket's header afterwards.
+  function toggleCollapse(id) {
+    bucketActions.toggleCollapse(id)
+    setTimeout(() => document.querySelector(`#bucket-${id} .bucket-header-button`)?.focus(), 0)
+  }
+
+  // Two columns that stack on their own (Amanda, 2026-11-22): odd buckets on the left, even on the
+  // right, in page order, so Tab still goes 1, 2, 3. Each tile's height is measured and set as how
+  // many 1px rows it spans (plus the 16px gap), so a collapsed bucket lets the ones below it in
+  // its column move up. With one column it has no effect.
+  useLayoutEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return undefined
+    const measure = (slot) => slot.style.setProperty('--span', Math.ceil(slot.getBoundingClientRect().height) + 16)
+    const observer = new ResizeObserver((entries) => entries.forEach((entry) => measure(entry.target)))
+    grid.querySelectorAll(':scope > .bucket-slot').forEach((slot) => {
+      measure(slot)
+      observer.observe(slot)
+    })
+    return () => observer.disconnect()
+  })
+
   // A newly added bucket scrolls into view, so it doesn't appear cut off below the fold
   useEffect(() => {
     if (buckets.length > bucketCount.current) {
@@ -390,7 +435,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
           emailsIn={emailsIn}
           bucketActions={bucketActions}
           gridProps={{
-            className: `bucket-grid ${columnSplit === null ? '' : 'is-resized'}`,
+            className: `bucket-grid is-reorder ${columnSplit === null ? '' : 'is-resized'}`,
             style: columnSplit === null ? undefined : { '--column-split': columnSplit, '--column-a': `${columnSplit}fr`, '--column-b': `${1 - columnSplit}fr` },
             ref: gridRef,
           }}
@@ -422,7 +467,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             onReset={() => setColumnSplit(null)}
           />
         )}
-        {buckets.map((bucket) => (
+        {buckets.map((bucket, index) => (
           <BucketTile
             key={bucket.id}
             bucket={bucket}
@@ -436,6 +481,8 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             allEmails={emails}
             autoSort={autoSort}
             onSortBacklog={onRules ? () => onRules(bucket.id, null, null, { preview: true }) : undefined}
+            onToggleCollapse={() => toggleCollapse(bucket.id)}
+            column={(index % 2) + 1}
             onOpenBucket={onOpenBucket}
             covered={covered}
           >
@@ -464,7 +511,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
           </BucketTile>
         ))}
         {adding && (
-          <div className="bucket-slot">
+          <div className="bucket-slot" style={{ '--col': (buckets.length % 2) + 1 }}>
             <BucketForm
               mode="add"
               otherNames={namesExcept(null)}
@@ -492,7 +539,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
         {/* Sits where the next bucket would go, centered in that space. Hidden while the
             new-bucket form is open, so there's only one way in at a time. */}
         {!adding && (
-          <div className="bucket-slot add-bucket-slot">
+          <div className="bucket-slot add-bucket-slot" style={{ '--col': (buckets.length % 2) + 1 }}>
             <button
               ref={addButtonRef}
               type="button"

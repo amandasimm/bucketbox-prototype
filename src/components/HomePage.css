@@ -2101,3 +2101,33 @@ label.setting-row { cursor: pointer; }
 .setting-hidden-list { margin: 0; padding: 0; list-style: none; }
 .setting-hidden-list li { display: flex; align-items: center; justify-content: space-between; min-height: 36px; font: var(--md-sys-typescale-body-medium) var(--font); }
 .setting-hidden-list .text-button { height: 32px; padding: 0 8px; }
+
+/* Collapsed buckets (PRD F17; BUILD-LOG 2026-11-22) */
+/* Two columns that stack on their own: odd buckets left, even right, each spanning as many 1px
+   rows as it's tall (BucketGrid measures it), so a collapsed bucket lets those below move up */
+.home-page[data-bucket-cols='2'] .bucket-grid:not(.is-reorder) {
+  grid-auto-rows: 1px;
+  row-gap: 0;
+  align-items: start;
+}
+.home-page[data-bucket-cols='2'] .bucket-grid:not(.is-reorder) > .bucket-slot {
+  grid-column: var(--col);
+  grid-row-end: span var(--span, 300);
+}
+@container (max-width: 1004px) {
+  .home-page[data-bucket-cols='2'] .bucket-grid:not(.is-reorder) { grid-auto-rows: auto; row-gap: 16px; }
+  .home-page[data-bucket-cols='2'] .bucket-grid:not(.is-reorder) > .bucket-slot { grid-column: auto; grid-row-end: auto; }
+}
+/* A collapsed tile: its header alone, as a pill like Gmail's minimized compose bar */
+.bucket-tile.is-collapsed {
+  height: 52px; /* the 44px header plus 4px above and below, so the drag highlight has room (Amanda, 2026-11-22) */
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.bucket-tile.is-collapsed .bucket-header { height: 50px; border-bottom: none; }
+.bucket-tile.is-collapsed .bucket-header-button { padding-left: 16px; }
+.bucket-slot.is-collapsed .bucket-menu-wrap { top: 12px; right: 12px; } /* centered: (52 - 28) / 2 */
+/* While dragging: it stays closed and highlights; the + and name sit in one line */
+.bucket-slot.is-collapsed .drop-target { flex-direction: row; border-radius: var(--md-sys-shape-corner-full); }
+.bucket-slot.is-collapsed .drop-target-plus { width: 28px; height: 28px; }
+.bucket-slot.is-collapsed .drop-target-plus svg { width: 14px; height: 14px; }
+.bucket-slot.is-collapsed .drop-target-name { padding: 2px 10px; }

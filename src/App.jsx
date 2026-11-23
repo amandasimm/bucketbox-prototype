@@ -500,6 +500,10 @@ export default function App() {
       const moved = `Moved ${moveIds.length} to ${bucket.name}`
       showToast(rulesChanged ? `Rules saved. ${moved}` : moved)
     },
+    // Collapse / Expand a bucket (PRD F17). Kept on the bucket until the page reloads; not undoable.
+    toggleCollapse(id) {
+      setBuckets(buckets.map((b) => (b.id === id ? { ...b, collapsed: !b.collapsed } : b)))
+    },
     // "Rules paused · Resume" on a tile footer turns every paused rule back on (PRD F14; brief 1e)
     resumeRules(id) {
       const bucket = buckets.find((b) => b.id === id)
