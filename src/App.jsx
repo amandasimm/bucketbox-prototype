@@ -105,6 +105,8 @@ export default function App() {
   }, [settings.motion])
 
   function saveSettings({ zone, ...rest }) {
+    // A new range starts from today (PRD F6; brief item 5)
+    if (rest.range !== settings.range) changeDay(0)
     setSettings(rest)
     setZoneMode(zone)
     if (zone === 'archive') setZoneToastSeen(true) // the choice is made, so no "Archive instead?" toast

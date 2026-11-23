@@ -39,7 +39,8 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
   }, [isLeaving])
   const inTile = variant === 'tile'
   const threadSize = email.messages?.length ?? 1
-  const received = variant === 'today' ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
+  // The Today list shows times; in This Week the day heading above gives the date (brief item 5)
+  const received = variant === 'today' || variant === 'week' ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
   const rowClasses = [
     'email-row',
     email.unread ? 'is-unread' : 'is-read',

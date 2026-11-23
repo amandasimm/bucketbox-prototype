@@ -22,7 +22,8 @@ import './RulesPanel.css'
 import Envelope from './Envelope.jsx'
 import Resizer from './Resizer.jsx'
 import Toast from './Toast.jsx'
-import TodayList, { unsortedFor } from './TodayList.jsx'
+import TodayList from './TodayList.jsx'
+import { listFor } from '../utils/range.js'
 import './HomePage.css'
 
 // With the mouse, the target is whatever is under the pointer. With the keyboard,
@@ -283,7 +284,8 @@ export default function HomePage({
 
   const count = draggedIds.length
   const openBucket = emailView.view.type === 'bucket' && buckets.find((b) => b.id === emailView.view.bucketId)
-  const todayEmails = unsortedFor(emails, dayOffset)
+  // What the Today list shows for the chosen range (brief item 5)
+  const todayEmails = listFor(emails, settings.range, dayOffset)
   const drawerEmail = todayEmails.find((email) => email.id === emailView.openEmailId)
   const rulesBucket = rulesFor && buckets.find((b) => b.id === rulesFor.bucketId)
   // "From an email" offers the viewed day's Today list and the bucket's own emails
@@ -336,6 +338,7 @@ export default function HomePage({
             emails={emails}
             buckets={buckets}
             dayOffset={dayOffset}
+            range={settings.range}
             onChangeDay={onChangeDay}
             onDeclutter={onDeclutter}
             selectedIds={selectedIds}

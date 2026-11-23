@@ -1,12 +1,19 @@
-import { useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import BulkActions from './BulkActions.jsx'
 import DayNav, { dayLabel } from './DayNav.jsx'
 import DeclutterIcon from './DeclutterIcon.jsx'
 import EmailRow from './EmailRow.jsx'
 import { newestFirst } from '../utils/dates.js'
+import { dayHeading, listFor, receivedIn, weekBounds, weekLabel } from '../utils/range.js'
 
-// State-aware empty messages (PRD F6; wording is a placeholder, PRD §12 #7)
-function emptyMessage(dayOffset, receivedThatDay) {
+// State-aware empty messages (PRD F6; wording is a placeholder, PRD §12 #7). This Week has its
+// own (placeholders too, Claude, 2026-11-22).
+function emptyMessage(dayOffset, receivedThatDay, range) {
+  if (range === 'week') {
+    if (weekBounds(dayOffset).end < 0) return 'You cleared this week. Nice work.'
+    if (receivedThatDay === 0) return 'Nothing yet this week, go enjoy your day.'
+    return "Way to go! This week's inbox is cleared right now."
+  }
   if (dayOffset < 0) return 'You cleared this day. Nice work.'
   if (receivedThatDay === 0) return 'Nothing yet, go enjoy your day.'
   return 'Way to go! Your daily inbox is cleared right now.'
@@ -27,9 +34,12 @@ export function unsortedFor(emails, dayOffset) {
 
 // The day's unsorted emails, with the unsorted count (PRD F1), Select all,
 // and the Move / Archive / Delete buttons (PRD F7). Clicking an email opens it in the drawer (PRD F5).
-export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onDeclutter, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
-  const dayEmails = emails.filter((email) => email.dayOffset === dayOffset)
-  const unsorted = unsortedFor(emails, dayOffset)
+// range (PRD F6, F10; brief item 5): 'today' shows one day; 'week' the Monday-to-Sunday week, newest
+// first under day headings, with the week's count.
+export default function TodayList({ emails, buckets, dayOffset, range = 'today', onChangeDay, onDeclutter, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
+  const dayEmails = receivedIn(emails, range, dayOffset)
+  const unsorted = listFor(emails, range, dayOffset)
+  const week = range === 'week'
   // Days that still have unsorted emails, for the back arrow's dot and the calendar
   const daysWithUnsorted = new Set(
     emails.filter((email) => email.bucketId === null && email.removedTo === null).map((email) => email.dayOffset),
@@ -51,8 +61,8 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onD
   return (
     <section className="today-list" aria-labelledby="today-heading">
       {/* A date from another year is long, so Declutter may have to shrink to its icon beside it */}
-      <header className={`today-header ${dayLabel(dayOffset).length > 14 ? 'has-long-date' : ''}`}>
-        <DayNav dayOffset={dayOffset} onChangeDay={onChangeDay} daysWithUnsorted={daysWithUnsorted} />
+      <header className={`today-header ${(week ? weekLabel(dayOffset) : dayLabel(dayOffset)).length > 14 ? 'has-long-date' : ''}`}>
+        <DayNav dayOffset={dayOffset} onChangeDay={onChangeDay} daysWithUnsorted={daysWithUnsorted} range={range} />
         {/* Declutter (PRD F13) starts on the day being viewed */}
         <button type="button" id="declutter-button" className="bulk-button declutter-button has-tooltip" onClick={onDeclutter}>
           <DeclutterIcon size={20} />
@@ -84,15 +94,25 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onD
       {unsorted.length > 0 ? (
         <>
           <ul className="email-list">
-            {unsorted.map((email) => (
-              <EmailRow
-                key={email.id}
-                email={email}
-                selected={selectedIds.includes(email.id)}
-                isOpen={email.id === openEmailId}
-                onToggleSelected={() => toggle(email.id)}
-                onOpen={() => onOpen(email.id)}
-              />
+            {unsorted.map((email, index) => (
+              <Fragment key={email.id}>
+                {/* This Week: a small heading where each day starts (Amanda, 2026-11-22) */}
+                {week && email.dayOffset !== unsorted[index - 1]?.dayOffset && (
+                  <li className="list-day-heading" role="presentation">
+                    {/* The day's name, then its date in a lighter weight (Amanda, 2026-11-22) */}
+                    <span className="list-day-name">{dayHeading(email.dayOffset).name}</span>{' '}
+                    <span className="list-day-date">{dayHeading(email.dayOffset).date}</span>
+                  </li>
+                )}
+                <EmailRow
+                  email={email}
+                  variant={week ? 'week' : 'today'}
+                  selected={selectedIds.includes(email.id)}
+                  isOpen={email.id === openEmailId}
+                  onToggleSelected={() => toggle(email.id)}
+                  onOpen={() => onOpen(email.id)}
+                />
+              </Fragment>
             ))}
           </ul>
         </>
@@ -108,7 +128,7 @@ export default function TodayList({ emails, buckets, dayOffset, onChangeDay, onD
               ))}
             </span>
           )}
-          <p>{emptyMessage(dayOffset, dayEmails.length)}</p>
+          <p>{emptyMessage(dayOffset, dayEmails.length, range)}</p>
         </div>
       )}
 

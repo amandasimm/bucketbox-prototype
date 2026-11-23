@@ -2134,3 +2134,17 @@ label.setting-row { cursor: pointer; }
 .bucket-slot.is-collapsed .drop-target-plus { width: 28px; height: 28px; }
 .bucket-slot.is-collapsed .drop-target-plus svg { width: 14px; height: 14px; }
 .bucket-slot.is-collapsed .drop-target-name { padding: 2px 10px; }
+
+/* This Week (brief item 5): a small heading where each day starts in the Today list */
+.list-day-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 16px 6px 44px; /* lines up with the sender, past the handle and checkbox */
+  border-bottom: 1px solid var(--divider);
+  background: var(--md-sys-color-surface-container-low);
+  font: 500 var(--md-sys-typescale-label-medium) var(--font);
+  color: var(--text-muted);
+}
+.list-day-name { font-weight: 600; color: var(--text); }
+.list-day-date { margin-left: 4px; font-weight: 400; color: var(--text-muted); }

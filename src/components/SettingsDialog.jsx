@@ -69,6 +69,21 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
         <h2 id={`${ids}-title`} className="dialog-title">Bucketbox settings</h2>
 
         <div className="settings-scroll">
+          {/* The Today list's range (PRD F6, F10; brief item 5). All Emails comes in Stage 21b. */}
+          <section className="settings-section" aria-labelledby={`${ids}-list`}>
+            <h3 id={`${ids}-list`} className="settings-heading">Today list</h3>
+            <ChoiceRow
+              legend="Show"
+              name={`${ids}-range`}
+              value={draft.range}
+              onChange={(range) => set({ range })}
+              options={[
+                { value: 'today', label: 'Today (one day at a time)' },
+                { value: 'week', label: 'This Week (Monday to Sunday)' },
+              ]}
+            />
+          </section>
+
           <section className="settings-section" aria-labelledby={`${ids}-buckets`}>
             <h3 id={`${ids}-buckets`} className="settings-heading">Buckets</h3>
             <SwitchRow

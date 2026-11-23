@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from './Icon.jsx'
 import IconButton from './IconButton.jsx'
+import { weekBounds, weekHolds, weekLabel } from '../utils/range.js'
 
 // "Today", "Yesterday", or a date with the full month name, like "October 27" (PRD F6).
 // A date from another year includes the year: "December 31, 2025" (BUILD-LOG, 2026-10-30).
@@ -139,26 +140,36 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
 // Moving between days (PRD F6): ‹ label › then the calendar. The next arrow only appears on
 // past days. The back arrow shows a small blue dot when the day before still has unsorted
 // emails, with a text label so it isn't color-only (BUILD-LOG, 2026-10-30).
-export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted }) {
+// range 'week' (PRD F6; brief item 5): the arrows move a week at a time, the label reads "This
+// week", "Last week" or "Nov 3–9", and the back arrow's dot means the week before has unsorted
+// emails. The calendar still picks a day; its week is shown.
+export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted, range = 'today' }) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const calendarRef = useRef(null)
-  const previousLabel = dayLabel(dayOffset - 1)
-  const previousHasUnsorted = daysWithUnsorted.has(dayOffset - 1)
-  const backLabel = previousHasUnsorted ? `Previous day. ${previousLabel} has unsorted emails` : 'Previous day'
+  const week = range === 'week'
+  const step = week ? 7 : 1
+  const previousLabel = week ? weekLabel(dayOffset - 7) : dayLabel(dayOffset - 1)
+  const previousHasUnsorted = week
+    ? [...daysWithUnsorted].some((offset) => weekHolds(dayOffset - 7, offset))
+    : daysWithUnsorted.has(dayOffset - 1)
+  const unit = week ? 'week' : 'day'
+  const backLabel = previousHasUnsorted ? `Previous ${unit}. ${previousLabel} has unsorted emails` : `Previous ${unit}`
+  // The next arrow only shows on past days (or past weeks)
+  const showNext = week ? weekBounds(dayOffset).end < 0 : dayOffset < 0
 
   return (
     <div className="day-nav">
       <span className={`day-nav-back ${previousHasUnsorted ? 'has-waiting' : ''}`}>
-        <IconButton label={backLabel} tooltipAlign="left" onClick={() => onChangeDay(dayOffset - 1)}>
+        <IconButton label={backLabel} tooltipAlign="left" onClick={() => onChangeDay(dayOffset - step)}>
           <Icon name="chevron_left" size={22} />
         </IconButton>
         {previousHasUnsorted && <span className="day-nav-dot" aria-hidden="true" />}
       </span>
       <h2 id="today-heading" className="today-label" aria-live="polite">
-        {dayLabel(dayOffset)}
+        {week ? weekLabel(dayOffset) : dayLabel(dayOffset)}
       </h2>
-      {dayOffset < 0 && (
-        <IconButton label="Next day" onClick={() => onChangeDay(dayOffset + 1)}>
+      {showNext && (
+        <IconButton label={`Next ${unit}`} onClick={() => onChangeDay(Math.min(dayOffset + step, 0))}>
           <Icon name="chevron_right" size={22} />
         </IconButton>
       )}
