@@ -29,7 +29,12 @@ export default function BucketEmpty({ bucket, emails, autoSort = true, onSortBac
           )}
         </>
       ) : (
-        <p>This bucket is empty. Drop emails here to keep them together.</p>
+        // Each sentence on its own line (Amanda, 2026-11-22)
+        <p>
+          This bucket is empty.
+          <br />
+          Drop emails here to keep them together.
+        </p>
       )}
     </div>
   )

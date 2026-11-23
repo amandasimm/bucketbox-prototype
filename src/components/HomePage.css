@@ -942,7 +942,10 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .drop-target-name { transition: transform 180ms cubic-bezier(0.3, 1.6, 0.5, 1); }
 .drop-target.is-over .drop-target-name {
   background: color-mix(in srgb, var(--bucket-color) 12%, white);
-  transform: scale(1.12); /* the name grows slightly under the envelope (PRD F4 v2 animation) */
+  /* Under the envelope the name turns bold and grows just a little (Amanda, 2026-11-22: 112% looked
+     comical; weight carries it now) */
+  font-weight: 700;
+  transform: scale(1.04);
 }
 .drop-target.is-over .drop-target-plus {
   background: var(--bucket-color);
