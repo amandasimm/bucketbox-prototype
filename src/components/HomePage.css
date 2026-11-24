@@ -638,7 +638,10 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 /* Add / Edit bucket form, shown in place of a tile (PRD F2, Flow 1) */
 .bucket-form {
   gap: 8px;
-  height: auto; /* hugs its contents, so there's no empty gap above Cancel / Save */
+  /* The same height as a tile, so opening the form doesn't move anything (Amanda, 2026-11-24;
+     was "hugs its contents" from 2026-11-13). It still grows if its contents need more. */
+  height: auto;
+  min-height: var(--bucket-height);
   padding: 16px;
   border: 1px solid var(--bucket-color); /* previews the picked color */
 }
@@ -861,7 +864,8 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: auto; /* Cancel / Save sit at the bottom of the tile-high form */
+  padding-top: 16px;
 }
 .filled-button:disabled {
   background: rgba(31, 31, 31, 0.12);
@@ -2211,6 +2215,8 @@ label.setting-row { cursor: pointer; }
 
 /* The page size choice in settings (All Emails, brief item 5) */
 .setting-select { margin-left: 0; flex-shrink: 0; }
+/* The time field matches the dropdowns: same height, border and text (Stage 24a) */
+.setting-time { padding-right: 4px; }
 
 /* All Emails (brief item 5, Stage 21b): Gmail's pager in the list toolbar, and its Select all line */
 .list-pager {

@@ -6,6 +6,7 @@ const KEY = 'bucketbox-settings'
 
 export const defaultSettings = {
   range: 'today', // the Today list's range: 'today' (default) | 'week' | 'all' (PRD F6, F10; brief item 5)
+  cutoff: '17:00', // "When do you usually stop checking email?": any time, 5 PM by default; "00:00" moves nothing (Stage 24a)
   pageSize: 50, // All Emails: emails per page, like Gmail (PRD F6)
   showCount: false, // All Emails: show the unsorted count (hidden by default; Amanda, 2026-11-22)
   chunkSize: 25, // All Emails: how many emails one Declutter run takes (PRD F6; separate from the page size)
@@ -38,6 +39,8 @@ export function loadSettings() {
       ...saved,
       buttons: { ...defaultSettings.buttons, ...saved.buttons },
       hiddenSuggestions: Array.isArray(saved.hiddenSuggestions) ? saved.hiddenSuggestions : [],
+      // Anything that isn't an "HH:MM" time (earlier builds saved an hour number) goes back to 5 PM
+      cutoff: /^\d\d:\d\d$/.test(saved.cutoff) ? saved.cutoff : defaultSettings.cutoff,
     }
   } catch {
     return defaultSettings

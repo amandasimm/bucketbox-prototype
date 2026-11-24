@@ -9,6 +9,16 @@ export function receivedAt(dayOffset, time) {
   return date
 }
 
+// Which list day an email belongs to (Stage 24a; Amanda, 2026-11-24). "When do you usually stop
+// checking email?" is a time ("17:00", 5 PM by default): anything that arrives at or after it
+// waits in the next day's Today list, so evening mail isn't missed the next morning. "00:00"
+// (midnight) moves nothing. Today's own late arrivals stay in Today, since there's no list for
+// tomorrow yet. calendarDayOffset is the day it really arrived; time is its 24-hour "HH:MM".
+export function listDay(calendarDayOffset, time, cutoff = '17:00') {
+  const after = cutoff !== '00:00' && time.padStart(5, '0') >= cutoff
+  return Math.min(after ? calendarDayOffset + 1 : calendarDayOffset, 0)
+}
+
 // "12:42 PM", shown on Today list rows
 export function formatTime(date) {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })

@@ -85,7 +85,7 @@ export const mockEmails = [
     "subject": "Cabin weekend: dates and who's driving?",
     "category": "Primary",
     "dayOffset": 0,
-    "time": "10:40",
+    "time": "01:30",
     "bucketId": null,
     "unread": true,
     "attachments": [],
@@ -120,13 +120,13 @@ export const mockEmails = [
       {
         "from": "Priya Nair",
         "dayOffset": 0,
-        "time": "08:20",
+        "time": "00:40",
         "body": "Perfect. Sam, there's a market about ten minutes away. Can everyone send me $40 for the deposit by the end of the week?"
       },
       {
         "from": "Jess Park",
         "dayOffset": 0,
-        "time": "10:40",
+        "time": "01:30",
         "body": "Sent! Also, should we make a shared packing list?"
       }
     ]
@@ -168,7 +168,7 @@ export const mockEmails = [
     "subject": "Security alert: New sign-in from Chrome on Windows",
     "category": "Primary",
     "dayOffset": 0,
-    "time": "09:45",
+    "time": "02:15",
     "bucketId": null,
     "unread": true,
     "attachments": [],

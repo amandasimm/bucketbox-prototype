@@ -9,7 +9,7 @@ import { unsortedFor } from './components/TodayList.jsx'
 import { mockEmails } from './data/mockEmails.js'
 import { bucketColors, startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
-import { receivedAt } from './utils/dates.js'
+import { listDay, receivedAt } from './utils/dates.js'
 import { listFor, weekBounds, weekLabel } from './utils/range.js'
 import { dayButtonLabel } from './components/Declutter.jsx'
 import { endTitle } from './utils/declutterMessages.js'
@@ -22,11 +22,16 @@ import { findRuleSuggestion } from './utils/suggestRules.js'
 
 // Everything lives in memory only: a page reload starts fresh (CLAUDE.md §5).
 // Each email has bucketId (null = unsorted) and removedTo (null, 'archive', 'trash' or 'junk').
+// calendarDayOffset is the day an email really arrived; dayOffset is the list day it shows under,
+// which "When should emails arrive in Today?" can move back a day for late-night mail (Stage 24a)
 const startingEmails = mockEmails.map((email) => ({
   ...email,
+  calendarDayOffset: email.dayOffset,
   receivedAt: receivedAt(email.dayOffset, email.time),
   removedTo: null,
 }))
+const withListDays = (list, cutoff) =>
+  list.map((email) => ({ ...email, dayOffset: listDay(email.calendarDayOffset, email.time, cutoff) }))
 // Each scenario's starting point (Stage 23; utils/scenario.js). Onboarding has no buckets, so the
 // emails that start in Priority are unsorted on their own days (Amanda, 2026-11-24).
 const startingPoint = {
@@ -65,7 +70,7 @@ function previousCard(list, deck, from) {
 export default function App({ scenario = 'filled', startToast = null, onSwitchScenario, onResetScenario }) {
   // true = Bucketbox, false = the plain Gmail view (PRD §5 toggle)
   const [prototypeOn, setPrototypeOn] = useState(true)
-  const [emails, setEmails] = useState(startingPoint[scenario].emails)
+  const [emails, setEmails] = useState(() => withListDays(startingPoint[scenario].emails, loadSettings().cutoff))
   const [buckets, setBuckets] = useState(startingPoint[scenario].buckets)
   const [selectedIds, setSelectedIds] = useState([])
   // Undo covers the last action only (PRD F8): { label, before, after, undone }
@@ -113,6 +118,15 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   useEffect(() => {
     document.body.classList.toggle('no-motion', !settings.motion)
   }, [settings.motion])
+  // A new arrival time moves late-night emails between days, in the list and in undo's snapshots
+  // (Stage 24a). Skipped on the first render, which already used the saved time.
+  const cutoffShown = useRef(settings.cutoff)
+  useEffect(() => {
+    if (cutoffShown.current === settings.cutoff) return
+    cutoffShown.current = settings.cutoff
+    changeEverywhere((list) => withListDays(list, settings.cutoff))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.cutoff])
   // The unread dot on rows is a setting, off by default (BUILD-LOG, 2026-11-24)
   useEffect(() => {
     document.body.classList.toggle('show-unread-dot', settings.unreadDot)
@@ -193,7 +207,16 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     const sorted = {} // bucket name -> how many
     let conflicts = 0
     const incoming = newEmails.map((email) => {
-      const arrived = { attachments: [], ...email, receivedAt: receivedAt(email.dayOffset, email.time), unread: true, bucketId: null, removedTo: null }
+      const arrived = {
+        attachments: [],
+        ...email,
+        calendarDayOffset: email.dayOffset,
+        dayOffset: listDay(email.dayOffset, email.time, settings.cutoff),
+        receivedAt: receivedAt(email.dayOffset, email.time),
+        unread: true,
+        bucketId: null,
+        removedTo: null,
+      }
       // With auto-sort switched off in settings, everything lands in the Today list (brief 1j)
       const route = settings.autoSort ? routeEmail(arrived, buckets) : { type: 'none' }
       // More than one bucket fits: it waits in the Today list, remembering which buckets (1g)

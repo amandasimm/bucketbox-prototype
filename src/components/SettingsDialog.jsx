@@ -125,6 +125,21 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
                 />
               </>
             )}
+            {/* The day's end (Stage 24a; Amanda, 2026-11-24) */}
+            <div className="setting-row">
+              <label className="setting-text" htmlFor={`${ids}-cutoff`}>
+                <span className="setting-label">When do you usually stop checking email?</span>
+                <span className="setting-hint">Anything that arrives after this waits in the next day&apos;s Today list, so evening emails don&apos;t get missed</span>
+              </label>
+              {/* A time field, 5 PM to start (Amanda, 2026-11-24). Clearing it keeps the last time. */}
+              <input
+                type="time"
+                id={`${ids}-cutoff`}
+                className="dialog-select setting-select setting-time"
+                value={draft.cutoff}
+                onChange={(event) => event.target.value && set({ cutoff: event.target.value })}
+              />
+            </div>
             <SwitchRow
               label="Unread dot indicator"
               hint="A blue dot next to the sender of unread emails"

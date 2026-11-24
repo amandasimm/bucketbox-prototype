@@ -6,7 +6,7 @@ import './GmailInbox.css'
 
 // Today's emails show the time, older ones the date, like Gmail
 function receivedLabel(email) {
-  return email.dayOffset === 0 ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
+  return (email.calendarDayOffset ?? email.dayOffset) === 0 ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
 }
 
 // The plain Gmail inbox, shown when Bucketbox is switched off (PRD §5 toggle; BUILD-LOG,

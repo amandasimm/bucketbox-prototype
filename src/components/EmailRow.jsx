@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { useDragMotion } from './DragMotion.jsx'
 import Icon from './Icon.jsx'
-import { formatShortDate, formatTime } from '../utils/dates.js'
+import { formatMessageTime, formatShortDate, formatTime } from '../utils/dates.js'
 import { MatchesTag, isNotSorted } from './ConflictBanner.jsx'
 
 // One email in a list. In a narrow list it's stacked like Gmail's narrow rows (BUILD-LOG,
@@ -43,8 +43,15 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
   const threadSize = email.messages?.length ?? 1
   // The Today list shows times; in This Week the day heading above gives the date (brief item 5)
   // All Emails (Stage 21b): a time for today's, a date for earlier ones, like Gmail
+  // An evening email moved to the next day by "When do you usually stop checking email?" shows its
+  // date too ("Nov 23, 6:15 PM"), so it doesn't look like it arrived later today (Stage 24a)
+  const moved = email.calendarDayOffset !== undefined && email.calendarDayOffset !== email.dayOffset
   const received =
-    variant === 'today' || variant === 'week' || (variant === 'all' && email.dayOffset === 0) ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
+    (variant === 'today' || variant === 'week') && moved
+      ? formatMessageTime(email.receivedAt)
+      : variant === 'today' || variant === 'week' || (variant === 'all' && (email.calendarDayOffset ?? email.dayOffset) === 0)
+        ? formatTime(email.receivedAt)
+        : formatShortDate(email.receivedAt)
   const rowClasses = [
     'email-row',
     email.unread ? 'is-unread' : 'is-read',
