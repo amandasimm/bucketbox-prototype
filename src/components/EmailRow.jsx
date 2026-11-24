@@ -5,8 +5,10 @@ import Icon from './Icon.jsx'
 import { formatShortDate, formatTime } from '../utils/dates.js'
 import { MatchesTag, isNotSorted } from './ConflictBanner.jsx'
 
-// One email in a list, stacked like Gmail's mobile rows (BUILD-LOG, 2026-10-28):
-// sender and time on top, then subject, preview and attachments.
+// One email in a list. In a narrow list it's stacked like Gmail's narrow rows (BUILD-LOG,
+// 2026-10-28): sender and time on top, then subject, preview and attachments. A list 520px or
+// wider shows Gmail's one-line rows instead: sender, subject – preview, time, with attachments
+// below (Stage 22; Amanda, 2026-11-24). The switch is in HomePage.css.
 // variant:
 // - 'today': time, checkbox, preview, always-visible drag handle (PRD F1). The handle's grab
 //   area is the whole left strip, including the space under the checkbox, plus the right edge.
@@ -93,15 +95,22 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
             {threadSize > 1 && <span className="email-thread-size">{threadSize}</span>}
             {email.unread && <span className="unread-dot" aria-hidden="true" />}
           </span>
-          <span className="email-received">{received}</span>
+          <span className="email-received">
+            {/* A calendar invitation: Gmail's calendar icon before the time (2026-11-24) */}
+            {email.invite && <span className="email-invite-icon"><Icon name="event" size={18} /></span>}
+            {received}
+          </span>
         </span>
-        {/* Before the subject, where Gmail shows its labels (brief 1g; Amanda, 2026-11-21) */}
-        <span className="email-subject">
-          {isNotSorted(email) && <MatchesTag email={email} />}
-          {email.subject}
+        {/* Subject and preview: stacked in a narrow list, on one line in a wide one */}
+        <span className="email-row-main">
+          {/* Before the subject, where Gmail shows its labels (brief 1g; Amanda, 2026-11-21) */}
+          <span className="email-subject">
+            {isNotSorted(email) && <MatchesTag email={email} />}
+            {email.subject}
+          </span>
+          {/* Bucket tiles show the preview and attachments too, like the Today list (BUILD-LOG, 2026-11-16) */}
+          <span className="email-preview">{email.preview}</span>
         </span>
-        {/* Bucket tiles show the preview and attachments too, like the Today list (BUILD-LOG, 2026-11-16) */}
-        <span className="email-preview">{email.preview}</span>
         {email.attachments.length > 0 && (
           <span className="email-attachments">
             {email.attachments.map((name) => (

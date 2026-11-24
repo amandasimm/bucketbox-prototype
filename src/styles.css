@@ -59,7 +59,9 @@
   --text: var(--md-sys-color-on-surface);
   --text-muted: var(--md-sys-color-on-surface-variant);
   --text-meta: var(--md-sys-color-on-surface-variant);      /* times and dates */
-  --text-read: var(--md-sys-color-on-surface-variant);      /* sender and subject of read emails */
+  --text-read: var(--md-sys-color-on-surface);              /* sender and subject of read emails: same dark as unread, just not bold (Gmail, 2026-11-24) */
+  --read-row-bg: #f2f6fc;      /* Gmail's fill for read rows; unread rows stay white (2026-11-24) */
+  --open-row-bg: var(--md-sys-color-surface-container-highest); /* the email open in the drawer or pane, darker than a read row */
   --unread-dot: var(--md-sys-color-primary);
   --selected-row-bg: var(--md-sys-color-primary-container);
   --text-preview: #5f6368;   /* body previews: lighter than any M3 text role, still AA on white (kept, BUILD-LOG 2026-10-29) */

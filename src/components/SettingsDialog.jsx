@@ -125,6 +125,12 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
                 />
               </>
             )}
+            <SwitchRow
+              label="Unread dot indicator"
+              hint="A blue dot next to the sender of unread emails"
+              checked={draft.unreadDot}
+              onChange={(unreadDot) => set({ unreadDot })}
+            />
           </section>
 
           <section className="settings-section" aria-labelledby={`${ids}-buckets`}>

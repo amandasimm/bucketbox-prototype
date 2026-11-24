@@ -1,6 +1,6 @@
 """Convert Amanda's mock data spreadsheet into the prototype's data file.
 
-Reads:  mock_inbox_data_v4.numbers  (sheets "Emails" and "Thread")
+Reads:  mock_inbox_data_v5.numbers  (sheets "Emails" and "Thread")
 Writes: src/data/mockEmails.js
 
 Needs the numbers-parser Python package (pip install numbers-parser).
@@ -15,7 +15,7 @@ from pathlib import Path
 from numbers_parser import Document
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "mock_inbox_data_v4.numbers"
+SOURCE = ROOT / "mock_inbox_data_v5.numbers"
 OUTPUT = ROOT / "src" / "data" / "mockEmails.js"
 
 
@@ -83,6 +83,8 @@ def main():
             "bucketId": bucket_id(text(row["Location"])),
             "unread": text(row["Unread"]).lower() == "yes",
             "attachments": [attachments] if attachments else [],
+            # A calendar invitation: Gmail shows a calendar icon before the time (v5, 2026-11-24)
+            "invite": text(row.get("Invite")).lower() == "yes",
             "preview": text(row["Body Preview"]),
             "body": text(row["Full Body"]),
         }
@@ -99,7 +101,7 @@ def main():
         sys.exit(f"Thread rows with no matching email: {sorted(messages_by_email)}")
 
     OUTPUT.write_text(
-        "// Generated from mock_inbox_data_v4.numbers by scripts/import-mock-data.py.\n"
+        "// Generated from mock_inbox_data_v5.numbers by scripts/import-mock-data.py.\n"
         "// Don't edit by hand: change the spreadsheet and re-run the import.\n"
         "// dayOffset: 0 = today, -1 = yesterday. time is 24-hour, in the viewer's time zone.\n\n"
         f"export const mockEmails = {json.dumps(emails, indent=2, ensure_ascii=False)}\n",

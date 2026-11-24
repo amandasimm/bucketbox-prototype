@@ -19,6 +19,7 @@ export const defaultSettings = {
   labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
   buttons: { move: true, archive: true, delete: true, declutter: true },
   motion: true,
+  unreadDot: false, // the blue dot on unread rows: off by default, like Gmail (Amanda, 2026-11-24)
   zone: 'trash', // the delete zone: 'trash' | 'archive'
 }
 

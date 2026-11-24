@@ -72,6 +72,7 @@ export default function GmailInbox({ emails, buckets }) {
                     <span className="gmail-inbox-subject">{email.subject}</span>
                     <span className="gmail-inbox-preview">{'\u00a0- '}{email.preview}</span>
                   </span>
+                  {email.invite && <span className="gmail-inbox-invite"><Icon name="event" size={20} /></span>}
                   <span className="gmail-inbox-date">{receivedLabel(email)}</span>
                 </span>
                 {email.attachments.length > 0 && (

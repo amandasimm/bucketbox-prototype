@@ -52,7 +52,7 @@
   text-align: left;
   font-size: 14px;
 }
-.gmail-inbox-row.is-read { background: var(--md-sys-color-surface-container); }
+.gmail-inbox-row.is-read { background: var(--read-row-bg); }
 .gmail-inbox-row.is-unread { background: var(--surface); }
 .gmail-inbox-row:hover {
   z-index: 1;
@@ -113,6 +113,8 @@
   font-weight: 400;
   line-height: 18px;
 }
+/* A calendar invitation's icon, before the date like Gmail (2026-11-24) */
+.gmail-inbox-invite { display: inline-flex; flex-shrink: 0; margin-left: 8px; color: var(--text-muted); }
 .gmail-inbox-date {
   flex-shrink: 0;
   width: 64px;

@@ -106,6 +106,10 @@ export default function App() {
   useEffect(() => {
     document.body.classList.toggle('no-motion', !settings.motion)
   }, [settings.motion])
+  // The unread dot on rows is a setting, off by default (BUILD-LOG, 2026-11-24)
+  useEffect(() => {
+    document.body.classList.toggle('show-unread-dot', settings.unreadDot)
+  }, [settings.unreadDot])
 
   function saveSettings({ zone, ...rest }) {
     // A new range starts from today (PRD F6; brief item 5)

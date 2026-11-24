@@ -1,4 +1,4 @@
-// Generated from mock_inbox_data_v4.numbers by scripts/import-mock-data.py.
+// Generated from mock_inbox_data_v5.numbers by scripts/import-mock-data.py.
 // Don't edit by hand: change the spreadsheet and re-run the import.
 // dayOffset: 0 = today, -1 = yesterday. time is 24-hour, in the viewer's time zone.
 
@@ -14,6 +14,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Good news! Your package is on the way. Track your shipment using the link below...",
     "body": "Good news! Your package is on the way. Track your shipment using the link below. Estimated delivery: tomorrow by 8 PM."
   },
@@ -28,6 +29,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "We just added a new series tailored just for you. Grab your popcorn and start watching...",
     "body": "We just added a new series tailored just for you. Grab your popcorn and start watching. New episodes are available now."
   },
@@ -42,6 +44,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Thanks for being such a great audience this morning! Here's the link to the slides...",
     "body": "Thanks for being such a great audience this morning! Here's the link to the slides: https://slides.example.com/q4-update. Let me know if you have any questions or want to talk through anything we covered."
   },
@@ -56,6 +59,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "See who's looking at your profile, explore new job matches, and stay updated in your network...",
     "body": "See who's looking at your profile, explore new job matches, and stay updated in your network. Upgrade to see everyone who viewed you."
   },
@@ -70,6 +74,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Keep your access by choosing a membership before your trial ends.",
     "body": "Keep your access by choosing a membership before your trial ends. Join today and we'll waive the enrollment fee."
   },
@@ -84,6 +89,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Sent! Also, should we make a shared packing list?",
     "body": "Sent! Also, should we make a shared packing list?",
     "messages": [
@@ -126,6 +132,21 @@ export const mockEmails = [
     ]
   },
   {
+    "id": "EML_1029",
+    "sender": "Jordan Reyes",
+    "senderEmail": "jordan.reyes@example.com",
+    "subject": "Invitation: Deck review @ Friday 3pm – 3:30pm",
+    "category": "Primary",
+    "dayOffset": 0,
+    "time": "10:30",
+    "bucketId": null,
+    "unread": true,
+    "attachments": [],
+    "invite": true,
+    "preview": "Jordan Reyes has invited you to Deck review on Friday, 3pm – 3:30pm (Google Meet)...",
+    "body": "Jordan Reyes has invited you to Deck review on Friday, 3pm – 3:30pm (Google Meet). Just 30 minutes to walk through the last few slides before we send it out. Thanks!"
+  },
+  {
     "id": "EML_1013",
     "sender": "Jordan Reyes",
     "senderEmail": "jordan.reyes@example.com",
@@ -136,6 +157,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Do you have a minute to chat today?",
     "body": "Do you have a minute to chat today? Just want to talk through a couple of things on the latest version."
   },
@@ -150,6 +172,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "We noticed a new login to your Google Account. If this was you, no action is needed...",
     "body": "We noticed a new login to your Google Account. If this was you, no action is needed. If not, secure your account."
   },
@@ -164,6 +187,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Thanks for applying. We'd love to set up a 30-minute video interview.",
     "body": "Thanks for applying. We'd love to set up a 30-minute video interview with our marketing lead. Do you have any availability next week?"
   },
@@ -178,6 +202,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "@Sarah: Hey team, please review the final mockups before our meeting today. Thanks!",
     "body": "@Sarah: Hey team, please review the final mockups before our meeting today. Thanks!"
   },
@@ -194,6 +219,7 @@ export const mockEmails = [
     "attachments": [
       "3 photos"
     ],
+    "invite": false,
     "preview": "Hi sweetheart! How are you doing? I feel like it's been ages...",
     "body": "Hi sweetheart! How are you doing? I feel like it's been ages. I just got back from Rome and wanted to share a few pictures. The food was unbelievable and I walked about a thousand miles. Call me when you have a minute and tell me everything that's new with you. Love, Aunt Wendy"
   },
@@ -208,6 +234,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Staff picks, new arrivals, and free events happening near you this month...",
     "body": "STAFF PICKS: 'The Lantern Keeper' (mystery), 'Small Hours' (literary fiction), 'A Garden of Second Chances' (memoir). COMMUNITY EVENTS: toddler story time, community book swap, teen coding club, and free help with tech questions. See the full calendar online."
   },
@@ -222,6 +249,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "I'm hosting this weekend! Bring snacks if you can.",
     "body": "I'm hosting this weekend! Bring snacks if you can. I'll have a few board games ready, and let me know if you have any favorites to add."
   },
@@ -236,6 +264,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "You are invited to join a Zoom meeting now in progress. Click to join: https://zoom.us/j/...",
     "body": "You are invited to join a Zoom meeting now in progress. Click to join: https://zoom.us/j/..."
   },
@@ -250,6 +279,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "\"Love this!\" View the comment and reply.",
     "body": "priya.nair commented: \"Love this!\" View the comment and reply."
   },
@@ -264,6 +294,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "It's official, we're all moved in! Here's our new address...",
     "body": "It's official, we're all moved in! Here's our new address: 218 Birchwood Lane, Apt 4C. Come visit once we've unpacked a few more boxes. I'll make coffee."
   },
@@ -278,6 +309,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "Your personalized playlist is fresh and ready for the week. Dive into 30 new tracks...",
     "body": "Your personalized playlist is fresh and ready for the week. Dive into 30 new tracks from artists you follow."
   },
@@ -292,8 +324,24 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Your latest statement is now available to view online.",
     "body": "Your latest statement is now available to view online. Your payment is scheduled for the due date on your account."
+  },
+  {
+    "id": "EML_1030",
+    "sender": "Priya Nair",
+    "senderEmail": "priya.nair@example.com",
+    "subject": "Invitation: Coffee + portfolio chat @ Saturday 11am – 12pm",
+    "category": "Primary",
+    "dayOffset": -1,
+    "time": "12:05",
+    "bucketId": null,
+    "unread": false,
+    "attachments": [],
+    "invite": true,
+    "preview": "Priya Nair has invited you to Coffee + portfolio chat on Saturday, 11am – 12pm...",
+    "body": "Priya Nair has invited you to Coffee + portfolio chat on Saturday, 11am – 12pm, at Corner Café. Coffee's on me as a thank-you for looking at my portfolio!"
   },
   {
     "id": "EML_1007",
@@ -306,6 +354,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "Thanks for riding! Here is your breakdown for the trip across town. Total: $24.50...",
     "body": "Thanks for riding! Here is your breakdown for the trip across town. Total: $24.50. Rate your driver to help us improve."
   },
@@ -320,6 +369,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "It's been a while. Here's a code for 20% off your next order.",
     "body": "It's been a while. Here's a code for 20% off your next order. Offer ends soon."
   },
@@ -334,6 +384,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "Based on your recent interest in interior design, we found some collections you might love...",
     "body": "Based on your recent interest in interior design, we found some collections you might love. Tap to explore."
   },
@@ -348,6 +399,7 @@ export const mockEmails = [
     "bucketId": null,
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "We found a known security vulnerability in a package you depend on. Upgrade immediately...",
     "body": "We found a known security vulnerability in a package you depend on. Upgrade immediately to keep your project secure."
   },
@@ -364,6 +416,7 @@ export const mockEmails = [
     "attachments": [
       "Lease renewal.pdf"
     ],
+    "invite": false,
     "preview": "Your lease ends soon, and we'd love to have you stay.",
     "body": "Your lease ends soon, and we'd love to have you stay. Please review the attached renewal and let me know by the end of the month."
   },
@@ -378,6 +431,7 @@ export const mockEmails = [
     "bucketId": "priority",
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "I've left comments throughout.",
     "body": "I've left comments throughout. Let's talk about the second section. Can you come by office hours?"
   },
@@ -392,6 +446,7 @@ export const mockEmails = [
     "bucketId": "priority",
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "We're so excited to celebrate with you!",
     "body": "We're so excited to celebrate with you! Could you let us know if you can make it by the end of the month?"
   },
@@ -406,6 +461,7 @@ export const mockEmails = [
     "bucketId": "priority",
     "unread": false,
     "attachments": [],
+    "invite": false,
     "preview": "Could you take a quick look at my portfolio before I send it out?",
     "body": "Could you take a quick look at my portfolio before I send it out? No rush."
   },
@@ -420,6 +476,7 @@ export const mockEmails = [
     "bucketId": "priority",
     "unread": true,
     "attachments": [],
+    "invite": false,
     "preview": "Open enrollment ends this month.",
     "body": "Open enrollment ends this month. Please review your options and submit your choices."
   }

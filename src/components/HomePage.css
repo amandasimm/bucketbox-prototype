@@ -19,12 +19,13 @@
   --bucket-area-min: calc(var(--bucket-cols) * var(--bucket-min) + (var(--bucket-cols) - 1) * 16px + 32px);
   position: relative;
   display: grid;
-  /* Today: 40% of the page, between 420px and 560px (Amanda, 2026-11-21), the same with or
-     without an open email. Wide enough that one column of buckets isn't stretched, narrow
-     enough that the reading drawer stays comfortable (email lines of about 440–520px at
-     1280–1440 wide). Never under its minimum, and never so wide the buckets lose theirs.
-     The dividers change it. */
-  --today-default: max(var(--today-min), min(clamp(420px, 40%, 560px), calc(100% - var(--bucket-area-min))));
+  /* Today's starting share (Stage 22; Amanda, 2026-11-24): half the page with one column of
+     buckets, so the Today card and the tiles are the same width; 40% with two columns, so each
+     column gets 30%. No upper limit: wide lists switch to Gmail's one-line rows. At least 420px,
+     never under its minimum, and never so wide the buckets lose theirs. The same with or
+     without an open email; the dividers change it. */
+  --today-share: 40%;
+  --today-default: max(var(--today-min), min(max(420px, var(--today-share)), calc(100% - var(--bucket-area-min))));
   grid-template-columns: var(--today-default) minmax(0, 1fr);
   /* A full-width row on top for the conflicts banner (brief 1g; Amanda 2026-11-21); it takes
      no room when there's no banner */
@@ -101,6 +102,7 @@
   padding: 0;
   overflow-y: auto;
   flex: 1;
+  container: email-list / inline-size; /* rows switch layout by the list's own width (Stage 22) */
 }
 
 /* Bulk buttons, pinned to the bottom of the Today list */
@@ -159,6 +161,7 @@
   border-bottom: 1px solid var(--divider);
   cursor: pointer;
 }
+.email-row.is-read { background: var(--read-row-bg); } /* Gmail: read rows tinted, unread rows white (2026-11-24) */
 .email-row:hover { box-shadow: inset 1px 0 0 var(--md-sys-color-outline-variant), inset -1px 0 0 var(--md-sys-color-outline-variant), var(--md-sys-elevation-level1); }
 
 .drag-handle {
@@ -236,7 +239,7 @@
 .email-subject,
 .email-preview { display: block; }
 /* The email that's open in the drawer or pane */
-.email-row.is-open { background: var(--md-sys-color-surface-container); }
+.email-row.is-open { background: var(--open-row-bg); }
 .email-row.is-open.is-selected { background: var(--selected-row-bg); }
 .email-row-top {
   display: flex;
@@ -253,9 +256,9 @@
 /* Text hierarchy (BUILD-LOG, 2026-10-29):
    1 sender: bold, darkest, largest · 2 time/date: regular, muted, small, far right
    3 subject: dark, a little smaller · 4 preview: regular, lightest gray, smallest, 2 lines
-   Unread: blue dot after the sender, sender and subject bold.
-   Read: no dot, sender and subject regular weight and slightly dimmer. No background fill,
-   so read and unread rows look the same in the Today list and in buckets. */
+   Unread: white row, sender and subject bold (plus a blue dot after the sender if the setting is on).
+   Read: Gmail's light blue-gray fill, no dot, sender and subject regular weight in the same
+   dark color (Gmail's styling, 2026-11-24; replaces "no background fill" from 2026-10-29). */
 .email-sender {
   display: flex;
   align-items: center;
@@ -265,6 +268,8 @@
   font-weight: 400;
   color: var(--text-read);
 }
+/* The unread dot shows only with "Unread dot indicator" on in settings (off by default; 2026-11-24) */
+body:not(.show-unread-dot) .unread-dot { display: none; }
 .unread-dot {
   width: 8px;
   height: 8px;
@@ -285,6 +290,17 @@
   font-size: 12px;
   font-weight: 400;
   color: var(--text-meta);
+}
+/* A calendar invitation (2026-11-24): Gmail's calendar icon before the time */
+.email-invite-icon {
+  display: inline-flex;
+  vertical-align: -4px; /* sits on the time's line */
+  margin-right: 8px;
+  line-height: 1;
+  color: var(--text-meta);
+}
+@container email-list (min-width: 520px) {
+  .email-invite-icon { margin-right: 16px; }
 }
 .email-subject {
   font-size: 14px;
@@ -307,6 +323,42 @@
   -webkit-box-orient: vertical;
 }
 
+/* Gmail's one-line rows, for any list 520px or wider (Stage 22; Amanda, 2026-11-24; Gmail switches
+   to its narrow rows at about 520px). Left to right: sender, subject – preview, time, all 14px
+   like Gmail; attachments on a short second line under the subject. Narrower lists keep the
+   stacked rows above. */
+@container email-list (min-width: 520px) {
+  /* Gmail's 40px row: 10px above, a 20px line, 10px below including the 1px divider (Amanda,
+     from Gmail's styles, 2026-11-24) */
+  .email-row { padding-block: 10px 9px; }
+  .email-row-body { line-height: 20px; }
+  .drag-handle { margin-block: -10px -9px; padding-block: 10px 9px; }
+  .email-checkbox { margin-top: 1px; }
+  .email-row-body {
+    display: grid;
+    grid-template-columns: clamp(120px, 28%, 200px) minmax(0, 1fr) auto;
+    column-gap: 16px;
+    align-items: center; /* centered like Gmail; lining up on the text baseline made rows 1px taller */
+  }
+  .email-row-top { display: contents; }
+  .email-sender { grid-area: 1 / 1; font-size: 14px; }
+  .email-row-main {
+    grid-area: 1 / 2;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+  }
+  .email-subject,
+  .email-preview { display: inline; }
+  .email-preview { -webkit-line-clamp: unset; white-space: nowrap; }
+  .email-preview::before { content: ' – '; } /* Gmail's dash between subject and preview */
+  .email-received { grid-area: 1 / 3; text-align: right; }
+  .is-unread .email-received { font-weight: 700; color: var(--text); } /* Gmail bolds an unread date */
+  .email-attachments { grid-area: 2 / 2 / 3 / -1; }
+}
+
 .email-attachments {
   display: flex;
   gap: 8px;
@@ -322,6 +374,11 @@
   border-radius: var(--md-sys-shape-corner-small); /* M3 chip shape */
   font-size: 14px;
   color: var(--text-muted);
+}
+/* Under a one-line row (after the rules above, so it wins): Gmail's 6px gap and 24px pill */
+@container email-list (min-width: 520px) {
+  .email-attachments { margin-top: 6px; }
+  .attachment-chip { height: 24px; border-radius: var(--md-sys-shape-corner-full); }
 }
 
 /* Buckets */
@@ -407,6 +464,9 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 /* While an email is open, Today goes to its starting width (even if it was dragged wider), so
    the drawer has room */
 .home-page.drawer-open { grid-template-columns: var(--today-default) minmax(0, 1fr); }
+/* One column of buckets: Today and the tiles share the page evenly. The 16px off is the
+   buckets' padding, so the two cards come out the same width. */
+.home-page[data-bucket-cols='1'] { --today-share: calc(50% - 16px); }
 /* In a single column, Add a Bucket sits right below the last bucket */
 .home-page[data-bucket-cols='1'] .add-bucket-slot { height: auto; padding: 4px 0; }
 /* Too narrow for two 290px tiles next to Today: one column of buckets */
@@ -524,7 +584,7 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .bucket-peek .email-row {
   grid-template-columns: 16px 1fr; /* hover handle, then text (no checkbox on tiles) */
   column-gap: 8px;
-  padding: 12px 12px 12px 4px;
+  padding-inline: 4px 12px; /* top and bottom come from the row, so one-line rows match the Today list */
 }
 
 /* The space where the next bucket would go, with Add a Bucket centered in it */
