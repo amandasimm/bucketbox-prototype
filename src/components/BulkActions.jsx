@@ -37,11 +37,20 @@ function DeleteZone({ mode }) {
   )
 }
 
+// What the "act on all" note says (All Emails, brief item 5; Amanda, 2026-11-22): when the selection
+// includes emails on other pages, Move / Archive / Delete ask first, like Gmail
+const allNote = (kind, count, bucket) =>
+  kind === 'move'
+    ? { text: `Move all ${count} unsorted emails to ${bucket.name}? This includes emails on other pages.`, confirm: `Move ${count}` }
+    : { text: `${kind === 'archive' ? 'Archive' : 'Delete'} all ${count} unsorted emails? This includes emails on other pages.`, confirm: `${kind === 'archive' ? 'Archive' : 'Delete'} ${count}` }
+
 // Move / Archive / Delete for the selected emails (PRD F7).
 // Always visible, switched off until something is selected.
-export default function BulkActions({ selectedCount, buckets, actions, zoneMode, covered = false }) {
+// confirmAll: the selection reaches beyond the page on screen (All Emails), so every action asks first.
+export default function BulkActions({ selectedCount, buckets, actions, zoneMode, covered = false, confirmAll = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [pendingNote, setPendingNote] = useState(null) // 'archive' | 'delete' | null
+  // The note above the buttons: { kind: 'archive' | 'delete' | 'move', bucket?, all? } or null
+  const [pendingNote, setPendingNote] = useState(null)
   const [seenNotes, setSeenNotes] = useState({ archive: false, delete: false })
   const footerRef = useRef(null)
   const menuRef = useRef(null)
@@ -111,17 +120,23 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
     )
   }
 
-  function startAction(kind) {
+  function startAction(kind, bucket) {
     setMenuOpen(false)
-    if (seenNotes[kind]) actions[kind]()
-    else setPendingNote(kind)
+    if (confirmAll) setPendingNote({ kind, bucket, all: true })
+    else if (kind === 'move') actions.move(bucket)
+    else if (seenNotes[kind]) actions[kind]()
+    else setPendingNote({ kind })
   }
 
   function confirmNote() {
-    setSeenNotes({ ...seenNotes, [pendingNote]: true })
-    actions[pendingNote]()
+    const { kind, bucket } = pendingNote
+    if (kind !== 'move') setSeenNotes({ ...seenNotes, [kind]: true })
+    if (kind === 'move') actions.move(bucket)
+    else actions[kind]()
     setPendingNote(null)
   }
+
+  const note = pendingNote && (pendingNote.all ? allNote(pendingNote.kind, selectedCount, pendingNote.bucket) : FIRST_USE_NOTES[pendingNote.kind])
 
   return (
     <footer className="bulk-actions" ref={footerRef}>
@@ -129,16 +144,16 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
         <div
           className="first-use-note"
           role="group"
-          aria-label={`About ${FIRST_USE_NOTES[pendingNote].confirm}`}
+          aria-label={`About ${note.confirm}`}
           onKeyDown={(event) => event.key === 'Escape' && setPendingNote(null)}
         >
-          <p>{FIRST_USE_NOTES[pendingNote].text}</p>
+          <p>{note.text}</p>
           <div className="first-use-note-buttons">
             <button type="button" className="text-button" onClick={() => setPendingNote(null)}>
               Cancel
             </button>
             <button type="button" className="filled-button" ref={noteConfirmRef} onClick={confirmNote}>
-              {FIRST_USE_NOTES[pendingNote].confirm} {selectedCount}
+              {pendingNote.all ? note.confirm : `${note.confirm} ${selectedCount}`}
             </button>
           </div>
         </div>
@@ -154,10 +169,7 @@ export default function BulkActions({ selectedCount, buckets, actions, zoneMode,
               type="button"
               role="menuitem"
               className="move-menu-item"
-              onClick={() => {
-                setMenuOpen(false)
-                actions.move(bucket)
-              }}
+              onClick={() => startAction('move', bucket)}
             >
               {bucket.emoji ? (
                 <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>

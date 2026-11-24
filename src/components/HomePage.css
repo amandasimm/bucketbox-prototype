@@ -2148,3 +2148,28 @@ label.setting-row { cursor: pointer; }
 }
 .list-day-name { font-weight: 600; color: var(--text); }
 .list-day-date { margin-left: 4px; font-weight: 400; color: var(--text-muted); }
+
+/* The page size choice in settings (All Emails, brief item 5) */
+.setting-select { margin-left: 0; flex-shrink: 0; }
+
+/* All Emails (brief item 5, Stage 21b): Gmail's pager in the list toolbar, and its Select all line */
+.list-pager {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+}
+.list-pager > span { margin-right: 4px; white-space: nowrap; }
+.list-pager .icon-button { width: 32px; height: 32px; }
+/* The pager sits at the right end of the toolbar (the count is in the heading in All Emails) */
+.select-all-banner {
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--md-sys-color-surface-container-low);
+  font: var(--md-sys-typescale-body-medium) var(--font);
+  color: var(--text);
+  text-align: center;
+}

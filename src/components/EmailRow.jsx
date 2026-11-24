@@ -40,7 +40,9 @@ export default function EmailRow({ email, variant = 'today', selected = false, i
   const inTile = variant === 'tile'
   const threadSize = email.messages?.length ?? 1
   // The Today list shows times; in This Week the day heading above gives the date (brief item 5)
-  const received = variant === 'today' || variant === 'week' ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
+  // All Emails (Stage 21b): a time for today's, a date for earlier ones, like Gmail
+  const received =
+    variant === 'today' || variant === 'week' || (variant === 'all' && email.dayOffset === 0) ? formatTime(email.receivedAt) : formatShortDate(email.receivedAt)
   const rowClasses = [
     'email-row',
     email.unread ? 'is-unread' : 'is-read',

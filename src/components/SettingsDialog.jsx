@@ -69,7 +69,7 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
         <h2 id={`${ids}-title`} className="dialog-title">Bucketbox settings</h2>
 
         <div className="settings-scroll">
-          {/* The Today list's range (PRD F6, F10; brief item 5). All Emails comes in Stage 21b. */}
+          {/* The Today list's range (PRD F6, F10; brief item 5). All Emails adds its page size and count. */}
           <section className="settings-section" aria-labelledby={`${ids}-list`}>
             <h3 id={`${ids}-list`} className="settings-heading">Today list</h3>
             <ChoiceRow
@@ -80,8 +80,35 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
               options={[
                 { value: 'today', label: 'Today (one day at a time)' },
                 { value: 'week', label: 'This Week (Monday to Sunday)' },
+                { value: 'all', label: 'All Emails (every unsorted email, in pages)' },
               ]}
             />
+            {draft.range === 'all' && (
+              <>
+                <div className="setting-row">
+                  <label className="setting-text" htmlFor={`${ids}-page-size`}>
+                    <span className="setting-label">Emails per page</span>
+                    <span className="setting-hint">Like Gmail, 50 to start</span>
+                  </label>
+                  <select
+                    id={`${ids}-page-size`}
+                    className="dialog-select setting-select"
+                    value={draft.pageSize}
+                    onChange={(event) => set({ pageSize: Number(event.target.value) })}
+                  >
+                    {[10, 25, 50, 100].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                </div>
+                <SwitchRow
+                  label="Show the count"
+                  hint="How many unsorted emails there are in all"
+                  checked={draft.showCount}
+                  onChange={(showCount) => set({ showCount })}
+                />
+              </>
+            )}
           </section>
 
           <section className="settings-section" aria-labelledby={`${ids}-buckets`}>

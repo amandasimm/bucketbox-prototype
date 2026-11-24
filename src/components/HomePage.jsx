@@ -339,6 +339,8 @@ export default function HomePage({
             buckets={buckets}
             dayOffset={dayOffset}
             range={settings.range}
+            pageSize={settings.pageSize}
+            showCount={settings.showCount}
             onChangeDay={onChangeDay}
             onDeclutter={onDeclutter}
             selectedIds={selectedIds}

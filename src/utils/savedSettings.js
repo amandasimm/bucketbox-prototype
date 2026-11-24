@@ -6,6 +6,8 @@ const KEY = 'bucketbox-settings'
 
 export const defaultSettings = {
   range: 'today', // the Today list's range: 'today' (default) | 'week' | 'all' (PRD F6, F10; brief item 5)
+  pageSize: 50, // All Emails: emails per page, like Gmail (PRD F6)
+  showCount: false, // All Emails: show the unsorted count (hidden by default; Amanda, 2026-11-22)
   autoSort: true, // auto-sort rules sort arriving mail (PRD F14)
   // Suggestions (PRD F15, F16): on by default for testing (Amanda, 2026-11-22), though the PRD
   // calls it opt-in
