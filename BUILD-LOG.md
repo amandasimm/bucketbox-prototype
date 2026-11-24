@@ -503,7 +503,8 @@ Each stage: preview → Amanda approves → commit → log update.
 ### 2026-11-24 — Stage 23: scenarios and the facilitator menu (brief item 6)
 - Done: two scenarios with their own links, `?scenario=filled` (also the plain link) and `?scenario=onboarding`; the facilitator menu gets Switch scenario (Filled / Onboarding, a check on the current one), Reset scenario and Reset settings, beside Add emails and Add pattern emails; up and down arrows (and Home, End) move through the menu. Code: `src/utils/scenario.js`, `src/main.jsx` (starts App over with a new key), App's `startingPoint` and `resetSettings`.
 - Checked: the plain link opens Filled; switching to Onboarding gives no buckets, "Make your first bucket…", 13 unsorted today, the 5 Priority emails unsorted on their own days (Nov 18–21), settings back to default (unread dots gone), the address bar showing `?scenario=onboarding`, and "Switched to Onboarding"; a reload stays in Onboarding and keeps saved settings; Reset settings clears them without touching the emails ("Settings reset"); Add emails then Reset scenario goes back to 13 ("Reset to Onboarding"); switching to Filled brings back Priority ("Switched to Filled"); resetting Filled keeps saved settings; Undo is empty after a reset; arrow keys wrap; Escape returns focus to the account icon. Build works.
-- Not checked: a real Shift-click (the browser tool can't hold Shift, so the menu was opened by a script; Shift-click worked in Stage 17f and the code didn't change); inside the Qualtrics iframe.
+- Amanda checked a real Shift-click on the live site (2026-11-24): works.
+- Not checked: inside the Qualtrics iframe.
 - Approved by Amanda: 2026-11-24
 ---
 
