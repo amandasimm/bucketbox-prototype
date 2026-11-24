@@ -4,6 +4,7 @@ import ComposeDrawer from './ComposeDrawer.jsx'
 import PageHistory from './PageHistory.jsx'
 import Icon from './Icon.jsx'
 import InertButton from './InertButton.jsx'
+import { scenarioName, scenarios } from '../utils/scenario.js'
 import './GmailShell.css'
 
 // Gmail's own frame, kept familiar on every screen (PRD §5): header, app rail, left nav.
@@ -21,21 +22,29 @@ const navItems = [
   { label: 'More', icon: 'expand_more' },
 ]
 
-// The facilitator menu (brief item 6, started early for 1f on 2026-11-21): for whoever runs a
-// test session. "Add emails" and "Add pattern emails" so far; stage 6 adds switching and
-// resetting scenarios and settings.
+// The facilitator menu (brief item 6; Add emails from 1f on 2026-11-21, the rest Stage 23): for
+// whoever runs a test session. Participants don't know it's there.
 function FacilitatorMenu({ facilitator, onClose }) {
   const menuRef = useRef(null)
   useEffect(() => {
-    menuRef.current.querySelector('[role="menuitem"]')?.focus()
+    menuRef.current.querySelector('[role^="menuitem"]')?.focus()
     function onPointerDown(event) {
       if (!menuRef.current.closest('.facilitator-wrap').contains(event.target)) onClose()
     }
     function onKeyDown(event) {
-      if (event.key !== 'Escape') return
-      event.stopPropagation()
-      onClose()
-      menuRef.current?.closest('.facilitator-wrap')?.querySelector('button')?.focus()
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        onClose()
+        menuRef.current?.closest('.facilitator-wrap')?.querySelector('button')?.focus()
+        return
+      }
+      // Up and down arrows (and Home, End) move between the items, like any menu
+      const items = [...menuRef.current.querySelectorAll('[role^="menuitem"]')]
+      const at = items.indexOf(document.activeElement)
+      const next = { ArrowDown: at + 1, ArrowUp: at - 1, Home: 0, End: items.length - 1 }[event.key]
+      if (next === undefined || at === -1) return
+      event.preventDefault()
+      items[(next + items.length) % items.length].focus()
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown, true)
@@ -44,37 +53,67 @@ function FacilitatorMenu({ facilitator, onClose }) {
       document.removeEventListener('keydown', onKeyDown, true)
     }
   }, [onClose])
+  // Each item closes the menu, then does its thing
+  const item = (action) => () => {
+    onClose()
+    action()
+  }
   return (
     <div className="facilitator-menu" role="menu" aria-label="Facilitator" ref={menuRef}>
       <p className="facilitator-menu-title" aria-hidden="true">Facilitator</p>
-      <button
-        type="button"
-        role="menuitem"
-        className="move-menu-item"
-        onClick={() => {
-          onClose()
-          facilitator.addEmails()
-        }}
-      >
+      <button type="button" role="menuitem" className="move-menu-item" onClick={item(facilitator.addEmails)}>
         <Icon name="forward_to_inbox" size={20} />
         <span>
           Add emails
           <span className="facilitator-menu-hint">8 arrive now and go through the auto-sort rules</span>
         </span>
       </button>
-      <button
-        type="button"
-        role="menuitem"
-        className="move-menu-item"
-        onClick={() => {
-          onClose()
-          facilitator.addPatternEmails()
-        }}
-      >
+      <button type="button" role="menuitem" className="move-menu-item" onClick={item(facilitator.addPatternEmails)}>
         <Icon name="stacked_email" size={20} />
         <span>
           Add pattern emails
           <span className="facilitator-menu-hint">35 from Chase (4 today), to trigger the auto-archive suggestion</span>
+        </span>
+      </button>
+
+      <div className="facilitator-menu-divider" role="separator" />
+      <div role="group" aria-labelledby="facilitator-scenario">
+        <p id="facilitator-scenario" className="facilitator-menu-title">Switch scenario</p>
+        {scenarios.map((scenario) => {
+          const current = scenario.id === facilitator.scenario
+          return (
+            <button
+              key={scenario.id}
+              type="button"
+              role="menuitemradio"
+              aria-checked={current}
+              className="move-menu-item"
+              onClick={item(() => !current && facilitator.switchScenario(scenario.id))}
+            >
+              {/* A check marks the one running; the others keep the space so names line up */}
+              <span className="facilitator-menu-check">{current && <Icon name="check" size={20} />}</span>
+              <span>
+                {scenario.name}
+                <span className="facilitator-menu-hint">{scenario.hint}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="facilitator-menu-divider" role="separator" />
+      <button type="button" role="menuitem" className="move-menu-item" onClick={item(facilitator.resetScenario)}>
+        <Icon name="restart_alt" size={20} />
+        <span>
+          Reset scenario
+          <span className="facilitator-menu-hint">Start {scenarioName(facilitator.scenario)} over: buckets, sorting, rules and added emails</span>
+        </span>
+      </button>
+      <button type="button" role="menuitem" className="move-menu-item" onClick={item(facilitator.resetSettings)}>
+        <Icon name="settings_backup_restore" size={20} />
+        <span>
+          Reset settings
+          <span className="facilitator-menu-hint">Every Bucketbox setting back to its default; emails and buckets stay</span>
         </span>
       </button>
     </div>

@@ -444,6 +444,9 @@
 }
 .facilitator-menu .move-menu-item { align-items: flex-start; }
 .facilitator-menu .move-menu-item .icon { margin-top: 2px; color: var(--text-muted); }
+.facilitator-menu-divider { height: 1px; margin: 8px 0; background: var(--divider); }
+.facilitator-menu .move-menu-item .facilitator-menu-check .icon { margin-top: 0; color: var(--focus-ring); }
+.facilitator-menu-check { display: inline-flex; flex-shrink: 0; width: 20px; margin-top: 2px; }
 .facilitator-menu-hint {
   display: block;
   font: var(--md-sys-typescale-body-small) var(--font);

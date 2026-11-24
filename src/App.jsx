@@ -13,7 +13,7 @@ import { receivedAt } from './utils/dates.js'
 import { listFor, weekBounds, weekLabel } from './utils/range.js'
 import { dayButtonLabel } from './components/Declutter.jsx'
 import { endTitle } from './utils/declutterMessages.js'
-import { loadSettings, storeSettings } from './utils/savedSettings.js'
+import { defaultSettings, loadSettings, storeSettings } from './utils/savedSettings.js'
 import { arrivingEmails } from './data/arrivingEmails.js'
 import { patternSender, patternTemplates, patternTodayCount, patternTotal } from './data/patternEmails.js'
 import { activeRules, routeEmail, ruleMatches } from './utils/rules.js'
@@ -27,6 +27,12 @@ const startingEmails = mockEmails.map((email) => ({
   receivedAt: receivedAt(email.dayOffset, email.time),
   removedTo: null,
 }))
+// Each scenario's starting point (Stage 23; utils/scenario.js). Onboarding has no buckets, so the
+// emails that start in Priority are unsorted on their own days (Amanda, 2026-11-24).
+const startingPoint = {
+  filled: { emails: startingEmails, buckets: startingBuckets },
+  onboarding: { emails: startingEmails.map((email) => ({ ...email, bucketId: null })), buckets: [] },
+}
 
 // How long a row takes to close up before its email leaves the list (BUILD-LOG, 2026-11-13)
 const LEAVE_MS = 200
@@ -56,16 +62,17 @@ function previousCard(list, deck, from) {
   return -1
 }
 
-export default function App() {
+export default function App({ scenario = 'filled', startToast = null, onSwitchScenario, onResetScenario }) {
   // true = Bucketbox, false = the plain Gmail view (PRD §5 toggle)
   const [prototypeOn, setPrototypeOn] = useState(true)
-  const [emails, setEmails] = useState(startingEmails)
-  const [buckets, setBuckets] = useState(startingBuckets)
+  const [emails, setEmails] = useState(startingPoint[scenario].emails)
+  const [buckets, setBuckets] = useState(startingPoint[scenario].buckets)
   const [selectedIds, setSelectedIds] = useState([])
   // Undo covers the last action only (PRD F8): { label, before, after, undone }
   const [lastAction, setLastAction] = useState(null)
-  // A new key restarts the toast's timer even when the message repeats
-  const [toast, setToast] = useState(null)
+  // A new key restarts the toast's timer even when the message repeats. After a scenario switch
+  // or reset, it starts by saying so (Stage 23).
+  const [toast, setToast] = useState(startToast ? { message: startToast, key: Date.now() } : null)
   // Settings saved in this browser from an earlier visit (brief 1j), read once at the start
   const [saved] = useState(loadSettings)
   // The delete zone deletes until someone picks "Archive instead" on its first-use toast, or
@@ -119,6 +126,17 @@ export default function App() {
     if (zone === 'archive') setZoneToastSeen(true) // the choice is made, so no "Archive instead?" toast
     setSettingsOpen(false)
     showToast('Settings saved')
+  }
+
+  // The facilitator's Reset settings (Stage 23): every setting back to its default, including the
+  // delete zone and the hidden suggestions. Emails and buckets stay as they are.
+  function resetSettings() {
+    const { zone, ...rest } = defaultSettings
+    if (rest.range !== settings.range) changeDay(0)
+    setSettings(rest)
+    setZoneMode(zone)
+    setZoneToastSeen(false)
+    showToast('Settings reset')
   }
 
   // Rows closing up just before their emails leave the list
@@ -912,7 +930,7 @@ export default function App() {
       buckets={buckets}
       history={prototypeOn ? history : null}
       onOpenSettings={() => setSettingsOpen(true)}
-      facilitator={{ addEmails: addArrivingEmails, addPatternEmails }}
+      facilitator={{ addEmails: addArrivingEmails, addPatternEmails, scenario, switchScenario: onSwitchScenario, resetScenario: onResetScenario, resetSettings }}
       inboxUnread={inboxUnread}
       prototypeOn={prototypeOn}
       onTogglePrototype={() => {
