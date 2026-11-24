@@ -15,7 +15,7 @@ const KEYCAP_ICONS = { up: 'arrow_upward', down: 'arrow_downward', left: 'arrow_
 
 // The end screen's button names the day it goes to: "Yesterday", or a short date like "Nov 6"
 // (with the year for another year)
-function dayButtonLabel(dayOffset) {
+export function dayButtonLabel(dayOffset) {
   if (dayOffset === -1) return 'Yesterday'
   const date = new Date()
   date.setDate(date.getDate() + dayOffset)
@@ -164,10 +164,13 @@ function EmailCard({ email, cardRef, onOpen, onReportSpam }) {
 // The bucket list under the buttons. Sorting is by pill, separate from the arrow keys (PRD F13).
 // Pills fill two rows at most; any more scroll sideways, so this sets a width that makes the
 // pills split evenly across the two rows (Amanda's review, 2026-10-31).
-function BucketBar({ email, buckets, onMove }) {
+// While sorting, the pills move the card into a bucket. On the end screen they open the bucket
+// instead, leaving Declutter (Amanda, 2026-11-24).
+function BucketBar({ email, buckets, onMove, onOpenBucket }) {
+  const opening = Boolean(onOpenBucket)
   return (
     <div className="declutter-bar" role="group" aria-labelledby="declutter-bar-label">
-      <span id="declutter-bar-label" className="declutter-bar-label">Move to:</span>
+      <span id="declutter-bar-label" className="declutter-bar-label">{opening ? 'Go to:' : 'Move to:'}</span>
       <div className="declutter-bar-scroll">
         <div className="declutter-bar-rows">
           {buckets.length === 0 && <span className="declutter-no-buckets">No buckets yet</span>}
@@ -177,8 +180,8 @@ function BucketBar({ email, buckets, onMove }) {
               type="button"
               className="declutter-pill"
               style={bucketStyle(bucket.color)}
-              aria-label={`Move to ${bucket.name}`}
-              onClick={() => onMove(email, bucket)}
+              aria-label={opening ? `Open ${bucket.name}` : `Move to ${bucket.name}`}
+              onClick={() => (opening ? onOpenBucket(bucket) : onMove(email, bucket))}
             >
               {bucket.emoji ? (
                 <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
@@ -197,28 +200,77 @@ function BucketBar({ email, buckets, onMove }) {
 // The confirmation message sits where the email card was: progress for this day (Flow 7).
 // It only says the day is done when no emails were left behind (CLAUDE.md §7).
 function EndMessage({ declutter, headingRef }) {
-  const { total, dayName, progress } = declutter
+  const { total, range, endTitle, progress, nextRun, actions } = declutter
+  // In the order of the title's outcomes: what left the Today list (cleared, then sorted), then
+  // what's still in it (Amanda, 2026-11-24). Four or more show as rows, at any width.
+  // Moved emails name their buckets (Amanda, 2026-11-24): one bucket, "moved to Priority"; two or
+  // three, "moved to buckets" with a line for each below it (shown as rows); four or more, "moved to
+  // 4 buckets", with how many went to each on hover or keyboard focus.
+  const buckets = progress.movedTo
+  const listBuckets = buckets.length >= 2 && buckets.length <= 3
+  const movedLabel = buckets.length === 1 ? `moved to ${buckets[0].bucket.name}` : listBuckets ? 'moved to buckets' : `moved to ${buckets.length} buckets`
   const lines = [
     [progress.archived, 'archived'],
-    [progress.moved, 'moved to buckets'],
-    [progress.read, 'marked as read'],
     [progress.deleted, 'deleted'],
+    [progress.moved, movedLabel, 'moved'],
+    [progress.read, 'marked as read'],
     [progress.left, 'still in the Today list'],
   ].filter(([count]) => count > 0)
-  let message = `${dayName} is Decluttered`
-  if (total === 0) message = `Nothing unsorted for ${dayName}`
-  else if (progress.left > 0 && progress.read < progress.left) message = `That's it for ${dayName}`
+  const rows = lines.length >= 4 || listBuckets
+  const bucketMark = (bucket) =>
+    bucket.emoji ? <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span> : <span className="bucket-swatch" aria-hidden="true" />
+  // The title fits the range and what was mostly done, and rotates (src/utils/declutterMessages.js).
+  // An empty day or week offers the one before, like the end screen's left button (Amanda, 2026-11-24)
+  const offerEarlier = total === 0 && range !== 'all' && nextRun
+  const earlierName = nextRun && ['Yesterday', 'Last week'].includes(nextRun.label) ? nextRun.label.toLowerCase() : nextRun?.label
 
   return (
-    <div className="declutter-end">
-      <h3 className="declutter-end-title" tabIndex={-1} ref={headingRef}>{message}</h3>
+    <div className="declutter-card declutter-end">
+      <h3 className="declutter-end-title" tabIndex={-1} ref={headingRef}>{endTitle}</h3>
+      {offerEarlier && (
+        <p className="declutter-end-offer">
+          <button type="button" className="inline-link" onClick={() => actions.nextRun(nextRun)}>
+            Want to see {earlierName}?
+          </button>
+        </p>
+      )}
       {lines.length > 0 && (
-        <ul className="declutter-end-list">
-          {lines.map(([count, label]) => (
-            <li key={label}>
-              <span className="declutter-end-count">{count}</span> {label}
-            </li>
-          ))}
+        <ul className={`declutter-end-list ${rows ? 'is-rows' : ''}`}>
+          {lines.map(([count, label, kind]) => {
+            const breakdown = kind === 'moved' && buckets.length >= 4
+            return (
+              <li
+                key={label}
+                className={breakdown ? 'has-tooltip has-breakdown' : undefined}
+                tabIndex={breakdown ? 0 : undefined}
+                aria-describedby={breakdown ? 'declutter-moved-to' : undefined}
+              >
+                <span className="declutter-end-count">{count}</span>
+                <span>{label}</span>
+                {breakdown && (
+                  <span className="tooltip declutter-end-tip" id="declutter-moved-to" role="tooltip">
+                    {buckets.map(({ bucket, count: n }) => (
+                      <span key={bucket.id} className="declutter-end-tip-row" style={bucketStyle(bucket.color)}>
+                        {bucketMark(bucket)}
+                        {bucket.name}: {n}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {kind === 'moved' && listBuckets && (
+                  <ul className="declutter-end-buckets">
+                    {buckets.map(({ bucket, count: n }) => (
+                      <li key={bucket.id} style={bucketStyle(bucket.color)}>
+                        <span className="declutter-end-count">{n}</span>
+                        {bucketMark(bucket)}
+                        <span>{bucket.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
@@ -229,7 +281,7 @@ function EndMessage({ declutter, headingRef }) {
 // Up and Down move through them, Left archives, Right marks read. Escape or the X leaves at any
 // time; what's done stays done and the rest stays in the Today list.
 export default function Declutter({ declutter, buckets, onSendReply }) {
-  const { dayName, total, position, email, openEmail, hasPrevious, hasNext, previousDay, actions, emailView, suggestion, suggestionActions } = declutter
+  const { dayName, total, position, email, openEmail, hasPrevious, nextRun, actions, emailView, suggestion, suggestionActions } = declutter
   const atEnd = !email
   // The auto-archive suggestion's review panel (PRD F15), from the end screen
   const [reviewing, setReviewing] = useState(false)
@@ -304,7 +356,7 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       else if (event.key === 'ArrowLeft' && !atEnd) go('left', actions.archive)(email)
       else if (event.key === 'ArrowRight' && !atEnd) go('right', actions.markRead)(email)
       // On the end screen, a held key from the last card doesn't carry over and leave it
-      else if (event.key === 'ArrowLeft' && previousDay !== null && !event.repeat) actions.previousDay(previousDay)
+      else if (event.key === 'ArrowLeft' && nextRun && !event.repeat) actions.nextRun(nextRun)
       else if (event.key === 'ArrowRight' && !event.repeat) actions.exit()
       else return
       event.preventDefault()
@@ -349,9 +401,13 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
           <div className="declutter-stage" hidden={Boolean(openEmail)}>
             <div className="declutter-reader">
               {atEnd ? (
-                <EndMessage declutter={declutter} headingRef={endHeadingRef} />
+                // The message on a card; the previous card's bottom edge shows above it, where Back
+                // goes (Amanda, 2026-11-24)
+                <div className={`declutter-deck is-end ${hasPrevious ? 'has-previous' : ''}`}>
+                  <EndMessage declutter={declutter} headingRef={endHeadingRef} />
+                </div>
               ) : (
-                <div className={`declutter-deck ${hasNext ? 'has-next' : ''}`}>
+                <div className="declutter-deck has-next">
                   <EmailCard
                     email={email}
                     cardRef={cardRef}
@@ -372,15 +428,18 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                 </div>
               )}
             </div>
-            {/* The buttons sit where their arrow keys point. On the end screen they stay at the
-                top, beside the message. */}
+            {/* The buttons sit where their arrow keys point, in the same place on the end screen */}
             <div className={`declutter-controls ${atEnd ? 'is-end' : ''}`}>
               {/* Buckets at the top, level with the start of the email; the arrow buttons at the
                   bottom, level with the end of the card (BUILD-LOG, 2026-11-13) */}
               {/* The auto-archive suggestion waits for the end screen, at the top of the right column
                   beside the end message, so it doesn't distract while sorting (Amanda, 2026-11-22) */}
               {suggestion && atEnd && <SuggestionBanner suggestion={suggestion} actions={suggestionActions} onReview={() => setReviewing(true)} />}
-              {!atEnd && <BucketBar email={email} buckets={buckets} onMove={go('away', actions.move)} />}
+              {atEnd ? (
+                buckets.length > 0 && <BucketBar buckets={buckets} onOpenBucket={actions.openBucket} />
+              ) : (
+                <BucketBar email={email} buckets={buckets} onMove={go('away', actions.move)} />
+              )}
               <div className="declutter-keys">
                 <ArrowButton
                   className="is-up"
@@ -391,12 +450,13 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                 />
                 {atEnd ? (
                   <div className="declutter-end-buttons">
-                    {previousDay !== null && (
+                    {/* The previous day or week with unsorted emails, or the next chunk of All Emails (Stage 21c) */}
+                    {nextRun && (
                       <ArrowButton
-                        label={dayButtonLabel(previousDay)}
-                        spokenLabel={`Declutter ${dayButtonLabel(previousDay)}`}
+                        label={nextRun.label}
+                        spokenLabel={nextRun.spoken}
                         keyName="left"
-                        onClick={() => actions.previousDay(previousDay)}
+                        onClick={() => actions.nextRun(nextRun)}
                       />
                     )}
                     <ArrowButton className="is-done is-main" label="Done" keyName="right" onClick={actions.exit} />

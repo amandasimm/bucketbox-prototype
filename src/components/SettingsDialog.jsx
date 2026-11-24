@@ -101,6 +101,22 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
                     ))}
                   </select>
                 </div>
+                <div className="setting-row">
+                  <label className="setting-text" htmlFor={`${ids}-chunk-size`}>
+                    <span className="setting-label">Declutter in chunks of</span>
+                    <span className="setting-hint">How many emails one Declutter run takes</span>
+                  </label>
+                  <select
+                    id={`${ids}-chunk-size`}
+                    className="dialog-select setting-select"
+                    value={draft.chunkSize}
+                    onChange={(event) => set({ chunkSize: Number(event.target.value) })}
+                  >
+                    {[10, 25, 50].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                </div>
                 <SwitchRow
                   label="Show the count"
                   hint="How many unsorted emails there are in all"

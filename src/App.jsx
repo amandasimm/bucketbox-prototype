@@ -10,6 +10,9 @@ import { mockEmails } from './data/mockEmails.js'
 import { bucketColors, startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { receivedAt } from './utils/dates.js'
+import { listFor, weekBounds, weekLabel } from './utils/range.js'
+import { dayButtonLabel } from './components/Declutter.jsx'
+import { endTitle } from './utils/declutterMessages.js'
 import { loadSettings, storeSettings } from './utils/savedSettings.js'
 import { arrivingEmails } from './data/arrivingEmails.js'
 import { patternSender, patternTemplates, patternTodayCount, patternTotal } from './data/patternEmails.js'
@@ -552,15 +555,28 @@ export default function App() {
     },
   }
 
+  // Counts Declutter runs, so the end screen's title rotates between versions (Amanda, 2026-11-24)
+  const declutterRuns = useRef(-1)
+
   // Declutter (PRD F13, Flow 7). Starts on the given day with a fresh deck, newest first.
-  function startDeclutter(day) {
+  // It follows the Today list's range (PRD F6; brief item 5, Stage 21c): one day, the week, or in
+  // All Emails the newest unsorted emails in chunks (25 to start), skipping ones an earlier chunk
+  // of this run already showed (seen).
+  function startDeclutter(day, seen = []) {
+    const range = settings.range
+    let list = listFor(emails, range, day)
+    if (range === 'all') list = list.filter((email) => !seen.includes(email.id)).slice(0, settings.chunkSize)
     setDayOffset(day)
     setView({ type: 'home' })
     setOpenEmailId(null)
     setSelectedIds([])
+    declutterRuns.current += 1
     setDeclutter({
       dayOffset: day,
-      deck: unsortedFor(emails, day).map((email) => email.id),
+      range,
+      seen,
+      runNumber: declutterRuns.current,
+      deck: list.map((email) => email.id),
       position: 0,
       openId: null,
       steps: [],
@@ -701,9 +717,16 @@ export default function App() {
   const declutterActions = {
     exit: exitDeclutter,
     keysUsed: () => setKeyTipShown(true),
-    previousDay: (day) => {
+    // The end screen's left button: the previous day or week with unsorted emails, or the next chunk
+    nextRun: (run) => {
       settleDeclutter()
-      startDeclutter(day)
+      startDeclutter(run.day, run.seen ?? [])
+    },
+    // The end screen's bucket pills: leave Declutter and open that bucket (Amanda, 2026-11-24)
+    openBucket(bucket) {
+      settleDeclutter()
+      setDeclutter(null)
+      emailView.openBucket(bucket.id)
     },
     next() {
       setDeclutter({ ...declutter, position: nextCard(emails, declutter.deck, declutter.position) })
@@ -815,24 +838,57 @@ export default function App() {
     const shownPosition = inDeck ? position : nextCard(emails, deck, position)
     const unsortedLeft = deckEmails.filter(isUnsorted)
     const readIds = steps.filter((step) => step.kind === 'read').map((step) => step.id)
-    const earlierDays = emails.filter((email) => isUnsorted(email) && email.dayOffset < day).map((email) => email.dayOffset)
+    // What comes next for each range (Stage 21c); the end screen's title is in declutterMessages.js
+    const range = declutter.range ?? 'today'
+    const unsortedDays = emails.filter(isUnsorted).map((email) => email.dayOffset)
+    let nextRun = null
+    let scopeName = dayLabel(day)
+    if (range === 'week') {
+      scopeName = weekLabel(day)
+      const earlier = unsortedDays.filter((offset) => offset < weekBounds(day).start)
+      if (earlier.length > 0) {
+        const target = Math.max(...earlier)
+        nextRun = { day: target, label: weekLabel(target), spoken: `Declutter ${weekLabel(target).toLowerCase()}` }
+      }
+    } else if (range === 'all') {
+      scopeName = 'All Emails'
+      const seen = [...(declutter.seen ?? []), ...deck]
+      const remaining = listFor(emails, 'all', 0).filter((email) => !seen.includes(email.id)).length
+      if (remaining > 0) {
+        const next = Math.min(settings.chunkSize, remaining)
+        nextRun = { day: 0, seen, label: `Next ${next}`, spoken: `Declutter the next ${next} emails` }
+      }
+    } else {
+      const earlier = unsortedDays.filter((offset) => offset < day)
+      if (earlier.length > 0) {
+        const target = Math.max(...earlier)
+        nextRun = { day: target, label: dayButtonLabel(target), spoken: `Declutter ${dayButtonLabel(target)}` }
+      }
+    }
+    const movedEmails = deckEmails.filter((email) => email.removedTo === null && email.bucketId !== null)
+    const progress = {
+      archived: deckEmails.filter((email) => email.removedTo === 'archive').length,
+      moved: movedEmails.length,
+      // How many went to each bucket, in the buckets' order, for the end card's hover (Amanda, 2026-11-24)
+      movedTo: buckets
+        .map((bucket) => ({ bucket, count: movedEmails.filter((email) => email.bucketId === bucket.id).length }))
+        .filter(({ count }) => count > 0),
+      deleted: deckEmails.filter((email) => email.removedTo === 'trash' || email.removedTo === 'junk').length,
+      read: unsortedLeft.filter((email) => readIds.includes(email.id)).length,
+      left: unsortedLeft.length,
+    }
     return {
       dayOffset: day,
-      dayName: dayLabel(day),
+      dayName: scopeName,
+      range,
+      endTitle: endTitle({ range, label: scopeName, deckSize: deck.length, progress, runNumber: declutter.runNumber ?? 0 }),
+      nextRun,
       total: deck.length,
       position: shownPosition,
       email: deckEmails[shownPosition] ?? null,
       openEmail: emails.find((email) => email.id === declutter.openId) ?? null,
       hasPrevious: previousCard(emails, deck, shownPosition) >= 0,
-      hasNext: nextCard(emails, deck, shownPosition) < deck.length,
-      previousDay: earlierDays.length > 0 ? Math.max(...earlierDays) : null,
-      progress: {
-        archived: deckEmails.filter((email) => email.removedTo === 'archive').length,
-        moved: deckEmails.filter((email) => email.removedTo === null && email.bucketId !== null).length,
-        deleted: deckEmails.filter((email) => email.removedTo === 'trash' || email.removedTo === 'junk').length,
-        read: unsortedLeft.filter((email) => readIds.includes(email.id)).length,
-        left: unsortedLeft.length,
-      },
+      progress,
       actions: declutterActions,
       emailView: declutterEmailView,
       // Auto-archive suggestion or the offer that follows it (PRD F15), or null

@@ -8,7 +8,9 @@
   min-height: 0;
   /* The email card, then the controls. On narrower screens the controls give up room first,
      down to a 32px gap between Archive and Mark as read; only then does the card shrink. */
-  --declutter-columns: minmax(0, 400px) clamp(296px, calc(100% - 432px), 376px);
+  /* The card grows to 600px: 560px of 16px text is about 65-70 characters a line, the comfortable
+     reading limit (Amanda, 2026-11-24) */
+  --declutter-columns: minmax(0, 600px) clamp(296px, calc(100% - 632px), 376px);
   border: 1px solid var(--card-stroke);
   border-radius: 16px;
   background: var(--md-sys-color-surface-container-low); /* flat, like Gmail's surfaces (BUILD-LOG, 2026-11-13) */
@@ -112,8 +114,7 @@
   background: var(--md-sys-color-surface-container-low);
   box-shadow: 0 -1px 4px rgba(31, 60, 110, 0.1);
 }
-/* The last card keeps the same height as the others; only the next card's edge goes away
-   (BUILD-LOG, 2026-11-13) */
+/* The last email shows it too: the end card comes next (Amanda, 2026-11-24) */
 
 .declutter-card {
   position: relative;
@@ -265,21 +266,92 @@
 .declutter-open .pane-content { padding-inline: 28px; }
 .declutter-open .thread-body { font-size: 16px; line-height: 24px; } /* matches the Declutter card */
 
-/* The confirmation screen: the message starts level with the buttons, so Done sits beside it */
+/* The confirmation screen (Amanda, 2026-11-24): the message on a card in the email card's place.
+   The previous card's bottom edge shows above it, where Back goes, running up under the progress
+   bar like the next card's edge runs off the bottom; nothing waits below. */
+.declutter-deck.is-end { margin-top: -24px; padding: calc(var(--declutter-peek) + 24px) 0 var(--declutter-peek); } /* ends level with the buttons, like the email card */
+.declutter-deck.is-end.has-previous::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--declutter-peek) + 12px); /* up to the progress bar, with a 12px gap before the card */
+  border-radius: 0 0 16px 16px;
+  background: var(--md-sys-color-surface-container-low);
+  box-shadow: 0 1px 4px rgba(31, 60, 110, 0.1);
+}
 .declutter-end {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 24px;
-  padding: 0 0 28px;
+  padding: 32px;
   text-align: center;
+  animation: declutter-card-in 220ms ease-out;
 }
-.declutter-end-title { margin: 0; font-size: 22px; font-weight: 400; }
+.declutter-end:hover { box-shadow: 0 1px 2px rgba(31, 60, 110, 0.1), 0 8px 24px rgba(31, 60, 110, 0.12); } /* not clickable, so no lift */
+.declutter-end-title { margin: 0; font-size: 24px; line-height: 32px; font-weight: 400; text-wrap: balance; }
 .declutter-end-title:focus { outline: none; }
-.declutter-end-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 16px; }
-.declutter-end-count { font-size: 18px; font-weight: 500; }
+/* "Want to see yesterday?" under an empty day's title; the title's gap is too wide for it */
+.declutter-end-offer { margin: -16px 0 0; font-size: 16px; }
+.declutter-end-offer .inline-link { font-size: inherit; }
+/* The counts: a filled banner of stats side by side, a number over its label (Amanda, 2026-11-24).
+   A fill, not a line or a stroke, since it already sits on a card. */
+.declutter-end-list {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--md-sys-color-surface-container);
+  list-style: none;
+}
+.declutter-end-list li {
+  flex: 0 1 160px; /* room for "still in the Today list" on one line; with all five they wrap */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+  text-wrap: balance;
+}
+.declutter-end-count { font-size: 24px; line-height: 32px; font-weight: 500; color: var(--text); }
+/* "Moved to buckets": how many went to each bucket, on hover or keyboard focus */
+.declutter-end-list .has-breakdown { cursor: default; border-radius: 8px; }
+.declutter-end-list .has-breakdown > span:nth-child(2) { text-decoration: underline dotted; text-underline-offset: 3px; }
+.declutter-end-tip { display: grid; gap: 4px; padding: 8px 12px; text-align: left; }
+.declutter-end-tip-row { display: flex; align-items: center; gap: 8px; }
+.declutter-end-tip .bucket-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--bucket-color); }
+/* On a narrower card, the counts go back to rows: a number beside its label, left-aligned and
+   centered as a block, still in the banner (Amanda, 2026-11-24) */
+.declutter-end { container-type: inline-size; }
+@container (max-width: 519px) {
+  .declutter-end-list { align-self: center; flex-direction: column; gap: 8px; padding: 16px 24px; }
+  .declutter-end-list li { flex: none; flex-direction: row; align-items: baseline; gap: 8px; font-size: 16px; line-height: 24px; }
+  .declutter-end-count { min-width: 20px; font-size: 18px; line-height: 24px; text-align: right; }
+}
+/* Four or more counts use those rows at every width, since side by side they squeeze (Amanda, 2026-11-24) */
+.declutter-end-list.is-rows { align-self: center; flex-direction: column; gap: 8px; padding: 16px 24px; }
+.declutter-end-list.is-rows li { flex: none; flex-direction: row; align-items: baseline; gap: 8px; font-size: 16px; line-height: 24px; }
+.declutter-end-list.is-rows .declutter-end-count { min-width: 20px; font-size: 18px; line-height: 24px; text-align: right; }
+/* Two or three buckets: a line for each under "moved to buckets", indented to line up with its label */
+.declutter-end-list.is-rows li:has(> .declutter-end-buckets) { flex-wrap: wrap; }
+.declutter-end-buckets {
+  flex-basis: 100%;
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 0 0 0 28px; /* the count's width plus the gap */
+  list-style: none;
+}
+.declutter-end-list .declutter-end-buckets li { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; }
+.declutter-end-list .declutter-end-buckets .declutter-end-count { min-width: 0; font-size: 14px; line-height: 20px; }
+.declutter-end-buckets .bucket-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--bucket-color); }
+.declutter-end-buckets .bucket-emoji { font-size: 14px; }
 .declutter-end-buttons {
   grid-area: 2 / 1 / 3 / -1;
   display: grid;
