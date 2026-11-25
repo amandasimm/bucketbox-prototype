@@ -127,6 +127,10 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     changeEverywhere((list) => withListDays(list, settings.cutoff))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.cutoff])
+  // Density (Stage 24b): the one-line rows' height, set on the page so every list follows it
+  useEffect(() => {
+    document.body.dataset.density = settings.density
+  }, [settings.density])
   // The unread dot on rows is a setting, off by default (BUILD-LOG, 2026-11-24)
   useEffect(() => {
     document.body.classList.toggle('show-unread-dot', settings.unreadDot)

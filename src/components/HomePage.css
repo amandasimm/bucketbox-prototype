@@ -72,8 +72,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 40px; /* the same height as a one-line email row (Amanda, 2026-11-24; was 36px) */
-  padding: 4px 20px 4px 36px; /* Select all lines up with the row checkboxes */
+  min-height: var(--toolbar-height, 40px); /* the same height as a one-line email row, at every density (Amanda, 2026-11-24; was 36px) */
+  padding: var(--toolbar-pad, 4px) 20px var(--toolbar-pad, 4px) 36px; /* Select all lines up with the row checkboxes */
   border-bottom: 1px solid var(--divider);
 }
 .unsorted-count {
@@ -330,9 +330,13 @@ body:not(.show-unread-dot) .unread-dot { display: none; }
 @container email-list (min-width: 520px) {
   /* Gmail's 40px row: 10px above, a 20px line, 10px below including the 1px divider (Amanda,
      from Gmail's styles, 2026-11-24) */
-  .email-row { padding-block: 10px 9px; }
+  /* Density (Stage 24b) changes the space above and below through --row-pad-top/-bottom */
+  .email-row { padding-block: var(--row-pad-top, 10px) var(--row-pad-bottom, 9px); }
   .email-row-body { line-height: 20px; }
-  .drag-handle { margin-block: -10px -9px; padding-block: 10px 9px; }
+  .drag-handle {
+    margin-block: calc(-1 * var(--row-pad-top, 10px)) calc(-1 * var(--row-pad-bottom, 9px));
+    padding-block: var(--row-pad-top, 10px) var(--row-pad-bottom, 9px);
+  }
   .email-checkbox { margin-top: 1px; }
   .email-row-body {
     display: grid;
@@ -379,7 +383,100 @@ body:not(.show-unread-dot) .unread-dot { display: none; }
 @container email-list (min-width: 520px) {
   .email-attachments { margin-top: 6px; }
   .attachment-chip { height: 24px; border-radius: var(--md-sys-shape-corner-full); }
+  /* Comfortable and Compact leave attachment chips out, like Gmail (Stage 24b) */
+  body[data-density='comfortable'] .email-attachments,
+  body[data-density='compact'] .email-attachments { display: none; }
+  /* Roomy (Amanda, 2026-11-25): bigger text, the subject on one line and the preview under it.
+     Sender and subject 15px, preview 14px, time 13px; a 70px row. */
+  body[data-density='roomy'] .email-row-body { align-items: start; }
+  body[data-density='roomy'] .email-checkbox { margin-top: 2px; }
+  body[data-density='roomy'] .email-sender { font-size: 15px; line-height: 22px; }
+  body[data-density='roomy'] .email-received { font-size: 13px; line-height: 22px; }
+  body[data-density='roomy'] .email-row-main { overflow: visible; white-space: normal; font-size: 15px; }
+  body[data-density='roomy'] .email-subject,
+  body[data-density='roomy'] .email-preview {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  body[data-density='roomy'] .email-subject { font-size: 15px; line-height: 22px; }
+  body[data-density='roomy'] .email-preview { font-size: 14px; line-height: 20px; }
+  body[data-density='roomy'] .email-preview::before { content: none; }
 }
+
+/* Density (Stage 24b; Amanda, 2026-11-24): Gmail's three plus Roomy. Rows of wide lists are
+   Default 40px, Comfortable 40px (no chips), Compact 32px (no chips), Roomy 70px (two lines,
+   bigger text, above); the Select all row matches, except Roomy's, which has 8px above and below. Stacked rows
+   don't change. */
+body[data-density='compact'] { --row-pad-top: 6px; --row-pad-bottom: 5px; --toolbar-height: 32px; --toolbar-pad: 3px; }
+/* Roomy's Select all row: 8px above and below, not row-height (Amanda, 2026-11-25) */
+body[data-density='roomy'] { --row-pad-top: 14px; --row-pad-bottom: 13px; --toolbar-height: 0px; --toolbar-pad: 8px; }
+
+/* The density picker, in settings and onboarding: a radio, the name, and a drawing of the rows */
+.density-choice { display: flex; flex-direction: column; gap: 8px; }
+.density-choice legend { margin-bottom: 4px; }
+.density-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.density-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--focus-ring); }
+.density-option-name { flex: 1; }
+.density-drawing {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 88px;
+  height: 44px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.density-drawing-row {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 6px;
+}
+.density-drawing-row + .density-drawing-row { border-top: 1px solid var(--md-sys-color-outline-variant); }
+.density-drawing-line { display: flex; align-items: center; gap: 5px; }
+.density-drawing-box {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 1px;
+}
+.density-drawing-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--md-sys-color-surface-container-highest); }
+.density-drawing-chip {
+  display: flex;
+  align-items: center;
+  width: 40px;
+  height: 14px;
+  margin-left: 11px;
+  padding-left: 6px;
+  border-radius: 7px;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-primary);
+}
+.density-drawing-chip .icon { font-size: 11px !important; }
+/* Roomy: one row with a thicker subject line and a preview line under it */
+.density-drawing.is-roomy .density-drawing-row { gap: 3px; }
+.density-drawing.is-roomy .density-drawing-bar { height: 5px; }
+.density-drawing-preview {
+  height: 3px;
+  margin-left: 11px;
+  margin-right: 14px;
+  border-radius: 2px;
+  background: var(--md-sys-color-surface-container-high);
+}
+.density-drawing.is-roomy .density-drawing-chip { height: 12px; }
 
 /* Buckets */
 /* Wraps the Today list and buckets without changing the layout, so they can be made

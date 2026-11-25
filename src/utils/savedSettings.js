@@ -20,6 +20,7 @@ export const defaultSettings = {
   labels: 'both', // 'both' | 'icons' | 'text', for Move / Archive / Delete and Declutter
   buttons: { move: true, archive: true, delete: true, declutter: true },
   motion: true,
+  density: 'roomy', // 'roomy' (to start; Amanda, 2026-11-25) | 'default' | 'comfortable' | 'compact' (Gmail's Density, plus Roomy; Stage 24b)
   unreadDot: false, // the blue dot on unread rows: off by default, like Gmail (Amanda, 2026-11-24)
   zone: 'trash', // the delete zone: 'trash' | 'archive'
 }

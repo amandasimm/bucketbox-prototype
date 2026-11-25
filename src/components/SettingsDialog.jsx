@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import DensityChoice from './DensityChoice.jsx'
 import Icon from './Icon.jsx'
 
 // A Material-style switch: a labeled row with the switch on the right. disabled: shown but
@@ -145,6 +146,18 @@ export default function SettingsDialog({ settings, canReorder, onSave, onReorder
               hint="A blue dot next to the sender of unread emails"
               checked={draft.unreadDot}
               onChange={(unreadDot) => set({ unreadDot })}
+            />
+          </section>
+
+          {/* Gmail's Density, plus Roomy (Stage 24b) */}
+          <section className="settings-section" aria-labelledby={`${ids}-density`}>
+            <h3 id={`${ids}-density`} className="settings-heading">Density</h3>
+            <DensityChoice
+              name={`${ids}-density-choice`}
+              value={draft.density}
+              onChange={(density) => set({ density })}
+              legend="How much space between emails"
+              hideLegend
             />
           </section>
 
