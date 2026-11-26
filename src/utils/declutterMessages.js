@@ -7,7 +7,7 @@
 // All done: nothing in the run was skipped (every card was cleared, sorted or at least read).
 //
 // Each line is a function of { Scope, scope, n, many } where:
-//   Scope / scope: "Today" / "today", "This week" / "this week", "These 25" / "these 25"...
+//   Scope / scope: "Today" / "today", "This Week" / "this week", "These 25" / "these 25"...
 //   n: how many were cleared (or sorted) · many: the scope is plural ("These 25"), for is / are
 const be = (many) => (many ? 'are' : 'is')
 const emails = (n) => (n === 1 ? '1 email' : `${n} emails`)
@@ -52,9 +52,9 @@ export const endTitles = {
 // unsorted emails …" ("today", "from yesterday", "this week", "anywhere")
 export function scopeWords(range, label, deckSize) {
   if (range === 'all') return { Scope: `These ${deckSize}`, scope: `these ${deckSize}`, many: true, empty: 'anywhere' }
-  const relative = ['Today', 'Yesterday', 'This week', 'Last week']
+  const relative = ['Today', 'Yesterday', 'This Week', 'Last Week']
   const scope = relative.includes(label) ? label.toLowerCase() : label
-  const empty = label === 'Today' || label === 'This week' ? scope : `from ${scope}`
+  const empty = label === 'Today' || label === 'This Week' ? scope : `from ${scope}`
   return { Scope: label, scope, many: false, empty }
 }
 

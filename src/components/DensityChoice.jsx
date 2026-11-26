@@ -3,7 +3,7 @@ import Icon from './Icon.jsx'
 // Gmail's Density setting, surfaced in Bucketbox (Stage 24b; Amanda, 2026-11-24), plus a fourth,
 // Roomy, for less at once on screen: bigger text, with the subject and preview on two lines.
 // Each choice has a small drawing of the rows, like Gmail's own picker. Used in Bucketbox
-// settings and in onboarding's second step. It changes the rows of wide lists (520px or more);
+// settings and in onboarding's third step. It changes the rows of wide lists (520px or more);
 // the stacked rows of narrow lists already have room to breathe. Row heights: HomePage.css, "Density".
 // Roomy comes first and is what everyone starts with (Amanda, 2026-11-25); Gmail's three follow.
 export const densities = [

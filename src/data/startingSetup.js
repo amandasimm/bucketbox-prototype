@@ -10,8 +10,21 @@ export const startingBuckets = [
 // Amanda, 2026-11-24): just two, plus "Make your own", to push people to make it their own.
 // Picking one creates it at once; it can be renamed, recolored or given an emoji later.
 export const starterBuckets = [
-  { name: 'Priority', color: '#8b5cf6', emoji: null }, // Purple, no emoji
-  { name: 'To Read', color: '#cbbcff', emoji: '📚' }, // Lavender
+  // The blues, Blue then Sky, with no emoji (Amanda, 2026-11-26): the tiles show a check where the
+  // dot or emoji would be, so a bucket made from one gets the plain color dot
+  { name: 'Priority', color: '#0b57d0', emoji: null }, // Blue, the default color
+  { name: 'To Read', color: '#a6d3ff', emoji: null }, // Sky, the light blue
+]
+
+// Labels the person made in Gmail before Bucketbox (Amanda, 2026-11-26). Step 5 offers to turn
+// them into buckets, bringing each label's emails along. Leave the list empty and that part of
+// the card doesn't show. emailIds are ids from mockEmails.js; only emails still unsorted move.
+// gmailColor is the color the person gave the label in Gmail (one of Gmail's label colors), or
+// null if they never picked one (Gmail doesn't color labels on its own). The bucket gets the closest
+// of the 12 colors below (utils/bucketColors.js, bucketColorFor); an uncolored label gets Slate.
+export const gmailLabels = [
+  { name: 'School', gmailColor: '#a479e2', emailIds: ['EML_1023'] }, // Gmail's purple. Dr. Alvarez's draft feedback
+  { name: 'Travel', gmailColor: '#ffad47', emailIds: ['EML_1012', 'EML_1015'] }, // Gmail's orange. The cabin weekend, Aunt Wendy's Rome pictures
 ]
 
 // The 12 bucket colors, 6 bold and 6 soft, chosen by Amanda (BUILD-LOG, 2026-10-30).

@@ -1,3 +1,5 @@
+import { bucketColors } from '../data/startingSetup.js'
+
 function luminance(hex) {
   const channels = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
   const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
@@ -24,4 +26,26 @@ export function bucketStyle(hex) {
     '--bucket-header': `color-mix(in srgb, ${hex} 20%, white)`,
     '--bucket-ink': inkOn(hex),
   }
+}
+
+// A color in CIE Lab, where distance matches how different two colors look
+function lab(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116)
+  const x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047)
+  const y = f(0.2126 * r + 0.7152 * g + 0.0722 * b)
+  const z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883)
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)]
+}
+
+// A Gmail label's color as the closest of Bucketbox's 12 (Amanda, 2026-11-26). Gmail labels have
+// no color until the person picks one; an uncolored label shows gray in Gmail, so it gets Slate.
+export function bucketColorFor(gmailColor) {
+  if (!gmailColor) return bucketColors.find((color) => color.name === 'Slate').hex
+  const target = lab(gmailColor)
+  const distance = (hex) => lab(hex).reduce((sum, value, i) => sum + (value - target[i]) ** 2, 0)
+  return bucketColors.reduce((best, color) => (distance(color.hex) < distance(best.hex) ? color : best)).hex
 }

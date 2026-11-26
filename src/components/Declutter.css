@@ -325,7 +325,6 @@
 .declutter-end-list .has-breakdown > span:nth-child(2) { text-decoration: underline dotted; text-underline-offset: 3px; }
 .declutter-end-tip { display: grid; gap: 4px; padding: 8px 12px; text-align: left; }
 .declutter-end-tip-row { display: flex; align-items: center; gap: 8px; }
-.declutter-end-tip .bucket-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--bucket-color); }
 /* On a narrower card, the counts go back to rows: a number beside its label, left-aligned and
    centered as a block, still in the banner (Amanda, 2026-11-24) */
 .declutter-end { container-type: inline-size; }
@@ -350,8 +349,6 @@
 }
 .declutter-end-list .declutter-end-buckets li { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; }
 .declutter-end-list .declutter-end-buckets .declutter-end-count { min-width: 0; font-size: 14px; line-height: 20px; }
-.declutter-end-buckets .bucket-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--bucket-color); }
-.declutter-end-buckets .bucket-emoji { font-size: 14px; }
 .declutter-end-buttons {
   grid-area: 2 / 1 / 3 / -1;
   display: grid;

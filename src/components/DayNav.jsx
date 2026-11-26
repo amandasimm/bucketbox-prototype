@@ -29,8 +29,12 @@ const POPOVER_WIDTH = 300
 
 // A small month calendar (PRD F6). Days with unsorted emails get a blue dot (a status,
 // not a count); future days are switched off. It floats on top of the page, so the
-// Today card's rounded edges can't cut it off.
-function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) {
+// Today card's rounded edges can't cut it off. Sunday is always the first column (Amanda,
+// 2026-11-26). week: This Week's calendar picks a whole week (Amanda, 2026-11-26): the viewed
+// week is one blue band, and pointing at (or tabbing to) any day lights up its week. A week that
+// doesn't start on Sunday wraps onto the next row.
+function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose, week = false }) {
+  const [hoverWeek, setHoverWeek] = useState(null) // the start of the week being pointed at
   const selected = new Date()
   selected.setDate(selected.getDate() + dayOffset)
   const [month, setMonth] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1))
@@ -66,7 +70,7 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
     }
   }, [anchorRef, onClose])
 
-  const firstWeekday = month.getDay()
+  const firstWeekday = month.getDay() // blanks before the 1st
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
   const now = new Date()
   const isThisMonth = month.getFullYear() * 12 + month.getMonth() >= now.getFullYear() * 12 + now.getMonth()
@@ -78,9 +82,9 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
   return createPortal(
     <div
       ref={popoverRef}
-      className="day-picker"
+      className={`day-picker ${week ? 'is-week' : ''}`}
       role="dialog"
-      aria-label="Choose a day"
+      aria-label={week ? 'Choose a week' : 'Choose a day'}
       style={{ left: position.left, top: position.top, width: POPOVER_WIDTH }}
     >
       <div className="day-picker-header">
@@ -102,7 +106,7 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
           <Icon name="chevron_right" size={20} />
         </IconButton>
       </div>
-      <div className="day-picker-grid" role="grid">
+      <div className="day-picker-grid" role="grid" onMouseLeave={() => setHoverWeek(null)}>
         {WEEKDAYS.map((weekday, i) => (
           <span key={`w${i}`} className="day-picker-weekday" aria-hidden="true">
             {weekday}
@@ -113,18 +117,27 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
           const offset = offsetOf(date)
           const future = offset > 0
           const hasUnsorted = daysWithUnsorted.has(offset)
-          const label = `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}${
-            hasUnsorted ? ', has unsorted emails' : ''
-          }`
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+          const label = `${week ? `${weekLabel(offset)}, ` : ''}${dayName}${hasUnsorted ? ', has unsorted emails' : ''}`
+          // In week mode: which band the day is in, and whether it rounds off the band's ends
+          const { start, end } = weekBounds(offset)
+          const selected = week ? weekHolds(dayOffset, offset) : offset === dayOffset
+          const weekClasses = week
+            ? `${hoverWeek === start ? 'in-hover-week' : ''} ${offset === start || date.getDate() === 1 || date.getDay() === 0 ? 'is-band-start' : ''} ${
+                offset === end || date.getDate() === daysInMonth || date.getDay() === 6 ? 'is-band-end' : ''
+              }`
+            : ''
           return (
             <button
               key={offset}
               type="button"
-              className={`day-picker-day ${offset === 0 ? 'is-today' : ''} ${offset === dayOffset ? 'is-selected' : ''}`}
+              className={`day-picker-day ${offset === 0 ? 'is-today' : ''} ${selected ? 'is-selected' : ''} ${weekClasses}`}
               disabled={future}
               aria-label={label}
               aria-current={offset === dayOffset ? 'date' : undefined}
               onClick={() => onPick(offset)}
+              onMouseEnter={week ? () => setHoverWeek(start) : undefined}
+              onFocus={week ? () => setHoverWeek(start) : undefined}
             >
               {date.getDate()}
               {hasUnsorted && <span className="day-picker-dot" aria-hidden="true" />}
@@ -142,7 +155,7 @@ function DayPicker({ anchorRef, dayOffset, daysWithUnsorted, onPick, onClose }) 
 // emails, with a text label so it isn't color-only (BUILD-LOG, 2026-10-30).
 // range 'week' (PRD F6; brief item 5): the arrows move a week at a time, the label reads "This
 // week", "Last week" or "Nov 3–9", and the back arrow's dot means the week before has unsorted
-// emails. The calendar still picks a day; its week is shown.
+// emails. The calendar picks a whole week (Amanda, 2026-11-26).
 export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted, range = 'today' }) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const calendarRef = useRef(null)
@@ -174,7 +187,7 @@ export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted, range
         </IconButton>
       )}
       <span ref={calendarRef} className="day-nav-calendar">
-        <IconButton label="Choose a day" onClick={() => setPickerOpen(!pickerOpen)}>
+        <IconButton label={week ? 'Choose a week' : 'Choose a day'} onClick={() => setPickerOpen(!pickerOpen)}>
           <Icon name="calendar_month" size={20} />
         </IconButton>
       </span>
@@ -183,6 +196,7 @@ export default function DayNav({ dayOffset, onChangeDay, daysWithUnsorted, range
           anchorRef={calendarRef}
           dayOffset={dayOffset}
           daysWithUnsorted={daysWithUnsorted}
+          week={week}
           onPick={(offset) => {
             setPickerOpen(false)
             onChangeDay(offset)

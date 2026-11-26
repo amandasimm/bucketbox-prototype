@@ -407,15 +407,16 @@ body:not(.show-unread-dot) .unread-dot { display: none; }
 
 /* Density (Stage 24b; Amanda, 2026-11-24): Gmail's three plus Roomy. Rows of wide lists are
    Default 40px, Comfortable 40px (no chips), Compact 32px (no chips), Roomy 70px (two lines,
-   bigger text, above); the Select all row matches, except Roomy's, which has 8px above and below. Stacked rows
-   don't change. */
+   bigger text, above). The Select all row is 40px in Roomy, Default and Comfortable alike (Amanda,
+   2026-11-26: they should match), 32px in Compact. Stacked rows don't change. */
 body[data-density='compact'] { --row-pad-top: 6px; --row-pad-bottom: 5px; --toolbar-height: 32px; --toolbar-pad: 3px; }
-/* Roomy's Select all row: 8px above and below, not row-height (Amanda, 2026-11-25) */
-body[data-density='roomy'] { --row-pad-top: 14px; --row-pad-bottom: 13px; --toolbar-height: 0px; --toolbar-pad: 8px; }
+body[data-density='roomy'] { --row-pad-top: 14px; --row-pad-bottom: 13px; }
 
 /* The density picker, in settings and onboarding: a radio, the name, and a drawing of the rows */
 .density-choice { display: flex; flex-direction: column; gap: 8px; }
 .density-choice legend { margin-bottom: 4px; }
+/* Onboarding's step 4: more room between the drawings (Amanda, 2026-11-26) */
+.welcome-body .density-choice { gap: 16px; }
 .density-option {
   display: flex;
   align-items: center;
@@ -1023,6 +1024,14 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   color: var(--text);
   background: var(--surface);
 }
+/* Dropdowns draw their own arrow (Material's expand_more, in the muted icon gray), 8px from the
+   right edge with room before it (Amanda, 2026-11-25: the browser's arrow sat against the edge) */
+select.dialog-select {
+  appearance: none;
+  padding-right: 32px;
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23444746'%3E%3Cpath d='M12 15.4 6 9.4 7.4 8l4.6 4.6L16.6 8 18 9.4z'/%3E%3C/svg%3E") no-repeat right 8px center / 20px 20px;
+  cursor: pointer;
+}
 .dialog-note {
   margin: 16px 0 0;
   color: var(--text-muted);
@@ -1391,6 +1400,7 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   color: #ffffff;
 }
 .filled-button:hover { box-shadow: var(--md-sys-elevation-level1); }
+.filled-button:disabled:hover { box-shadow: none; } /* a switched-off button doesn't lift (Amanda, 2026-11-26) */
 
 /* Toast: just above undo/redo in the left nav, so the confirmation sits next to the way back.
    Its left edge lines up with the nav (the Compose button), not the window (BUILD-LOG, 2026-10-30). */
@@ -2001,6 +2011,20 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   background: var(--unread-dot);
 }
 .day-picker-day.is-selected .day-picker-dot { background: #ffffff; }
+/* This Week's calendar (Amanda, 2026-11-26): the week is drawn as one band. The viewed week is
+   blue; the week under the pointer (or keyboard focus) gets a light band, rounded at the week's
+   ends, at each row's ends (Sunday stays the first column, so a Monday week wraps) and at the
+   month's edges. Future days stay greyed out inside the band. */
+.day-picker.is-week .day-picker-grid { column-gap: 0; }
+.day-picker.is-week .day-picker-day { border-radius: 0; }
+.day-picker.is-week .day-picker-day.is-band-start { border-top-left-radius: 18px; border-bottom-left-radius: 18px; }
+.day-picker.is-week .day-picker-day.is-band-end { border-top-right-radius: 18px; border-bottom-right-radius: 18px; }
+.day-picker.is-week .day-picker-day:hover { background-image: none !important; } /* the band is the hover */
+.day-picker.is-week .day-picker-day.in-hover-week:not(.is-selected) { background: var(--md-sys-color-surface-container-highest); }
+.day-picker.is-week .day-picker-day.is-selected:disabled { color: rgb(255 255 255 / 0.6); }
+.day-picker.is-week .day-picker-day.in-hover-week.is-selected { background: color-mix(in srgb, var(--focus-ring) 88%, black); }
+.day-picker.is-week .day-picker-day.is-today { box-shadow: none; text-decoration: underline; text-underline-offset: 3px; }
+.day-picker.is-week .day-picker-day.is-today:not(.is-selected) { color: var(--focus-ring); }
 
 /* ---- Bucketbox settings (PRD F10; BUILD-LOG, 2026-11-16) ---- */
 /* The settings pop-up: the same card as the delete-bucket confirmation, a little wider */
@@ -2045,6 +2069,7 @@ label.setting-row { cursor: pointer; }
 .setting-choices { margin: 0; padding: 0; border: none; min-width: 0; }
 .setting-choices legend { margin-bottom: 8px; }
 .setting-choice-list { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.setting-choice-list.is-stacked { flex-direction: column; align-items: flex-start; } /* the count's choices, one per row (Amanda, 2026-11-26) */
 /* The switch: Gmail's own (the same look as the Bucketbox switch in the nav) */
 .setting-switch-input { position: absolute; opacity: 0; pointer-events: none; }
 .setting-switch {
@@ -2312,8 +2337,22 @@ label.setting-row { cursor: pointer; }
 
 /* The page size choice in settings (All Emails, brief item 5) */
 .setting-select { margin-left: 0; flex-shrink: 0; }
-/* The time field matches the dropdowns: same height, border and text (Stage 24a) */
-.setting-time { padding-right: 4px; }
+/* The typed time field (TimeField.jsx; Amanda, 2026-11-26): the dropdowns' height and corners,
+   no icon; darker outline on hover, Gmail's 2px blue outline while typing */
+.time-field {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 112px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--text);
+}
+.time-field:hover { border-color: var(--text); }
+.time-field:focus { outline: none; border: 2px solid var(--focus-ring); padding: 0 11px; }
 
 /* All Emails (brief item 5, Stage 21b): Gmail's pager in the list toolbar, and its Select all line */
 .list-pager {
@@ -2326,6 +2365,8 @@ label.setting-row { cursor: pointer; }
 }
 .list-pager > span { margin-right: 4px; white-space: nowrap; }
 .list-pager .icon-button { width: 32px; height: 32px; }
+/* The 32px arrows take no more height than Select all, so the row is as tall as in Today and This Week (Amanda, 2026-11-26) */
+.list-pager { margin-block: -4px; }
 /* The pager sits at the right end of the toolbar (the count is in the heading in All Emails) */
 .select-all-banner {
   margin: 0;
@@ -2347,20 +2388,57 @@ label.setting-row { cursor: pointer; }
   background: var(--surface);
   box-shadow: var(--card-shadow);
 }
-.welcome-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.welcome-kicker,
-.welcome-progress { margin: 0; font: 500 var(--md-sys-typescale-label-medium) var(--font); color: var(--text-muted); }
-.welcome-kicker { color: var(--focus-ring); }
-/* Four short bars: done and current ones in blue */
-.welcome-bar { display: flex; gap: 4px; margin: 8px 0 20px; }
-.welcome-bar span { flex: 1; height: 4px; border-radius: 2px; background: var(--md-sys-color-surface-container-highest); }
-.welcome-bar span.is-done { background: var(--focus-ring); }
+.welcome-card { overflow: hidden; }
+/* The header (Amanda, 2026-11-26): Gmail's blue, edge to edge, like a card's title bar. The
+   heading matches the Today list's ("Today", "24 unsorted"); the count, X and progress bar follow
+   Declutter's header. White on #0b57d0 is about 6.9:1. */
+.welcome-card:has(> .welcome-header) { border: 0; } /* no gray line around the blue; the shadow gives the edge */
+.welcome-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  margin: -24px -24px 24px; /* out to the card's edges */
+  padding: 12px 12px 12px 24px; /* the heading lines up with the question below */
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  /* White hover and focus on the blue */
+  --md-sys-state-hover: rgb(255 255 255 / 0.08);
+  --md-sys-state-focus: rgb(255 255 255 / 0.12);
+  --md-sys-state-pressed: rgb(255 255 255 / 0.12);
+}
+.welcome-heading { flex: 1; margin: 0; font-size: 22px; line-height: 28px; font-weight: 400; }
+.welcome-count { margin: 0 8px 0 0; font-size: 14px; line-height: 20px; white-space: nowrap; }
+.welcome-header .icon-button { width: 36px; height: 36px; color: var(--md-sys-color-on-primary); }
+.welcome-header .icon-button:focus-visible { outline-color: var(--md-sys-color-on-primary); outline-offset: -2px; }
+/* Declutter's progress bar: light blue on a darker blue track, so it shows against both the
+   blue header and the white body under it (white blended into the body) */
+.welcome-progress-bar {
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  background: rgb(0 0 0 / 0.3);
+  overflow: hidden;
+}
+.welcome-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 0 var(--md-sys-shape-corner-full) var(--md-sys-shape-corner-full) 0;
+  background: var(--md-sys-color-inverse-primary);
+  transition: width 200ms;
+}
 .welcome-title { margin: 0 0 4px; font: 400 var(--md-sys-typescale-title-large) var(--font); }
 .welcome-title:focus { outline: none; }
 .welcome-hint { margin: 0 0 20px; font: var(--md-sys-typescale-body-medium) var(--font); color: var(--text-muted); }
 .welcome-body { display: flex; flex-direction: column; gap: 16px; }
+.welcome-title + .welcome-body { margin-top: 16px; } /* a step without helper text */
+
 .welcome-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
-.welcome-skip { margin-right: auto; } /* Skip sits on the left, away from Next / Done */
+.welcome-back { margin-right: auto; } /* Back on the left, away from Next / Done */
+/* Back is a text button: its word lines up with the card's edges (the title above,
+   Next below), and its hover shape reaches out past it (Amanda, 2026-11-25) */
+.welcome-back { margin-left: -16px; }
 
 /* Choices drawn as cards: picture on top, radio and words below */
 .welcome-choices { display: grid; gap: 12px; }
@@ -2369,7 +2447,7 @@ label.setting-row { cursor: pointer; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
+  padding: 12px 10px; /* 10px at the sides, so "It Depends" fits on one line in a narrower window (Amanda, 2026-11-26) */
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 12px;
   cursor: pointer;
@@ -2385,11 +2463,10 @@ label.setting-row { cursor: pointer; }
   border-radius: 8px;
   background: var(--md-sys-color-surface-container-low);
 }
-.welcome-choice-text { display: flex; align-items: flex-start; gap: 8px; }
+.welcome-choice-text { display: flex; align-items: center; gap: 6px; }
 .welcome-choice-text input { flex-shrink: 0; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--focus-ring); }
-.welcome-choice-label { display: block; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
-.welcome-choice-hint { display: block; font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
-.welcome-extra { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
+.welcome-choice-label { display: block; white-space: nowrap; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
+.welcome-choice-hint { display: block; margin-top: 2px; font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
 
 /* Step 1's drawings of the list */
 .mini-list {
@@ -2403,12 +2480,15 @@ label.setting-row { cursor: pointer; }
   background: var(--surface);
 }
 .mini-heading { display: flex; justify-content: space-between; font: 500 9px/12px var(--font); color: var(--text); }
-.mini-pager { font-weight: 400; color: var(--text-muted); }
+.mini-pager { font-weight: 400; font-size: 7px; color: var(--text-muted); white-space: nowrap; }
 .mini-row { height: 5px; border-radius: 3px; background: var(--md-sys-color-surface-container-highest); }
-.mini-day { width: 40%; height: 4px; margin-top: 2px; border-radius: 2px; background: var(--focus-ring); opacity: 0.7; }
+.mini-day { width: 40%; height: 4px; margin-top: 2px; border-radius: 2px; background: var(--compose-bg); } /* Compose's light blue (Amanda, 2026-11-26; was dark blue) */
+/* This Week's day markers, a little tighter, so its drawing is exactly as tall as Today's */
+.mini-list.is-week { gap: 3px; }
+.mini-list.is-week .mini-day { height: 3px; margin-top: 0; }
 
-/* Step 2: the time, and yesterday evening's mail moving to today */
-.welcome-cutoff { display: flex; align-items: center; gap: 16px; }
+/* The time, and yesterday evening's mail moving to today */
+.welcome-field { display: flex; align-items: center; gap: 16px; }
 .welcome-evening {
   display: flex;
   align-items: center;
@@ -2469,6 +2549,7 @@ label.setting-row { cursor: pointer; }
   transition: box-shadow 150ms ease;
 }
 .starter-bucket:hover { box-shadow: var(--md-sys-elevation-level1); }
+.starter-bucket:not(.is-own):hover { background-image: none !important; } /* the suggested buckets lift without the gray hover fill (Amanda, 2026-11-26) */
 .starter-bucket:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .starter-bucket-header {
   display: flex;
@@ -2479,7 +2560,7 @@ label.setting-row { cursor: pointer; }
   border-bottom: 1px solid var(--divider);
   background: var(--bucket-header);
 }
-.starter-bucket-name { font: 500 var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+.starter-bucket-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 500 var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
 .starter-bucket-body { display: flex; flex-direction: column; justify-content: center; gap: 10px; flex: 1; padding: 0 14px; }
 .starter-bucket-body .mini-row:nth-child(2) { width: 75%; }
 .starter-bucket-body .mini-row:nth-child(3) { width: 55%; }
@@ -2492,3 +2573,24 @@ label.setting-row { cursor: pointer; }
   color: var(--focus-ring);
 }
 .starter-bucket.is-own .starter-bucket-name { color: var(--focus-ring); }
+/* Picked: a filled check and a thicker outline (Amanda, 2026-11-25: pick several, then Continue).
+   The check sits where a bucket's dot or emoji would, before the name (Amanda, 2026-11-26) */
+.starter-bucket-check { display: flex; flex-shrink: 0; color: var(--text-muted); }
+.starter-bucket.is-picked, .starter-bucket.is-picked:hover { box-shadow: 0 0 0 2px var(--bucket-color); }
+.starter-bucket.is-picked .starter-bucket-check { color: var(--focus-ring); }
+.first-bucket-card .welcome-buttons { align-items: center; }
+/* "Select one or more", under the cards in the secondary text color (Amanda, 2026-11-26) */
+.first-bucket-note { margin: 4px 0 0; font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
+/* "Use my Gmail labels" (Amanda, 2026-11-26): a text button that opens a checklist of the
+   person's labels, every one checked to start */
+.label-import { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--divider); }
+.label-import-toggle { display: inline-flex; align-items: center; gap: 8px; height: 36px; margin-left: -12px; padding: 0 12px; border-radius: 18px; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
+.label-import-list { display: flex; flex-direction: column; margin-top: 4px; }
+.label-import-note { margin: 0 0 4px; font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
+.label-import-row { display: flex; align-items: center; gap: 12px; min-height: 40px; cursor: pointer; font: var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+.label-import-row .email-checkbox { margin: 0; }
+.label-import-row.is-all { color: var(--text-muted); border-bottom: 1px solid var(--divider); }
+.label-import-icon { display: flex; }
+.label-import-name { flex: 1; }
+.label-import-count { color: var(--text-muted); font: var(--md-sys-typescale-body-small) var(--font); }
+.first-bucket-form { margin-bottom: 8px; }

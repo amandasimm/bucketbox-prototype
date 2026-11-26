@@ -217,12 +217,11 @@ function EndMessage({ declutter, headingRef }) {
     [progress.left, 'still in the Today list'],
   ].filter(([count]) => count > 0)
   const rows = lines.length >= 4 || listBuckets
-  const bucketMark = (bucket) =>
-    bucket.emoji ? <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span> : <span className="bucket-swatch" aria-hidden="true" />
+  // Bucket names show without their emoji or color dot here (Amanda, 2026-11-25)
   // The title fits the range and what was mostly done, and rotates (src/utils/declutterMessages.js).
   // An empty day or week offers the one before, like the end screen's left button (Amanda, 2026-11-24)
   const offerEarlier = total === 0 && range !== 'all' && nextRun
-  const earlierName = nextRun && ['Yesterday', 'Last week'].includes(nextRun.label) ? nextRun.label.toLowerCase() : nextRun?.label
+  const earlierName = nextRun && ['Yesterday', 'Last Week'].includes(nextRun.label) ? nextRun.label.toLowerCase() : nextRun?.label
 
   return (
     <div className="declutter-card declutter-end">
@@ -250,8 +249,7 @@ function EndMessage({ declutter, headingRef }) {
                 {breakdown && (
                   <span className="tooltip declutter-end-tip" id="declutter-moved-to" role="tooltip">
                     {buckets.map(({ bucket, count: n }) => (
-                      <span key={bucket.id} className="declutter-end-tip-row" style={bucketStyle(bucket.color)}>
-                        {bucketMark(bucket)}
+                      <span key={bucket.id} className="declutter-end-tip-row">
                         {bucket.name}: {n}
                       </span>
                     ))}
@@ -260,9 +258,8 @@ function EndMessage({ declutter, headingRef }) {
                 {kind === 'moved' && listBuckets && (
                   <ul className="declutter-end-buckets">
                     {buckets.map(({ bucket, count: n }) => (
-                      <li key={bucket.id} style={bucketStyle(bucket.color)}>
+                      <li key={bucket.id}>
                         <span className="declutter-end-count">{n}</span>
-                        {bucketMark(bucket)}
                         <span>{bucket.name}</span>
                       </li>
                     ))}

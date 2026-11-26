@@ -6,9 +6,12 @@ const KEY = 'bucketbox-settings'
 
 export const defaultSettings = {
   range: 'today', // the Today list's range: 'today' (default) | 'week' | 'all' (PRD F6, F10; brief item 5)
+  weekStart: 1, // This Week's first day, 0 = Sunday … 6 = Saturday; Monday to start (Amanda, 2026-11-25)
   cutoff: '17:00', // "When do you usually stop checking email?": any time, 5 PM by default; "00:00" moves nothing (Stage 24a)
   pageSize: 50, // All Emails: emails per page, like Gmail (PRD F6)
-  showCount: false, // All Emails: show the unsorted count (hidden by default; Amanda, 2026-11-22)
+  // All Emails' heading count: 'none' (to start; Amanda, 2026-11-22) | 'unsorted' | 'unread' (a choice of
+  // three, Amanda, 2026-11-26; was the Show the count switch)
+  count: 'none',
   chunkSize: 25, // All Emails: how many emails one Declutter run takes (PRD F6; separate from the page size)
   autoSort: true, // auto-sort rules sort arriving mail (PRD F14)
   // Suggestions (PRD F15, F16): on by default for testing (Amanda, 2026-11-22), though the PRD
@@ -35,6 +38,9 @@ export function loadSettings() {
     if (!saved || typeof saved !== 'object') return defaultSettings
     if (saved.version !== VERSION) delete saved.suggestions
     delete saved.version
+    // The old Show the count switch: on becomes the unsorted count
+    if (!('count' in saved) && saved.showCount === true) saved.count = 'unsorted'
+    delete saved.showCount
     return {
       ...defaultSettings,
       ...saved,
@@ -42,6 +48,8 @@ export function loadSettings() {
       hiddenSuggestions: Array.isArray(saved.hiddenSuggestions) ? saved.hiddenSuggestions : [],
       // Anything that isn't an "HH:MM" time (earlier builds saved an hour number) goes back to 5 PM
       cutoff: /^\d\d:\d\d$/.test(saved.cutoff) ? saved.cutoff : defaultSettings.cutoff,
+      count: ['none', 'unsorted', 'unread'].includes(saved.count) ? saved.count : defaultSettings.count,
+      weekStart: Number.isInteger(saved.weekStart) && saved.weekStart >= 0 && saved.weekStart <= 6 ? saved.weekStart : defaultSettings.weekStart,
     }
   } catch {
     return defaultSettings

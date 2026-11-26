@@ -37,10 +37,11 @@ export function unsortedFor(emails, dayOffset) {
 
 // The day's unsorted emails, with the unsorted count (PRD F1), Select all,
 // and the Move / Archive / Delete buttons (PRD F7). Clicking an email opens it in the drawer (PRD F5).
-// range (PRD F6, F10; brief item 5): 'today' shows one day; 'week' the Monday-to-Sunday week, newest
+// range (PRD F6, F10; brief item 5): 'today' shows one day; 'week' the week (Monday to Sunday unless changed), newest
 // first under day headings, with the week's count; 'all' every unsorted email in Gmail-style pages,
-// with no day arrows or calendar, and the count only if showCount is on (Stage 21b).
-export default function TodayList({ emails, buckets, dayOffset, range = 'today', pageSize = 50, showCount = false, onChangeDay, onDeclutter, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
+// with no day arrows or calendar, and a count only if count isn't 'none' (Stage 21b): the unsorted
+// count or the unread one (Amanda, 2026-11-26).
+export default function TodayList({ emails, buckets, dayOffset, range = 'today', pageSize = 50, count = 'none', onChangeDay, onDeclutter, selectedIds, onSelect, actions, zoneMode, openEmailId, onOpen, covered }) {
   const dayEmails = receivedIn(emails, range, dayOffset)
   const unsorted = listFor(emails, range, dayOffset)
   const week = range === 'week'
@@ -51,6 +52,8 @@ export default function TodayList({ emails, buckets, dayOffset, range = 'today',
   const page = Math.min(pageState, pages - 1)
   const shown = all ? unsorted.slice(page * pageSize, (page + 1) * pageSize) : unsorted
   const shownIds = shown.map((email) => email.id)
+  const showCount = count !== 'none'
+  const unreadCount = unsorted.filter((email) => email.unread).length
   // The count beside Select all; All Emails puts it in the heading instead (Amanda, 2026-11-24)
   const countShown = !all
   // Days that still have unsorted emails, for the back arrow's dot and the calendar
@@ -83,7 +86,7 @@ export default function TodayList({ emails, buckets, dayOffset, range = 'today',
             (Amanda, 2026-11-24), or "All Emails" while the count is hidden */}
         {all ? (
           <h2 id="today-heading" className="today-label">
-            {showCount ? `${unsorted.length} unsorted` : 'All Emails'}
+            {count === 'unsorted' ? `${unsorted.length} unsorted` : count === 'unread' ? `${unreadCount} unread` : 'All Emails'}
           </h2>
         ) : (
           <DayNav dayOffset={dayOffset} onChangeDay={onChangeDay} daysWithUnsorted={daysWithUnsorted} range={range} />

@@ -1,6 +1,7 @@
 // The Today list's range (PRD F6, F10; brief item 5; BUILD-LOG 2026-11-22): 'today' (the default),
 // 'week' or, from Stage 21b, 'all'. In week mode the viewed day (dayOffset) picks the week: the
-// Monday-to-Sunday week it falls in (Amanda). Days are offsets from today (0 = today).
+// week it falls in, Monday to Sunday unless the person picks another first day (Amanda,
+// 2026-11-25). Days are offsets from today (0 = today).
 import { newestFirst } from './dates.js'
 
 const isUnsorted = (email) => email.bucketId === null && email.removedTo === null
@@ -12,9 +13,21 @@ const dateOf = (dayOffset) => {
   return date
 }
 
-// The week holding dayOffset: { start, end } as offsets, Monday to Sunday (end may be in the future)
+// The first day of the week, 0 = Sunday … 6 = Saturday (settings.weekStart, Monday to start). App
+// sets it before each render, so every week below follows the setting without passing it around.
+let firstDay = 1
+export function setWeekStart(day) {
+  firstDay = day
+}
+
+// The days of the week, in the order the week-start dropdown lists them, and their names
+export const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+// "Monday to Sunday", "Sunday to Saturday"…
+export const weekSpan = (day) => `${weekdayNames[day]} to ${weekdayNames[(day + 6) % 7]}`
+
+// The week holding dayOffset: { start, end } as offsets (end may be in the future)
 export function weekBounds(dayOffset) {
-  const weekday = (dateOf(dayOffset).getDay() + 6) % 7 // Monday = 0
+  const weekday = (dateOf(dayOffset).getDay() - firstDay + 7) % 7 // the first day = 0
   const start = dayOffset - weekday
   return { start, end: start + 6 }
 }
@@ -24,12 +37,12 @@ export const weekHolds = (dayOffset, offset) => {
   return offset >= start && offset <= end
 }
 
-// "This week", "Last week", or "Nov 3–9" (with the year for another year)
+// "This Week", "Last Week", or "Nov 3–9" (with the year for another year)
 export function weekLabel(dayOffset) {
   const { start, end } = weekBounds(dayOffset)
   const thisWeek = weekBounds(0)
-  if (start === thisWeek.start) return 'This week'
-  if (start === thisWeek.start - 7) return 'Last week'
+  if (start === thisWeek.start) return 'This Week'
+  if (start === thisWeek.start - 7) return 'Last Week'
   const from = dateOf(start)
   const to = dateOf(end)
   const otherYear = to.getFullYear() !== new Date().getFullYear()

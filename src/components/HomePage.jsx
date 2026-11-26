@@ -23,8 +23,8 @@ import Envelope from './Envelope.jsx'
 import Resizer from './Resizer.jsx'
 import Toast from './Toast.jsx'
 import TodayList from './TodayList.jsx'
-import WelcomeCard from './WelcomeCard.jsx'
-import FirstBucketCard from './FirstBucketCard.jsx'
+import WelcomeCard, { welcomeSteps } from './WelcomeCard.jsx'
+import FirstBucketCard, { startingLabels, startingPicks } from './FirstBucketCard.jsx'
 import { listFor } from '../utils/range.js'
 import './HomePage.css'
 
@@ -127,6 +127,9 @@ export default function HomePage({
   const ruleSuggestionSkips = settings.hiddenSuggestions.map((hidden) => hidden.key).filter(Boolean)
 
   // The emails being dragged. Grabbing a checked Today email brings all the checked ones along.
+  // The first-bucket card's picks, kept here so going Back to the steps doesn't lose them
+  const [firstPicks, setFirstPicks] = useState(startingPicks)
+  const [firstLabels, setFirstLabels] = useState(startingLabels) // the Gmail labels list (open, which are checked)
   const [draggedIds, setDraggedIds] = useState([])
   // When a drag starts with an email open, the drawer closes; this keeps Today at the narrower
   // "email open" width until the drop, so the page doesn't jump mid-drag (BUILD-LOG, 2026-10-31)
@@ -343,7 +346,7 @@ export default function HomePage({
             dayOffset={dayOffset}
             range={settings.range}
             pageSize={settings.pageSize}
-            showCount={settings.showCount}
+            count={settings.count}
             onChangeDay={onChangeDay}
             onDeclutter={onDeclutter}
             selectedIds={selectedIds}
@@ -379,7 +382,23 @@ export default function HomePage({
                 onRules={openRules}
                 formRequest={formRequest?.where === 'grid' ? formRequest : null}
                 autoSort={settings.autoSort}
-                intro={(props) => <FirstBucketCard afterSetup={Boolean(welcome?.finished)} {...props} />}
+                intro={({ onCreate }) => (
+                  <FirstBucketCard
+                    afterSetup={Boolean(welcome?.finished)}
+                    steps={welcomeSteps(settings.range).length + 1} // the questions, then this step
+                    picks={firstPicks}
+                    onPicks={setFirstPicks}
+                    labels={firstLabels}
+                    onLabels={setFirstLabels}
+                    emails={emails}
+                    onBack={welcome?.onBack}
+                    onCreate={(list) => {
+                      onCreate(list)
+                      setFirstPicks(startingPicks())
+                      setFirstLabels(startingLabels())
+                    }}
+                  />
+                )}
               />
             )}
             {/* The drawer disappears when no Today emails remain (PRD F5) */}

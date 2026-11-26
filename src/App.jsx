@@ -10,7 +10,7 @@ import { mockEmails } from './data/mockEmails.js'
 import { bucketColors, startingBuckets } from './data/startingSetup.js'
 import { prefersReducedMotion } from './components/DragMotion.jsx'
 import { listDay, receivedAt } from './utils/dates.js'
-import { listFor, weekBounds, weekLabel } from './utils/range.js'
+import { listFor, setWeekStart, weekBounds, weekLabel } from './utils/range.js'
 import { dayButtonLabel } from './components/Declutter.jsx'
 import { endTitle } from './utils/declutterMessages.js'
 import { defaultSettings, loadSettings, storeSettings } from './utils/savedSettings.js'
@@ -105,6 +105,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     const { zone, ...rest } = saved
     return rest
   })
+  setWeekStart(settings.weekStart) // before anything below works out a week
   useEffect(() => {
     storeSettings({ ...settings, zone: zoneMode })
   }, [settings, zoneMode])
@@ -157,7 +158,8 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   useEffect(() => {
     if (welcome?.finished && buckets.length > 0) setWelcome(null)
   }, [welcome, buckets.length])
-  const welcomeActions = welcome?.finished ? { finished: true } : welcome && {
+  // After the steps, Back on the last step ("Create your first bucket") returns to the final question
+  const welcomeActions = welcome?.finished ? { finished: true, onBack: () => setWelcome({ ...welcome, finished: false }) } : welcome && {
     step: welcome.step,
     onStep: (step) => setWelcome({ ...welcome, step }),
     onChange: ({ zone, ...fields }) => {
@@ -168,14 +170,12 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
         if (zone === 'archive') setZoneToastSeen(true)
       }
     },
-    // Both end the steps; the card stays as "Make your first bucket" until one exists
-    onDone: () => {
-      setWelcome({ finished: true })
-      showToast("You're all set. You can change these anytime in Bucketbox settings.")
-    },
+    // Both end the steps; the card stays as "Create your first bucket" until buckets are made
+    // (Continue shows the "You're all set" toast). The step is kept, so Back returns to it.
+    onDone: () => setWelcome({ ...welcome, finished: true }),
     onSkip: () => {
       applySettings(welcome.before)
-      setWelcome({ finished: true })
+      setWelcome({ ...welcome, finished: true })
     },
   }
 
@@ -564,6 +564,23 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       const id = `bucket-${Date.now()}`
       setBuckets([...buckets, { id, name, color, emoji }])
       return id
+    },
+    // The first-bucket card's Continue: every picked bucket at once (Amanda, 2026-11-25). A bucket
+    // made from a Gmail label (Amanda, 2026-11-26) brings that label's unsorted emails with it;
+    // like rules' backlog moves, this isn't undoable (changeEverywhere).
+    addMany(list) {
+      const now = Date.now()
+      const made = list.map(({ name, color, emoji, emailIds = [] }, i) => ({ id: `bucket-${now}-${i}`, name, color, emoji, emailIds }))
+      setBuckets([...buckets, ...made.map(({ emailIds, ...bucket }) => bucket)])
+      const homeOf = new Map(made.flatMap((bucket) => bucket.emailIds.map((emailId) => [emailId, bucket.id])))
+      const moving = emails.filter((email) => homeOf.has(email.id) && isUnsorted(email)).map((email) => email.id)
+      if (moving.length > 0) {
+        changeEverywhere((all) => all.map((email) => (moving.includes(email.id) && isUnsorted(email) ? { ...email, bucketId: homeOf.get(email.id) } : email)))
+        setSelectedIds(selectedIds.filter((x) => !moving.includes(x)))
+      }
+      const fromLabels = moving.length === 1 ? '1 email from your labels is in its bucket.' : `${moving.length} emails from your labels are in their buckets.`
+      if (welcome?.finished) showToast(`You're all set.${moving.length > 0 ? ` ${fromLabels}` : ''} You can change these anytime in Bucketbox settings.`)
+      else if (moving.length > 0) showToast(fromLabels)
     },
     edit(id, { name, color, emoji }) {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
