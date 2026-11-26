@@ -2451,7 +2451,44 @@ label.setting-row { cursor: pointer; }
   color: var(--text-muted);
 }
 
-/* The first-bucket card (Amanda, 2026-11-25): the welcome card's look, with Add a Bucket */
+/* The first-bucket card (Amanda, 2026-11-25): the welcome card's look */
 .first-bucket-card { margin-bottom: 16px; }
-.first-bucket-card .welcome-buttons { justify-content: flex-start; margin-top: 4px; }
-.first-bucket-add { display: inline-flex; align-items: center; gap: 8px; }
+/* Starter buckets (Stage 24d): small bucket tiles in their colors, plus "Make your own" */
+.starter-buckets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
+.starter-bucket {
+  display: flex;
+  flex-direction: column;
+  height: 120px;
+  padding: 0; /* the header runs edge to edge, like a tile's */
+  overflow: hidden;
+  border: 1px solid var(--bucket-color, var(--md-sys-color-outline-variant));
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+.starter-bucket:hover { box-shadow: var(--md-sys-elevation-level1); }
+.starter-bucket:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.starter-bucket-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bucket-header);
+}
+.starter-bucket-name { font: 500 var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+.starter-bucket-body { display: flex; flex-direction: column; justify-content: center; gap: 10px; flex: 1; padding: 0 14px; }
+.starter-bucket-body .mini-row:nth-child(2) { width: 75%; }
+.starter-bucket-body .mini-row:nth-child(3) { width: 55%; }
+/* Make your own: a dashed outline, like a space waiting to be filled */
+.starter-bucket.is-own {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed var(--md-sys-color-outline);
+  color: var(--focus-ring);
+}
+.starter-bucket.is-own .starter-bucket-name { color: var(--focus-ring); }

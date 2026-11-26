@@ -6,6 +6,14 @@ export const startingBuckets = [
   { id: 'priority', name: 'Priority', color: '#8b5cf6' }, // Purple, so blue stays Gmail's color (BUILD-LOG, 2026-11-13)
 ]
 
+// Starter buckets offered on the first-bucket card when there are no buckets (PRD F12; Stage 24d;
+// Amanda, 2026-11-24): just two, plus "Make your own", to push people to make it their own.
+// Picking one creates it at once; it can be renamed, recolored or given an emoji later.
+export const starterBuckets = [
+  { name: 'Priority', color: '#8b5cf6', emoji: null }, // Purple, no emoji
+  { name: 'To Read', color: '#cbbcff', emoji: '📚' }, // Lavender
+]
+
 // The 12 bucket colors, 6 bold and 6 soft, chosen by Amanda (BUILD-LOG, 2026-10-30).
 // The first one is the default for a new bucket. How they're drawn: utils/bucketColors.js.
 export const bucketColors = [

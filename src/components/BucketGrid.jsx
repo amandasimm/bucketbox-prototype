@@ -410,7 +410,9 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
   }, [buckets.length])
 
   // Wait a moment so the button is visible again before focusing it
-  const focusAddButton = () => setTimeout(() => addButtonRef.current?.focus(), 0)
+  // Back to Add a Bucket, or, on the first-bucket card, to its "Make your own" (Stage 24d)
+  const focusAddButton = () =>
+    setTimeout(() => (addButtonRef.current ?? gridRef.current?.closest('.buckets')?.querySelector('.starter-bucket.is-own'))?.focus(), 0)
 
   const emailsIn = (bucket) =>
     emails.filter((email) => email.bucketId === bucket.id && email.removedTo === null).sort(newestFirst)
@@ -456,6 +458,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
               setEditingId(null)
               setAdding(true)
             },
+            onCreate: (values) => bucketActions.add(values),
           })
         ) : (
           !adding && <p className="buckets-empty">Make your first bucket to start sorting.</p>
