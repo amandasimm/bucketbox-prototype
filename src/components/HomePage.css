@@ -2336,3 +2336,122 @@ label.setting-row { cursor: pointer; }
   color: var(--text);
   text-align: center;
 }
+
+/* ---- Onboarding welcome card (Stage 24c; Amanda, 2026-11-25) ----
+   A card in the bucket area, one question per step, with pictures for each choice. */
+.welcome-card {
+  max-width: 640px;
+  padding: 24px 24px 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+.welcome-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.welcome-kicker,
+.welcome-progress { margin: 0; font: 500 var(--md-sys-typescale-label-medium) var(--font); color: var(--text-muted); }
+.welcome-kicker { color: var(--focus-ring); }
+/* Four short bars: done and current ones in blue */
+.welcome-bar { display: flex; gap: 4px; margin: 8px 0 20px; }
+.welcome-bar span { flex: 1; height: 4px; border-radius: 2px; background: var(--md-sys-color-surface-container-highest); }
+.welcome-bar span.is-done { background: var(--focus-ring); }
+.welcome-title { margin: 0 0 4px; font: 400 var(--md-sys-typescale-title-large) var(--font); }
+.welcome-title:focus { outline: none; }
+.welcome-hint { margin: 0 0 20px; font: var(--md-sys-typescale-body-medium) var(--font); color: var(--text-muted); }
+.welcome-body { display: flex; flex-direction: column; gap: 16px; }
+.welcome-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.welcome-skip { margin-right: auto; } /* Skip sits on the left, away from Next / Done */
+
+/* Choices drawn as cards: picture on top, radio and words below */
+.welcome-choices { display: grid; gap: 12px; }
+.welcome-choices.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.welcome-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.welcome-choice:hover { background: var(--md-sys-color-surface-container-low); }
+.welcome-choice.is-checked { border-color: var(--focus-ring); box-shadow: inset 0 0 0 1px var(--focus-ring); background: color-mix(in srgb, var(--md-sys-color-primary-container) 35%, var(--surface)); }
+.welcome-choice:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.welcome-choice-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+}
+.welcome-choice-text { display: flex; align-items: flex-start; gap: 8px; }
+.welcome-choice-text input { flex-shrink: 0; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--focus-ring); }
+.welcome-choice-label { display: block; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
+.welcome-choice-hint { display: block; font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
+.welcome-extra { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
+
+/* Step 1's drawings of the list */
+.mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 78%;
+  padding: 6px 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.mini-heading { display: flex; justify-content: space-between; font: 500 9px/12px var(--font); color: var(--text); }
+.mini-pager { font-weight: 400; color: var(--text-muted); }
+.mini-row { height: 5px; border-radius: 3px; background: var(--md-sys-color-surface-container-highest); }
+.mini-day { width: 40%; height: 4px; margin-top: 2px; border-radius: 2px; background: var(--focus-ring); opacity: 0.7; }
+
+/* Step 2: the time, and yesterday evening's mail moving to today */
+.welcome-cutoff { display: flex; align-items: center; gap: 16px; }
+.welcome-evening {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+}
+.welcome-evening-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+  font: var(--md-sys-typescale-body-small) var(--font);
+  color: var(--text-muted);
+  text-align: center;
+}
+.welcome-evening-day.is-today { border-color: var(--focus-ring); color: var(--text); }
+.welcome-evening-day .icon { color: var(--focus-ring); }
+.welcome-evening-mail { display: flex; align-items: center; gap: 2px; color: var(--focus-ring); }
+.welcome-note { margin: 0; font: var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+
+/* Step 3: the buttons each choice keeps */
+.mini-buttons { display: flex; gap: 8px; }
+.mini-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+/* The first-bucket card (Amanda, 2026-11-25): the welcome card's look, with Add a Bucket */
+.first-bucket-card { margin-bottom: 16px; }
+.first-bucket-card .welcome-buttons { justify-content: flex-start; margin-top: 4px; }
+.first-bucket-add { display: inline-flex; align-items: center; gap: 8px; }

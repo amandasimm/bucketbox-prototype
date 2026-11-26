@@ -23,6 +23,8 @@ import Envelope from './Envelope.jsx'
 import Resizer from './Resizer.jsx'
 import Toast from './Toast.jsx'
 import TodayList from './TodayList.jsx'
+import WelcomeCard from './WelcomeCard.jsx'
+import FirstBucketCard from './FirstBucketCard.jsx'
 import { listFor } from '../utils/range.js'
 import './HomePage.css'
 
@@ -119,6 +121,7 @@ export default function HomePage({
   declutter,
   conflicts,
   onHideRuleSuggestion,
+  welcome,
 }) {
   // Suggested rules hidden in settings (PRD F16)
   const ruleSuggestionSkips = settings.hiddenSuggestions.map((hidden) => hidden.key).filter(Boolean)
@@ -360,17 +363,25 @@ export default function HomePage({
             onReset={() => setTodayWidth(null)}
           />
           <div className="home-right">
-            <BucketGrid
-              buckets={buckets}
-              emails={emails}
-              bucketActions={bucketActions}
-              onOpenBucket={emailView.openBucket}
-              covered={Boolean(openBucket || declutter)}
-              reordering={reordering}
-              onRules={openRules}
-              formRequest={formRequest?.where === 'grid' ? formRequest : null}
-              autoSort={settings.autoSort}
-            />
+            {/* Onboarding's welcome card takes the bucket area until it's done or skipped (Stage 24c) */}
+            {welcome && !welcome.finished ? (
+              <div className="buckets welcome-area">
+                <WelcomeCard settings={settings} emails={emails} {...welcome} />
+              </div>
+            ) : (
+              <BucketGrid
+                buckets={buckets}
+                emails={emails}
+                bucketActions={bucketActions}
+                onOpenBucket={emailView.openBucket}
+                covered={Boolean(openBucket || declutter)}
+                reordering={reordering}
+                onRules={openRules}
+                formRequest={formRequest?.where === 'grid' ? formRequest : null}
+                autoSort={settings.autoSort}
+                intro={(props) => <FirstBucketCard afterSetup={Boolean(welcome?.finished)} {...props} />}
+              />
+            )}
             {/* The drawer disappears when no Today emails remain (PRD F5) */}
             {drawerEmail && !openBucket && (
               <EmailDrawer

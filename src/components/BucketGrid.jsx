@@ -351,7 +351,7 @@ function ReorderGrid({ buckets, emailsIn, bucketActions, gridProps }) {
   )
 }
 
-export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, formRequest, autoSort = true, covered = false, reordering = false }) {
+export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucket, onRules, formRequest, autoSort = true, covered = false, reordering = false, intro }) {
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   // Back from the rules panel without saving: the bucket's edit form opens again
@@ -446,9 +446,20 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
 
   return (
     <section className="buckets" aria-label="Buckets">
-      {buckets.length === 0 && !adding && (
-        <p className="buckets-empty">Make your first bucket to start sorting.</p>
-      )}
+      {/* With no buckets, a card asks for the first one and holds the Add a Bucket button
+          (FirstBucketCard; Amanda, 2026-11-25), in place of the old one-line message */}
+      {buckets.length === 0 &&
+        (intro ? (
+          intro({
+            adding,
+            onAdd: () => {
+              setEditingId(null)
+              setAdding(true)
+            },
+          })
+        ) : (
+          !adding && <p className="buckets-empty">Make your first bucket to start sorting.</p>
+        ))}
       <div
         className={`bucket-grid ${columnSplit === null ? '' : 'is-resized'}`}
         style={
@@ -538,7 +549,7 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
         )}
         {/* Sits where the next bucket would go, centered in that space. Hidden while the
             new-bucket form is open, so there's only one way in at a time. */}
-        {!adding && (
+        {!adding && !(buckets.length === 0 && intro) && (
           <div className="bucket-slot add-bucket-slot" style={{ '--col': (buckets.length % 2) + 1 }}>
             <button
               ref={addButtonRef}

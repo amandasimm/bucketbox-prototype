@@ -136,14 +136,47 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     document.body.classList.toggle('show-unread-dot', settings.unreadDot)
   }, [settings.unreadDot])
 
-  function saveSettings({ zone, ...rest }) {
+  function applySettings({ zone, ...rest }) {
     // A new range starts from today (PRD F6; brief item 5)
     if (rest.range !== settings.range) changeDay(0)
     setSettings(rest)
     setZoneMode(zone)
     if (zone === 'archive') setZoneToastSeen(true) // the choice is made, so no "Archive instead?" toast
+  }
+  function saveSettings(draft) {
+    applySettings(draft)
     setSettingsOpen(false)
     showToast('Settings saved')
+  }
+  // The onboarding welcome card (Stage 24c): in the bucket area whenever the Onboarding scenario
+  // starts fresh. Its choices apply as they're made; Done keeps them, Skip puts back the settings
+  // it started with. welcome: { step, before } or null
+  const [welcome, setWelcome] = useState(() => (scenario === 'onboarding' ? { step: 1, before: saved } : null))
+  // Once the first bucket exists, onboarding is over: deleting every bucket later shows the
+  // plain first-bucket card, without the welcome header
+  useEffect(() => {
+    if (welcome?.finished && buckets.length > 0) setWelcome(null)
+  }, [welcome, buckets.length])
+  const welcomeActions = welcome?.finished ? { finished: true } : welcome && {
+    step: welcome.step,
+    onStep: (step) => setWelcome({ ...welcome, step }),
+    onChange: ({ zone, ...fields }) => {
+      if (fields.range && fields.range !== settings.range) changeDay(0)
+      setSettings({ ...settings, ...fields })
+      if (zone) {
+        setZoneMode(zone)
+        if (zone === 'archive') setZoneToastSeen(true)
+      }
+    },
+    // Both end the steps; the card stays as "Make your first bucket" until one exists
+    onDone: () => {
+      setWelcome({ finished: true })
+      showToast("You're all set. You can change these anytime in Bucketbox settings.")
+    },
+    onSkip: () => {
+      applySettings(welcome.before)
+      setWelcome({ finished: true })
+    },
   }
 
   // The facilitator's Reset settings (Stage 23): every setting back to its default, including the
@@ -970,6 +1003,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
         <HomePage
           conflicts={{ ids: conflictEmails.map(({ email }) => email.id), open: () => setConflictsOpen(true) }}
           onHideRuleSuggestion={hideRuleSuggestion}
+          welcome={welcomeActions}
           emails={emails}
           buckets={buckets}
           dayOffset={dayOffset}

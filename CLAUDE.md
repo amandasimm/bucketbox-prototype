@@ -83,7 +83,7 @@ Avoid:
 - **No action by default.** Emails wait in the Today list until the user acts.
 - **Chunk by day.** Counts are per day, never cumulative.
 - **Core actions stay visible.** Undo and redo are always shown (disabled when empty), never hidden in menus.
-- **Tooltips and popovers over modals.** Inline editing, dropdowns, and drawers instead of pop-ups. Only these modals: the delete-bucket confirmation, the Bucketbox settings menu (Amanda's choice, 2026-11-16), and the PRD's first-use destructive confirmation (built as an inline note instead, see BUILD-LOG).
+- **Tooltips and popovers over modals.** Inline editing, dropdowns, and drawers instead of pop-ups. Only these modals: the delete-bucket confirmation, the Bucketbox settings menu (Amanda's choice, 2026-11-16), the auto-sort conflicts pop-up (PRD F14), and the PRD's first-use destructive confirmation (built as an inline note instead, see BUILD-LOG).
 - **Nothing alarming, nothing color-only.** Indicators (missed day, reminder, bucket color) pair color with a shape, icon, or text. No red alerts or urgency language.
 - **Calm, low-pressure, rewarding.** Celebrate clearing a day, not reaching zero. Messages match the real inbox state.
 - **Preserve Gmail familiarity.** Keep Gmail's nav, header, icons, row information, and compose drawer.
