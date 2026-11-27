@@ -530,6 +530,13 @@ body[data-density='roomy'] { --row-pad-top: 14px; --row-pad-bottom: 13px; }
 .resizer:focus-visible { outline: none; }
 .resizer:focus-visible .resizer-bar { opacity: 1; background: var(--focus-ring); }
 body.is-resizing { cursor: col-resize; user-select: none; }
+/* A divider under something, changing its height (direction="rows") */
+.resizer.is-rows { align-items: center; width: auto; height: 16px; cursor: row-resize; }
+.resizer.is-rows .resizer-bar { width: 100%; height: 4px; }
+body.is-resizing-rows { cursor: row-resize; user-select: none; }
+/* A bucket's bottom edge (Amanda, 2026-11-27): over the 16px gap below the tile, inset from the
+   rounded corners */
+.resizer.is-bucket-height { position: absolute; left: 16px; right: 16px; bottom: -16px; }
 /* Between the Today card and the buckets: it fills the 16px gap, as tall as the Today card */
 .resizer.is-main {
   grid-area: buckets;
@@ -589,9 +596,9 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   flex-shrink: 0;
   box-sizing: border-box;
   height: 44px; /* fixed, so the 3-dot button can sit centered on the same line */
-  border-bottom: 1px solid var(--divider);
-  /* The color at 20%. Dark text stays above 10:1 on every color in the palette,
-     and the gray count above 6:1. */
+  /* The color at 40% (Amanda, 2026-11-27: bolder, like the onboarding card's header; was 20%),
+     with no line under it. Dark text stays at 8.5:1 or more on every color, gray at 4.8:1 or more.
+     The tile keeps its 1px outline in the full color, which helps tell buckets apart. */
   background: var(--bucket-header);
 }
 .bucket-swatch {
@@ -621,6 +628,7 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .bucket-header-button:hover { background: color-mix(in srgb, var(--bucket-color) 8%, transparent); }
 .bucket-header-button:hover .bucket-name { text-decoration: underline; }
 .bucket-header-button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; }
+
 /* Gmail's emphasized label: 14px, 500 */
 .bucket-name {
   flex: 1;
@@ -641,7 +649,7 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   flex-shrink: 0;
   padding: 2px 8px;
   border-radius: var(--md-sys-shape-corner-full);
-  background: color-mix(in srgb, var(--bucket-color) 45%, white);
+  background: var(--surface); /* white, so it stands out on the 40% header (was the color at 45%) */
   color: var(--text);
   font: 500 var(--md-sys-typescale-label-medium) var(--font);
 }
@@ -1930,9 +1938,10 @@ select.dialog-select {
   height: 32px;
 }
 .day-nav .today-label {
-  margin: 0;
+  margin: 0 0 0 8px; /* 8px more after the back arrow (Amanda, 2026-11-27): 12px in all */
   white-space: nowrap;
 }
+.day-nav .today-label + .icon-button { margin-left: 8px; } /* and before the next arrow, on past days */
 /* When the day before still has unsorted emails: a soft blue circle behind the arrow (Gmail's
    selected blue), the arrow in blue, and a small blue dot (the unread dot's color) on its
    bottom right corner (BUILD-LOG, 2026-10-30) */
@@ -2296,6 +2305,7 @@ label.setting-row { cursor: pointer; }
    rows as it's tall (BucketGrid measures it), so a collapsed bucket lets those below move up */
 .home-page[data-bucket-cols='2'] .bucket-grid:not(.is-reorder) {
   grid-auto-rows: 1px;
+  grid-auto-flow: row dense; /* each tile takes the first free space in its own column, so a taller bucket only pushes down its own column (Amanda, 2026-11-27: bucket heights) */
   row-gap: 0;
   align-items: start;
 }

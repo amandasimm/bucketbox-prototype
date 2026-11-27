@@ -41,8 +41,7 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules, onTog
     <div className="bucket-menu-wrap" ref={wrapRef}>
       <IconButton
         label={`Options for the ${bucket.name} bucket`}
-        tooltip="Bucket options"
-        tooltipAlign="right"
+        tooltip={null} // no hover text: it covered the menu (Amanda, 2026-11-27); screen readers still hear the label
         onClick={() => setOpen(!open)}
       >
         <Icon name="more_vert" size={20} />
@@ -157,7 +156,7 @@ function RulesFooter({ bucket, onRules, onResume }) {
   )
 }
 
-function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, onToggleCollapse, column, covered }) {
+function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, children, onEdit, onDelete, onReorder, onRules, onResume, onSortBacklog, onOpenBucket, onToggleCollapse, column, covered, height, resize }) {
   // Collapsed (PRD F17; BUILD-LOG 2026-11-22): a header-only pill with the name and new count.
   // Clicking it expands it; the 3-dot menu has Collapse / Expand. It stays closed while dragging.
   const collapsed = Boolean(bucket.collapsed) && !editing
@@ -177,7 +176,11 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
   // The target sits on a wrapper around the tile (not inside it), so it can cover the tile's
   // border and rounded corners exactly instead of being clipped inside them
   return (
-    <div ref={setNodeRef} className={`bucket-slot ${collapsed ? 'is-collapsed' : ''}`} style={{ ...bucketStyle(bucket.color), '--col': column }}>
+    <div
+      ref={setNodeRef}
+      className={`bucket-slot ${collapsed ? 'is-collapsed' : ''}`}
+      style={{ ...bucketStyle(bucket.color), '--col': column, ...(height ? { '--bucket-height': `${height}px` } : {}) }}
+    >
       {editing ? (
         children
       ) : (
@@ -230,6 +233,11 @@ function BucketTile({ bucket, bucketEmails, allEmails, autoSort, editing, childr
             {autoSort && !collapsed && <RulesFooter bucket={bucket} onRules={onRules} onResume={onResume} />}
           </article>
           <BucketMenu bucket={bucket} onEdit={onEdit} onDelete={onDelete} onReorder={onReorder} onRules={onRules} onToggleCollapse={onToggleCollapse} />
+          {/* The bottom edge drags to change this bucket's height (Amanda, 2026-11-27). Not on a
+              collapsed bucket, and hidden while an email is being dragged. */}
+          {!collapsed && !showTarget && (
+            <Resizer label={`Resize the ${bucket.name} bucket`} direction="rows" className="is-bucket-height" {...resize} />
+          )}
         </>
       )}
       {showTarget && (
@@ -377,6 +385,27 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
     return grid.left + 8 + (grid.width - 16) * (columnSplit ?? 0.5)
   }
 
+  // Each bucket's own height, from dragging its bottom edge (Amanda, 2026-11-27): { [id]: px }.
+  // A bucket without one uses the usual height. Kept until the page reloads, like the buckets.
+  // Never shorter than a header and an email, never taller than the screen's bucket area.
+  const [heights, setHeights] = useState({})
+  const tileOf = (id) => document.getElementById(`bucket-${id}`)?.closest('.bucket-tile')
+  function setHeight(id, px) {
+    const tallest = Math.max(200, window.innerHeight - 136)
+    setHeights((current) => ({ ...current, [id]: Math.round(Math.min(tallest, Math.max(140, px))) }))
+  }
+  const resizeFor = (id) => ({
+    onMove: (y) => {
+      const tile = tileOf(id)
+      if (tile) setHeight(id, y - tile.getBoundingClientRect().top)
+    },
+    onNudge: (by) => {
+      const tile = tileOf(id)
+      if (tile) setHeight(id, tile.getBoundingClientRect().height + by)
+    },
+    onReset: () => setHeights(({ [id]: _, ...rest }) => rest),
+  })
+
   // Collapse / Expand (PRD F17). Focus stays on the bucket's header afterwards.
   function toggleCollapse(id) {
     bucketActions.toggleCollapse(id)
@@ -490,6 +519,8 @@ export default function BucketGrid({ buckets, emails, bucketActions, onOpenBucke
             column={(index % 2) + 1}
             onOpenBucket={onOpenBucket}
             covered={covered}
+            height={heights[bucket.id]}
+            resize={resizeFor(bucket.id)}
           >
             {editingId === bucket.id && (
               <BucketForm

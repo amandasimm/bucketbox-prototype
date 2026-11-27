@@ -15,7 +15,8 @@ export function inkOn(hex) {
 }
 
 // The CSS variables a bucket tile uses. One rule for every color (BUILD-LOG, 2026-10-30):
-// the outline is the color itself and the header is the color at 20%. Text is always dark,
+// the outline is the color itself and the header is the color at 40% (Amanda, 2026-11-27; was 20%).
+// 40% is the most that keeps gray text at AA on every color (dark text 8.5:1+, gray 4.8:1+). Text is always dark,
 // never the bucket color, since most of the palette is too light to read as text.
 // - --bucket-color: outlines, the dot, the filled "+"
 // - --bucket-header: header fill
@@ -23,7 +24,7 @@ export function inkOn(hex) {
 export function bucketStyle(hex) {
   return {
     '--bucket-color': hex,
-    '--bucket-header': `color-mix(in srgb, ${hex} 20%, white)`,
+    '--bucket-header': `color-mix(in srgb, ${hex} 40%, white)`,
     '--bucket-ink': inkOn(hex),
   }
 }
