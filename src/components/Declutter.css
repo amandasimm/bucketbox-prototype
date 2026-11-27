@@ -6,11 +6,12 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* The email card, then the controls. On narrower screens the controls give up room first,
-     down to a 32px gap between Archive and Mark as read; only then does the card shrink. */
-  /* The card grows to 600px: 560px of 16px text is about 65-70 characters a line, the comfortable
-     reading limit (Amanda, 2026-11-24) */
-  --declutter-columns: minmax(0, 600px) clamp(296px, calc(100% - 632px), 376px);
+  /* The email card on the left, the controls taking the rest (Amanda, 2026-11-27: on narrow
+     windows the card was too wide and the buckets cramped; on wide ones the card sits left and
+     the bucket pills get the room). The card is 46% of the space (44% looked slightly narrow), at least 340px and at most
+     600px: 560px of 16px text is about 65-70 characters a line, the comfortable reading limit
+     (Amanda, 2026-11-24). The controls are never narrower than 296px. */
+  --declutter-columns: minmax(340px, min(600px, 46%)) minmax(296px, 1fr);
   border: 1px solid var(--card-stroke);
   border-radius: 16px;
   background: var(--md-sys-color-surface-container-low); /* flat, like Gmail's surfaces (BUILD-LOG, 2026-11-13) */
@@ -81,7 +82,7 @@
   --declutter-peek: 56px; /* how much of the next card shows below this one */
   grid-template-columns: var(--declutter-columns);
   grid-template-rows: minmax(0, 1fr);
-  justify-content: center;
+  justify-content: start;
   gap: 32px;
   padding: 24px 24px 0;
 }
@@ -204,6 +205,8 @@
 /* Rectangular buttons, so they read differently from the round bucket pills */
 .declutter-keys {
   display: grid;
+  width: 100%;
+  max-width: 376px; /* the buttons keep their spacing however wide the column gets */
   grid-template-columns: 132px minmax(0, 1fr) 132px; /* the middle is the gap between Archive and Mark as read */
   grid-template-rows: 36px 36px 36px;
   row-gap: 12px;
@@ -482,7 +485,7 @@
    first card); the pointer sits 10px above them */
 .declutter-tip.is-step-1 { bottom: calc(100% - 38px); }
 /* Step 2: in the bucket list, just under the pills, pointing up at them */
-.declutter-tip.is-step-2 { position: relative; bottom: auto; margin-top: 18px; }
+.declutter-tip.is-step-2 { position: relative; bottom: auto; max-width: 376px; margin-top: 18px; } /* no wider than the buttons, however wide the column gets */
 .declutter-tip.is-step-2::after { top: auto; bottom: 100%; left: 28px; border-top-color: transparent; border-bottom-color: var(--surface); filter: drop-shadow(0 -1px 1px rgb(60 64 67 / 0.12)); }
 /* The pills glow while it shows, so the list mustn't clip them */
 .declutter-bar.has-tip .declutter-bar-scroll { overflow: visible; }
