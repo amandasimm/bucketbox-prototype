@@ -23,13 +23,68 @@ export function dayButtonLabel(dayOffset) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: otherYear ? 'numeric' : undefined })
 }
 
+// A keycap on its own, for the first-time tip
+const Keycap = ({ keyName }) => (
+  <span className="keycap" aria-hidden="true">
+    <Icon name={KEYCAP_ICONS[keyName]} size={14} />
+  </span>
+)
+
+// The first time Declutter opens in a visit (Amanda, 2026-11-27): a short tip in three chunks, one
+// idea at a time, each placed by what it's about. 1: Left and Right, and clicking the email to open
+// it, just above the blue buttons (over the Back button, which is off on the first card). 2: the
+// bucket pills, just under them. 3: Up and Down, above the Back button. The controls it's about
+// glow. Next / Got it moves on, and so does doing it (that step's keys, or a pill), which still
+// does its job. Not a modal.
+const TIP_STEPS = 3
+function KeysTip({ step, onNext }) {
+  return (
+    <div className={`declutter-tip is-step-${step}`} role="status">
+      <p className="declutter-tip-count">
+        <span className="visually-hidden">Tip, step </span>
+        {step} of {TIP_STEPS}
+      </p>
+      {step === 1 && (
+        <>
+          {/* A welcome first (Amanda, 2026-11-27) */}
+          <p className="declutter-tip-title">Welcome to Declutter</p>
+          <p className="declutter-tip-text">Declutter is a quicker way to get through your inbox. Click the email to open it or use the arrow keys to sort.</p>
+          <p className="declutter-tip-line is-keys">
+            <Keycap keyName="left" /> <span>Archive</span>
+            <Keycap keyName="right" /> <span>Mark as read</span>
+          </p>
+        </>
+      )}
+      {step === 2 && (
+        <>
+          <p className="declutter-tip-line">Move it to a bucket</p>
+          <p className="declutter-tip-text">Click a bucket to move the email there.</p>
+        </>
+      )}
+      {step === 3 && (
+        <>
+          <p className="declutter-tip-line">
+            <Keycap keyName="up" /> <span>Back</span>
+            <Keycap keyName="down" /> <span>Next</span>
+          </p>
+          <p className="declutter-tip-text">Move through your emails.</p>
+        </>
+      )}
+      <button type="button" className="text-button declutter-tip-button" onClick={onNext}>
+        {step < TIP_STEPS ? 'Next' : 'Got it'}
+      </button>
+    </div>
+  )
+}
+
 // A labeled action around the card. Its place matches its arrow key (PRD F13). Like the
 // icon buttons, a switched-off one stays focusable. onClick hears 'pointer' for a mouse click.
-function ArrowButton({ className = '', label, spokenLabel = label, keyName, disabled = false, onClick }) {
+// glow: the first-time tip is about this button.
+function ArrowButton({ className = '', label, spokenLabel = label, keyName, disabled = false, onClick, glow = false }) {
   return (
     <button
       type="button"
-      className={`declutter-action ${className}`}
+      className={`declutter-action ${className} ${glow ? 'is-tip-glow' : ''}`}
       aria-label={`${spokenLabel}, ${keyName} arrow key`}
       aria-keyshortcuts={`Arrow${keyName.charAt(0).toUpperCase()}${keyName.slice(1)}`}
       aria-disabled={disabled}
@@ -166,10 +221,11 @@ function EmailCard({ email, cardRef, onOpen, onReportSpam }) {
 // pills split evenly across the two rows (Amanda's review, 2026-10-31).
 // While sorting, the pills move the card into a bucket. On the end screen they open the bucket
 // instead, leaving Declutter (Amanda, 2026-11-24).
-function BucketBar({ email, buckets, onMove, onOpenBucket }) {
+// tip: the first-time tip's bucket step, shown under the pills while they glow
+function BucketBar({ email, buckets, onMove, onOpenBucket, tip = null }) {
   const opening = Boolean(onOpenBucket)
   return (
-    <div className="declutter-bar" role="group" aria-labelledby="declutter-bar-label">
+    <div className={`declutter-bar ${tip ? 'has-tip' : ''}`} role="group" aria-labelledby="declutter-bar-label">
       <span id="declutter-bar-label" className="declutter-bar-label">{opening ? 'Go to:' : 'Move to:'}</span>
       <div className="declutter-bar-scroll">
         <div className="declutter-bar-rows">
@@ -178,7 +234,7 @@ function BucketBar({ email, buckets, onMove, onOpenBucket }) {
             <button
               key={bucket.id}
               type="button"
-              className="declutter-pill"
+              className={`declutter-pill ${tip ? 'is-tip-glow' : ''}`}
               style={bucketStyle(bucket.color)}
               aria-label={opening ? `Open ${bucket.name}` : `Move to ${bucket.name}`}
               onClick={() => (opening ? onOpenBucket(bucket) : onMove(email, bucket))}
@@ -192,6 +248,7 @@ function BucketBar({ email, buckets, onMove, onOpenBucket }) {
             </button>
           ))}
         </div>
+        {tip}
       </div>
     </div>
   )
@@ -278,8 +335,26 @@ function EndMessage({ declutter, headingRef }) {
 // Up and Down move through them, Left archives, Right marks read. Escape or the X leaves at any
 // time; what's done stays done and the rest stays in the Today list.
 export default function Declutter({ declutter, buckets, onSendReply }) {
-  const { dayName, total, position, email, openEmail, hasPrevious, nextRun, actions, emailView, suggestion, suggestionActions } = declutter
+  const { dayName, total, position, email, openEmail, hasPrevious, nextRun, actions, emailView, suggestion, suggestionActions, showTip } = declutter
   const atEnd = !email
+  // The first-time tip's step: 1, 2, or 0 when it's not showing. It's put away on the end screen.
+  const [tipStep, setTipStep] = useState(showTip && email ? 1 : 0)
+  const tipShowing = tipStep > 0 && !atEnd && !openEmail
+  function nextTip() {
+    // With no buckets, the bucket step is skipped
+    if (tipStep < TIP_STEPS) setTipStep(tipStep === 1 && buckets.length === 0 ? 3 : tipStep + 1)
+    else {
+      setTipStep(0)
+      actions.tipDone()
+    }
+  }
+  useEffect(() => {
+    if (tipStep > 0 && atEnd) {
+      setTipStep(0)
+      actions.tipDone()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atEnd])
   // The auto-archive suggestion's review panel (PRD F15), from the end screen
   const [reviewing, setReviewing] = useState(false)
   const reviewOpen = reviewing && atEnd && suggestion?.type === 'archive'
@@ -358,6 +433,9 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       else return
       event.preventDefault()
       actions.keysUsed()
+      // Pressing the tip's own keys moves it along
+      if (tipShowing && tipStep === 1 && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) nextTip()
+      else if (tipShowing && tipStep === 3 && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) nextTip()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -435,14 +513,24 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
               {atEnd ? (
                 buckets.length > 0 && <BucketBar buckets={buckets} onOpenBucket={actions.openBucket} />
               ) : (
-                <BucketBar email={email} buckets={buckets} onMove={go('away', actions.move)} />
+                <BucketBar
+                  email={email}
+                  buckets={buckets}
+                  onMove={(...args) => {
+                    go('away', actions.move)(...args)
+                    if (tipShowing && tipStep === 2) nextTip()
+                  }}
+                  tip={tipShowing && tipStep === 2 && buckets.length > 0 ? <KeysTip step={2} onNext={nextTip} /> : null}
+                />
               )}
               <div className="declutter-keys">
+                {tipShowing && tipStep !== 2 && <KeysTip step={tipStep} onNext={nextTip} />}
                 <ArrowButton
                   className="is-up"
                   label="Back"
                   keyName="up"
                   disabled={!hasPrevious}
+                  glow={tipShowing && tipStep === 3}
                   onClick={go('down', actions.previous)}
                 />
                 {atEnd ? (
@@ -460,9 +548,9 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
                   </div>
                 ) : (
                   <>
-                    <ArrowButton className="is-left is-main" label="Archive" keyName="left" onClick={(how) => go('left', actions.archive)(email, how)} />
-                    <ArrowButton className="is-right is-main" label="Mark as read" keyName="right" onClick={(how) => go('right', actions.markRead)(email, how)} />
-                    <ArrowButton className="is-down" label="Next" keyName="down" onClick={go('up', actions.next)} />
+                    <ArrowButton className="is-left is-main" label="Archive" keyName="left" glow={tipShowing && tipStep === 1} onClick={(how) => go('left', actions.archive)(email, how)} />
+                    <ArrowButton className="is-right is-main" label="Mark as read" keyName="right" glow={tipShowing && tipStep === 1} onClick={(how) => go('right', actions.markRead)(email, how)} />
+                    <ArrowButton className="is-down" label="Next" keyName="down" glow={tipShowing && tipStep === 3} onClick={go('up', actions.next)} />
                   </>
                 )}
               </div>

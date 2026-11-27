@@ -25,6 +25,7 @@ import Toast from './Toast.jsx'
 import TodayList from './TodayList.jsx'
 import WelcomeCard, { welcomeSteps } from './WelcomeCard.jsx'
 import FirstBucketCard, { startingLabels, startingPicks } from './FirstBucketCard.jsx'
+import GettingStarted from './GettingStarted.jsx'
 import { listFor } from '../utils/range.js'
 import './HomePage.css'
 
@@ -119,6 +120,8 @@ export default function HomePage({
   onSendReply,
   onDeclutter,
   declutter,
+  checklist,
+  composeWidth,
   conflicts,
   onHideRuleSuggestion,
   welcome,
@@ -454,6 +457,11 @@ export default function HomePage({
         )}
         {declutter && (
           <Declutter key={declutter.dayOffset} declutter={declutter} buckets={buckets} onSendReply={onSendReply} />
+        )}
+        {/* The getting-started checklist (Stage 24e), out of the way while Declutter or a rules
+            panel is open, since those use the bottom right */}
+        {checklist && !declutter && !rulesFor && (
+          <GettingStarted checklist={checklist} composeWidth={composeWidth} />
         )}
         {/* "Create rule" on a suggested-rule toast opens that bucket's rules with the rule ready (F16) */}
         <Toast

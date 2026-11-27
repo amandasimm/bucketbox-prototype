@@ -98,6 +98,9 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   const [declutter, setDeclutter] = useState(null)
   // Whether Declutter's arrow-key tip has shown, or isn't needed because the keys were used
   const [keyTipShown, setKeyTipShown] = useState(false)
+  // Whether Declutter's first-time tip (two short steps on the arrow keys) has been seen this visit
+  // (Amanda, 2026-11-27). A reload or Reset shows it again.
+  const [declutterTipSeen, setDeclutterTipSeen] = useState(false)
   // Bucketbox's settings (PRD F10; BUILD-LOG, 2026-11-16 and 2026-11-22). Saved in this browser,
   // so they're kept after a reload (utils/savedSettings.js). The delete zone's choice lives in
   // zoneMode above. "Show bucket counts" is gone: tiles have no counts (brief 1j).
@@ -179,6 +182,31 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     },
   }
 
+  // The getting-started checklist (Stage 24e; Amanda, 2026-11-24 and 2026-11-27). It appears in the
+  // Onboarding scenario once step 5's Continue makes the first buckets, and ticks tasks off as
+  // they happen. Undo doesn't untick. Closing it removes it until the page reloads.
+  // checklist: null, or { minimized, done: { bucket, rules, move, declutter }, announce }
+  const [checklist, setChecklist] = useState(null)
+  const taskNames = { rules: 'Add auto-sort rules to a bucket', move: 'Move an email into a bucket', declutter: 'Organize your emails with Declutter' }
+  function tick(task) {
+    setChecklist((current) =>
+      current && !current.done[task] ? { ...current, done: { ...current.done, [task]: true }, announce: `Done: ${taskNames[task]}` } : current,
+    )
+  }
+  // Someone moving an email into a bucket themselves (not labels, rules or suggestions)
+  const tickIfMove = (change) => change?.bucketId && tick('move')
+  const checklistActions = checklist && {
+    ...checklist,
+    minimize: () => setChecklist({ ...checklist, minimized: true }),
+    expand: () => setChecklist({ ...checklist, minimized: false }),
+    close: () => setChecklist(null),
+  }
+  // Compose opening minimizes the checklist; its pill sits to the left of Compose
+  const composeOpen = compose !== null
+  useEffect(() => {
+    if (composeOpen) setChecklist((current) => (current && !current.minimized ? { ...current, minimized: true } : current))
+  }, [composeOpen])
+
   // The facilitator's Reset settings (Stage 23): every setting back to its default, including the
   // delete zone and the hidden suggestions. Emails and buckets stay as they are.
   function resetSettings() {
@@ -216,6 +244,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       leaving.current = false
       const before = latestEmails.current
       const after = before.map((email) => (ids.includes(email.id) ? { ...email, ...change } : email))
+      tickIfMove(change)
       setLastAction({ label, before, after, undone: false })
       setEmails(after)
       setSelectedIds([])
@@ -365,6 +394,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       if (e.id === nextId) return { ...e, unread: false }
       return e
     })
+    tickIfMove(change)
     setLastAction({ label, before: emails, after, undone: false })
     setEmails(after)
     setSelectedIds([])
@@ -581,6 +611,8 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       const fromLabels = moving.length === 1 ? '1 email from your labels is in its bucket.' : `${moving.length} emails from your labels are in their buckets.`
       if (welcome?.finished) showToast(`You're all set.${moving.length > 0 ? ` ${fromLabels}` : ''} You can change these anytime in Bucketbox settings.`)
       else if (moving.length > 0) showToast(fromLabels)
+      // The end of onboarding: the getting-started checklist, with Make a bucket already done
+      if (welcome?.finished) setChecklist({ minimized: false, done: { bucket: true, rules: false, move: false, declutter: false }, announce: '' })
     },
     edit(id, { name, color, emoji }) {
       setBuckets(buckets.map((bucket) => (bucket.id === id ? { ...bucket, name, color, emoji } : bucket)))
@@ -593,6 +625,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       const bucket = buckets.find((b) => b.id === id)
       const rulesChanged = JSON.stringify({ rules: bucket.rules ?? [], ruleJoin: bucket.ruleJoin ?? 'any' }) !== JSON.stringify({ rules, ruleJoin })
       setBuckets(buckets.map((b) => (b.id === id ? { ...b, rules, ruleJoin } : b)))
+      if (rules.some((rule) => rule.criteria.length > 0)) tick('rules')
       if (moveIds.length === 0) {
         showToast('Rules saved')
         return
@@ -710,6 +743,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
     const after = patchEmail(emails, email.id, change)
     const previous = Object.fromEntries(Object.keys(change).map((key) => [key, email[key]]))
     const step = { id: email.id, label, kind, change, previous, advance, position: declutter.position }
+    tickIfMove(change)
     setEmails(after)
     setDeclutter({
       ...declutter,
@@ -724,7 +758,8 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   // The first time someone clicks Archive or Mark as read with the mouse, before ever using the
   // arrow keys, the toast mentions the key once. It's a signifier, not a push (BUILD-LOG, 2026-11-08).
   function keyTip(how, key) {
-    if (how !== 'pointer' || keyTipShown) return {}
+    // Not after the first-time tip, which already taught the keys
+    if (how !== 'pointer' || keyTipShown || declutterTipSeen) return {}
     setKeyTipShown(true)
     return { tip: `You can also use the ${key} key` }
   }
@@ -816,6 +851,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   const declutterActions = {
     exit: exitDeclutter,
     keysUsed: () => setKeyTipShown(true),
+    tipDone: () => setDeclutterTipSeen(true),
     // The end screen's left button: the previous day or week with unsorted emails, or the next chunk
     nextRun: (run) => {
       settleDeclutter()
@@ -987,6 +1023,7 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
       email: deckEmails[shownPosition] ?? null,
       openEmail: emails.find((email) => email.id === declutter.openId) ?? null,
       hasPrevious: previousCard(emails, deck, shownPosition) >= 0,
+      showTip: !declutterTipSeen,
       progress,
       actions: declutterActions,
       emailView: declutterEmailView,
@@ -1000,6 +1037,13 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
   // Gmail labels, so bucketed emails still count until they're archived or deleted
   // (BUILD-LOG, 2026-10-30). Hidden in Bucketbox, which only shows per-day counts (2026-10-29).
   const inboxUnread = prototypeOn ? 0 : emails.filter((email) => email.removedTo === null && email.unread).length
+
+  // Organize your emails with Declutter: reaching the end screen of a run that had emails in it
+  const declutterEnded = Boolean(declutter && declutter.deck.length > 0 && declutterScreen().email === null)
+  useEffect(() => {
+    if (declutterEnded) tick('declutter')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [declutterEnded])
 
   return (
     <GmailShell
@@ -1048,6 +1092,8 @@ export default function App({ scenario = 'filled', startToast = null, onSwitchSc
           emailView={emailView}
           onSendReply={sendReply}
           declutter={declutter && declutterScreen()}
+          checklist={checklistActions}
+          composeWidth={compose ? (compose.minimized ? 300 : 540) : 0}
         />
       ) : (
         <GmailInbox emails={emails} buckets={buckets} />

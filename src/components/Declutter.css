@@ -426,3 +426,63 @@
 .suggestion-buttons .text-button:hover { background: var(--md-sys-state-hover); }
 /* The review panel slides in over Declutter, like the rules panel over the buckets */
 .declutter .archive-review { z-index: 12; }
+
+/* The first-time tip (Amanda, 2026-11-27): a small card just above the arrow buttons, pointing
+   down at them, in two steps. The buttons it's about glow softly, like the checklist's guide. */
+.declutter-keys { position: relative; }
+.declutter-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 16px); /* step 3: above the Back button */
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px 8px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level2);
+}
+/* The little pointer under the card */
+.declutter-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border: 8px solid transparent;
+  border-top-color: var(--surface);
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 1px rgb(60 64 67 / 0.15));
+}
+.declutter-tip p { margin: 0; }
+/* Step 1: just above Archive and Mark as read, over the Back button's row (Back is off on the
+   first card); the pointer sits 10px above them */
+.declutter-tip.is-step-1 { bottom: calc(100% - 38px); }
+/* Step 2: in the bucket list, just under the pills, pointing up at them */
+.declutter-tip.is-step-2 { position: relative; bottom: auto; margin-top: 18px; }
+.declutter-tip.is-step-2::after { top: auto; bottom: 100%; left: 28px; border-top-color: transparent; border-bottom-color: var(--surface); filter: drop-shadow(0 -1px 1px rgb(60 64 67 / 0.12)); }
+/* The pills glow while it shows, so the list mustn't clip them */
+.declutter-bar.has-tip .declutter-bar-scroll { overflow: visible; }
+.declutter-tip-title { font: 500 16px/24px var(--font); color: var(--text); }
+.declutter-tip-line.is-keys { margin-top: 6px; } /* a little room between the welcome and the keys */
+.declutter-tip-count { font: var(--md-sys-typescale-label-small) var(--font); color: var(--text-muted); }
+.declutter-tip-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font: 500 var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+.declutter-tip-line .keycap { color: var(--text-muted); }
+.declutter-tip-line .keycap:not(:first-child) { margin-left: 10px; }
+.declutter-tip-text { font: var(--md-sys-typescale-body-medium) var(--font); color: var(--text-muted); }
+.declutter-tip-button { align-self: flex-end; height: 32px; margin-right: -8px; padding: 0 12px; border-radius: 16px; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
+.declutter-action.is-tip-glow,
+.declutter-pill.is-tip-glow {
+  box-shadow: 0 0 10px 3px color-mix(in srgb, var(--focus-ring) 35%, transparent), 0 0 24px 8px color-mix(in srgb, var(--focus-ring) 14%, transparent);
+  animation: declutter-tip-glow 1600ms ease-in-out infinite alternate;
+}
+@keyframes declutter-tip-glow {
+  from { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--focus-ring) 25%, transparent), 0 0 14px 4px color-mix(in srgb, var(--focus-ring) 8%, transparent); }
+  to { box-shadow: 0 0 10px 3px color-mix(in srgb, var(--focus-ring) 35%, transparent), 0 0 24px 8px color-mix(in srgb, var(--focus-ring) 14%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .declutter-action.is-tip-glow, .declutter-pill.is-tip-glow { animation: none; }
+}
+body.no-motion .declutter-action.is-tip-glow,
+body.no-motion .declutter-pill.is-tip-glow { animation: none; }

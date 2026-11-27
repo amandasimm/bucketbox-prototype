@@ -65,7 +65,7 @@ export function BucketMenu({ bucket, onEdit, onDelete, onReorder, onRules, onTog
             <button
               type="button"
               role="menuitem"
-              className="move-menu-item"
+              className="move-menu-item bucket-menu-rules"
               onClick={() => {
                 setOpen(false)
                 onRules()

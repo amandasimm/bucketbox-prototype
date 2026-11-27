@@ -1415,7 +1415,7 @@ select.dialog-select {
 .toast-region {
   position: fixed;
   right: calc(var(--side-panel-width) + 16px); /* bottom right, beside Gmail's side panel (BUILD-LOG, 2026-11-13) */
-  bottom: 24px;
+  bottom: calc(24px + var(--checklist-space, 0px)); /* above the getting-started checklist while it shows (Stage 24e) */
   z-index: 60;
   max-width: 420px;
 }
@@ -2604,3 +2604,97 @@ label.setting-row { cursor: pointer; }
 .label-import-name { flex: 1; }
 .label-import-count { color: var(--text-muted); font: var(--md-sys-typescale-body-small) var(--font); }
 .first-bucket-form { margin-bottom: 8px; }
+
+/* ---- Getting-started checklist (Stage 24e; GettingStarted.jsx) ----
+   Where Compose opens, bottom right beside Gmail's side panel; to Compose's left while Compose
+   is open. The header is the onboarding card's: Gmail's blue, white text. */
+.checklist {
+  position: fixed;
+  right: calc(var(--side-panel-width) + 16px + var(--compose-offset, 0px));
+  bottom: 16px;
+  z-index: 50;
+  width: 360px;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--surface);
+  box-shadow: var(--md-sys-elevation-level4);
+  overflow: hidden;
+}
+.checklist-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+  padding: 0 8px 0 16px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  --md-sys-state-hover: rgb(255 255 255 / 0.08);
+  --md-sys-state-focus: rgb(255 255 255 / 0.12);
+  --md-sys-state-pressed: rgb(255 255 255 / 0.12);
+}
+.checklist-title { flex: 1; margin: 0; font: 500 16px/24px var(--font); }
+.checklist-count { margin: 0 4px 0 0; font: var(--md-sys-typescale-body-medium) var(--font); white-space: nowrap; }
+.checklist .icon-button { width: 32px; height: 32px; color: inherit; }
+.checklist-header .icon-button:focus-visible,
+.checklist.is-minimized .icon-button:focus-visible { outline-color: var(--md-sys-color-on-primary); outline-offset: -2px; }
+/* The onboarding card's progress bar: light blue on a darker blue track */
+.checklist-progress { position: absolute; inset: auto 0 0; height: 4px; background: rgb(0 0 0 / 0.3); overflow: hidden; }
+.checklist-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 0 var(--md-sys-shape-corner-full) var(--md-sys-shape-corner-full) 0;
+  background: var(--md-sys-color-inverse-primary);
+  transition: width 200ms;
+}
+.checklist-tasks { margin: 0; padding: 8px 0; list-style: none; }
+.checklist .visually-hidden { margin: 0; } /* the screen-reader message's paragraph margin made the card scrollable */
+.checklist-task { display: flex; align-items: flex-start; gap: 12px; padding: 8px 16px; }
+.checklist-check { display: flex; flex-shrink: 0; color: var(--text-muted); }
+.checklist-task.is-done .checklist-check { color: var(--focus-ring); }
+.checklist-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding-top: 1px; }
+.checklist-name { display: flex; align-items: center; gap: 8px; font: 500 var(--md-sys-typescale-body-medium) var(--font); color: var(--text); }
+.checklist-task.is-done .checklist-name { font-weight: 400; color: var(--text-muted); text-decoration: line-through; } /* struck through once done, alongside the check (Amanda, 2026-11-27) */
+.checklist-optional { font: var(--md-sys-typescale-label-small) var(--font); color: var(--text-muted); } /* plain text, no tag (Amanda, 2026-11-27) */
+.checklist-help { font: var(--md-sys-typescale-body-small) var(--font); color: var(--text-muted); }
+/* A task that points out its control: a light hover, and a focus ring for keyboard users */
+.checklist-task.is-guided { cursor: default; }
+.checklist-task.is-guided:hover { background: var(--md-sys-color-surface-container-low); }
+.checklist-task.is-guided:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+/* The guide (Amanda, 2026-11-27): a soft blue glow on the control itself, in its own shape
+   (GettingStarted.jsx copies its box and corners), slowly breathing brighter and dimmer (steady
+   when motion is off or reduced). No outline, no fill over the button. */
+.guide {
+  position: fixed;
+  z-index: 70;
+  box-shadow: 0 0 10px 3px color-mix(in srgb, var(--focus-ring) 35%, transparent), 0 0 24px 8px color-mix(in srgb, var(--focus-ring) 14%, transparent);
+  pointer-events: none;
+  animation: guide-glow 1600ms ease-in-out infinite alternate;
+}
+@keyframes guide-glow {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide { animation: none; }
+}
+body.no-motion .guide { animation: none; }
+.checklist-done { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 16px 16px; }
+.checklist-done p { margin: 0; font: 500 var(--md-sys-typescale-body-medium) var(--font); }
+/* Minimized: a pill like Compose's minimized bar, in the header's blue */
+.checklist.is-minimized {
+  display: flex;
+  align-items: center;
+  width: 280px;
+  height: 40px;
+  padding-right: 4px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--md-sys-elevation-level3);
+  --md-sys-state-hover: rgb(255 255 255 / 0.08);
+  --md-sys-state-focus: rgb(255 255 255 / 0.12);
+  --md-sys-state-pressed: rgb(255 255 255 / 0.12);
+}
+.checklist-bar { flex: 1; display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 8px 0 20px; color: inherit; text-align: left; border-radius: var(--md-sys-shape-corner-full); }
+.checklist-bar .checklist-title { font-size: 14px; }
+.checklist-bar:focus-visible { outline: 2px solid var(--md-sys-color-on-primary); outline-offset: -3px; }
