@@ -43,6 +43,19 @@
 .declutter-bar-label { flex-shrink: 0; line-height: 32px; font-weight: 500; color: var(--text-muted); }
 .declutter-bar-scroll { flex: 1; align-self: stretch; min-width: 0; overflow-y: auto; padding: 2px; } /* 2px: room for focus rings, kept off the 4px grid so pills line up with the label */
 .declutter-bar-rows { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* The bucket's number key (Amanda, 2026-11-27): a keycap at the end of the pill, like the arrow
+   buttons', with a 90% white fill so it lifts off every bucket color; the number and outline stay
+   solid. (A floating corner badge was tried and dropped: it read like a count.) */
+.declutter-pill-key {
+  width: 18px;
+  height: 18px;
+  margin-right: -6px;
+  border-color: var(--md-sys-color-outline);
+  box-shadow: 0 1px 0 var(--md-sys-color-outline);
+  background: rgb(255 255 255 / 0.9);
+  font: 500 11px/1 var(--font);
+  color: var(--text-muted);
+}
 .declutter-no-buckets { line-height: 32px; color: var(--text-muted); }
 .declutter-pill {
   flex-shrink: 0;
@@ -224,6 +237,15 @@
 .declutter-action.is-main {
   background: var(--focus-ring);
   color: var(--md-sys-color-on-primary);
+}
+/* Every keycap is a white key (Amanda, 2026-11-27), like the bucket pills' numbers: a 90% white
+   fill. On the blue buttons the arrow is the button's blue on the white key, with a soft darker
+   bottom edge; on the outlined buttons it keeps their blue outline. */
+.declutter-action .keycap { background: rgb(255 255 255 / 0.9); }
+.declutter-action.is-main .keycap {
+  border-color: rgb(255 255 255 / 0.9);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+  color: var(--focus-ring);
 }
 .declutter-action[aria-disabled='true'] {
   border-color: var(--md-sys-color-outline-disabled);

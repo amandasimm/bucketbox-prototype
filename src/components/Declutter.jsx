@@ -58,7 +58,7 @@ function KeysTip({ step, onNext }) {
       {step === 2 && (
         <>
           <p className="declutter-tip-line">Move it to a bucket</p>
-          <p className="declutter-tip-text">Click a bucket to move the email there.</p>
+          <p className="declutter-tip-text">Click a bucket or press its number to move the email there.</p>
         </>
       )}
       {step === 3 && (
@@ -230,23 +230,35 @@ function BucketBar({ email, buckets, onMove, onOpenBucket, tip = null }) {
       <div className="declutter-bar-scroll">
         <div className="declutter-bar-rows">
           {buckets.length === 0 && <span className="declutter-no-buckets">No buckets yet</span>}
-          {buckets.map((bucket) => (
-            <button
-              key={bucket.id}
-              type="button"
-              className={`declutter-pill ${tip ? 'is-tip-glow' : ''}`}
-              style={bucketStyle(bucket.color)}
-              aria-label={opening ? `Open ${bucket.name}` : `Move to ${bucket.name}`}
-              onClick={() => (opening ? onOpenBucket(bucket) : onMove(email, bucket))}
-            >
-              {bucket.emoji ? (
-                <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
-              ) : (
-                <span className="bucket-swatch" aria-hidden="true" />
-              )}
-              {bucket.name}
-            </button>
-          ))}
+          {buckets.map((bucket, index) => {
+            // Number keys (Amanda, 2026-11-27; a small part of PRD F11): the first nine buckets get
+            // 1 to 9, in the order shown, with the number as a keycap after the name. Not on the end
+            // screen's "Go to:" pills.
+            const number = !opening && index < 9 ? String(index + 1) : null
+            return (
+              <button
+                key={bucket.id}
+                type="button"
+                className={`declutter-pill ${tip ? 'is-tip-glow' : ''}`}
+                style={bucketStyle(bucket.color)}
+                aria-label={opening ? `Open ${bucket.name}` : `Move to ${bucket.name}${number ? `, key ${number}` : ''}`}
+                aria-keyshortcuts={number ?? undefined}
+                onClick={() => (opening ? onOpenBucket(bucket) : onMove(email, bucket))}
+              >
+                {bucket.emoji ? (
+                  <span className="bucket-emoji" aria-hidden="true">{bucket.emoji}</span>
+                ) : (
+                  <span className="bucket-swatch" aria-hidden="true" />
+                )}
+                {bucket.name}
+                {number && (
+                  <span className="keycap declutter-pill-key" aria-hidden="true">
+                    {number}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
         {tip}
       </div>
@@ -332,7 +344,7 @@ function EndMessage({ declutter, headingRef }) {
 }
 
 // Declutter (rapid sort; PRD F13, Flow 7): the viewed day's unsorted emails as a rolodex of cards.
-// Up and Down move through them, Left archives, Right marks read. Escape or the X leaves at any
+// Up and Down move through them, Left archives, Right marks read, 1 to 9 move to a bucket. Escape or the X leaves at any
 // time; what's done stays done and the rest stays in the Today list.
 export default function Declutter({ declutter, buckets, onSendReply }) {
   const { dayName, total, position, email, openEmail, hasPrevious, nextRun, actions, emailView, suggestion, suggestionActions, showTip } = declutter
@@ -427,6 +439,11 @@ export default function Declutter({ declutter, buckets, onSendReply }) {
       else if (event.key === 'ArrowDown' && !atEnd) go('up', actions.next)()
       else if (event.key === 'ArrowLeft' && !atEnd) go('left', actions.archive)(email)
       else if (event.key === 'ArrowRight' && !atEnd) go('right', actions.markRead)(email)
+      // 1 to 9 move the email to that bucket (Amanda, 2026-11-27)
+      else if (/^[1-9]$/.test(event.key) && !atEnd && buckets[Number(event.key) - 1]) {
+        go('away', actions.move)(email, buckets[Number(event.key) - 1])
+        if (tipShowing && tipStep === 2) nextTip()
+      }
       // On the end screen, a held key from the last card doesn't carry over and leave it
       else if (event.key === 'ArrowLeft' && nextRun && !event.repeat) actions.nextRun(nextRun)
       else if (event.key === 'ArrowRight' && !event.repeat) actions.exit()
